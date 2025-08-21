@@ -18,13 +18,7 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         Vector2 input = Vector2.zero;
-        if (Keyboard.current != null)
-        {
-            if (Keyboard.current.wKey.isPressed) input.y += 1f;
-            if (Keyboard.current.sKey.isPressed) input.y -= 1f;
-            if (Keyboard.current.aKey.isPressed) input.x -= 1f;
-            if (Keyboard.current.dKey.isPressed) input.x += 1f;
-        }
+
 
         Vector3 move = transform.right * input.x + transform.forward * input.y;
         controller.Move(move.normalized * speed * Time.deltaTime);
