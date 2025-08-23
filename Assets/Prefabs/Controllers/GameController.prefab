@@ -162,6 +162,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc02f3ee2953c394482f58c330a6a6bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  flowOrder: 000000000100000002000000030000000400000005000000060000000700000008000000
+  autoStartOnAwake: 1
+  phaseFlagPrefix: phase
+  mirrorToDialogueFlags: 1
+  onPhaseEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  onPhaseExited:
+    m_PersistentCalls:
+      m_Calls: []
+  onFlagChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1516915960344644527
 GameObject:
   m_ObjectHideFlags: 0
@@ -1137,6 +1159,7 @@ Transform:
   - {fileID: 2768179172574907827}
   - {fileID: 801601843191711715}
   - {fileID: 3853644774767433764}
+  - {fileID: 4038909174851090052}
   - {fileID: 7641378776891031171}
   - {fileID: 2421628012715641085}
   m_Father: {fileID: 0}
@@ -2005,6 +2028,54 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &6623257214655020004
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4038909174851090052}
+  - component: {fileID: 6358877578257761423}
+  m_Layer: 0
+  m_Name: TimelineController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4038909174851090052
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6623257214655020004}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1018.1009, y: 349.15195, z: -20.69274}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3425256690308988721}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6358877578257761423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6623257214655020004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3734f6bdaddbc274b80fbef0bd86bb7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimelineController
+  phases:
+  - phase: 0
+    asset: {fileID: 11400000, guid: a5654100055ebcc49be1944ed79b5420, type: 2}
+  defaultDirector: {fileID: 0}
 --- !u!1 &6924963409507885683
 GameObject:
   m_ObjectHideFlags: 0

@@ -24,21 +24,28 @@ MonoBehaviour:
   id: Mom_1
   memo: 
   steps:
-  - speaker: fwfwq
+  - displayStepId: 1
+    speaker: fwfwq
     text: 1111111111111
     conditions: []
     autoNext: 0
     autoNextDelay: 0.8
     choices: []
     flagEditsOnEnter: []
-  - speaker: fqfqfwq
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 2
+    speaker: fqfqfwq
     text: 2222222222222222
     conditions: []
     autoNext: 0
     autoNextDelay: 0.8
     choices: []
     flagEditsOnEnter: []
-  - speaker: qwfwq
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 3
+    speaker: qwfwq
     text: 33333333333
     conditions: []
     autoNext: 0
@@ -51,3 +58,7 @@ MonoBehaviour:
       gotoId: 1:Choices2
       conditions: []
     flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  useGoto: 0
+  gotoId: 
