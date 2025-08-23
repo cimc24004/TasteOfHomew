@@ -1,104 +1,129 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using Cysharp.Threading.Tasks;
 
 public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 {
-    public enum StartMode
-    {
-        Single,         // 単純に1つのIDから開始
-        RandomFromList  // 複数IDの中からランダムに1つ
-    }
+    public enum StartMode { Single, RandomFromList }
+    public enum GroupRefMode { ByKey, ByAsset }
 
-    [Title("Mode")]
+    [Title("Group")]
+    [EnumToggleButtons] public GroupRefMode groupRef = GroupRefMode.ByAsset;
+    [ShowIf(nameof(groupRef), GroupRefMode.ByKey)]  [LabelText("Group Key")]   public string groupKey;
+    [ShowIf(nameof(groupRef), GroupRefMode.ByAsset)][LabelText("Group Asset")] public DialogueSequenceGroupAsset groupAsset;
+
+    [Title("Start Mode")]
     [EnumToggleButtons] public StartMode mode = StartMode.Single;
-
-    [ShowIf(nameof(mode), StartMode.Single)]
-    [LabelText("Single ID")]
-    public string singleId;
-
-    [ShowIf(nameof(mode), StartMode.RandomFromList)]
-    [LabelText("候補IDs"), ListDrawerSettings(Expanded = true)]
-    public List<string> candidateIds = new();
+    [ShowIf(nameof(mode), StartMode.Single)]        [LabelText("Sequence ID")] public string singleSequenceId;
+    [ShowIf(nameof(mode), StartMode.RandomFromList)][LabelText("候補 Sequence IDs"), ListDrawerSettings(Expanded = true)]
+    public List<string> candidateSequenceIds = new();
 
     [Title("Options")]
-    [Tooltip("一度だけ起動して以降は無効にする")]
-    public bool once = false;
+    [Tooltip("一度だけ起動して以降は無効にする")] public bool once = false;
+    [Tooltip("このNPCで会話進行中は新たなTalkを無視（推奨）")] public bool blockWhileTalking = true;
 
     private bool consumed = false;
-    public void Interact() => Talk();
+    private bool localBusy = false;
+
+    // IInteractable
+    public void Interact() => Talk().Forget();
     public string GetDisplayText() => "話す";
-    public bool ShouldHighlight() => true;
+    public bool ShouldHighlight() => (!blockWhileTalking || !localBusy) && (!once || !consumed);
 
-    /// <summary>外部（ボタンや他スクリプト）から呼んで会話開始。</summary>
     [Button("Talk()")]
-    public void Talk()
+    public void TalkButton() => Talk().Forget();
+
+    public async UniTaskVoid Talk()
     {
         if (once && consumed) return;
+        if (blockWhileTalking && localBusy) return;
 
-        string id = ResolveId();
-        if (string.IsNullOrWhiteSpace(id))
+        if (!TryResolveGroup(out string gKey))
         {
-            Debug.LogWarning($"{name}: 有効な dialogueId がありません。");
+            Debug.LogWarning($"{name}: Group が未設定です。");
+            return;
+        }
+        string seqId = ResolveSequenceId();
+        if (string.IsNullOrWhiteSpace(seqId))
+        {
+            Debug.LogWarning($"{name}: 有効な sequenceId がありません。");
             return;
         }
 
         var ctrl = DialogueController.instance;
-        if (!ctrl)
+        if (!ctrl) { Debug.LogError("DialogueController.instance が見つかりません。"); return; }
+
+        localBusy = true;
+        try
         {
-            Debug.LogError("DialogueController.Instance が見つかりません。シーンに配置してください。");
-            return;
+            await ctrl.StartDialogueAsync(gKey, seqId);
+            if (once) consumed = true;
         }
-
-        ctrl.StartDialogue(id);
-
-        if (once) consumed = true;
+        finally { localBusy = false; }
     }
 
-    /// <summary>外部からIDを指定して開始したい場合に。</summary>
-    public void TalkWithId(string id)
+    public void TalkWith(string explicitGroupKey, string sequenceId)
+        => TalkWithAsync(explicitGroupKey, sequenceId).Forget();
+
+    private async UniTaskVoid TalkWithAsync(string explicitGroupKey, string sequenceId)
     {
         if (once && consumed) return;
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            Debug.LogWarning($"{name}: TalkWithId に空のIDが渡されました。");
-            return;
-        }
+        if (blockWhileTalking && localBusy) return;
+        if (string.IsNullOrWhiteSpace(explicitGroupKey) || string.IsNullOrWhiteSpace(sequenceId))
+        { Debug.LogWarning($"{name}: TalkWith に不正な引数。"); return; }
+
         var ctrl = DialogueController.instance;
-        if (!ctrl)
+        if (!ctrl) { Debug.LogError("DialogueController.instance が見つかりません。"); return; }
+
+        localBusy = true;
+        try
         {
-            Debug.LogError("DialogueController.Instance が見つかりません。");
-            return;
+            await ctrl.StartDialogueAsync(explicitGroupKey, sequenceId);
+            if (once) consumed = true;
         }
-        ctrl.StartDialogue(id);
-        if (once) consumed = true;
+        finally { localBusy = false; }
     }
 
-    public bool CanTalk => !once || !consumed;
+    // helpers
+    private bool TryResolveGroup(out string resolved)
+    {
+        if (groupRef == GroupRefMode.ByAsset)
+        {
+            if (groupAsset && !string.IsNullOrWhiteSpace(groupAsset.groupKey)) { resolved = groupAsset.groupKey; return true; }
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(groupKey)) { resolved = groupKey; return true; }
+        }
+        resolved = null; return false;
+    }
 
-    /// <summary>モードに応じて開始IDを決定。</summary>
-    private string ResolveId()
+    private string ResolveSequenceId()
     {
         switch (mode)
         {
-            case StartMode.Single:
-                return string.IsNullOrWhiteSpace(singleId) ? null : singleId;
-
+            case StartMode.Single: return string.IsNullOrWhiteSpace(singleSequenceId) ? null : singleSequenceId;
             case StartMode.RandomFromList:
-                if (candidateIds == null || candidateIds.Count == 0) return null;
-
-                // 空でないIDのみ抽出
-                var pool = candidateIds.FindAll(s => !string.IsNullOrWhiteSpace(s));
+                if (candidateSequenceIds == null || candidateSequenceIds.Count == 0) return null;
+                var pool = new List<string>();
+                foreach (var s in candidateSequenceIds) if (!string.IsNullOrWhiteSpace(s)) pool.Add(s);
                 if (pool.Count == 0) return null;
-
-                int idx = Random.Range(0, pool.Count);
-                return pool[idx];
-
-            default:
-                return null;
+                int idx = Random.Range(0, pool.Count); return pool[idx];
         }
+        return null;
     }
 
-    /// <summary>一度きりフラグを解除したい場合に。</summary>
-    public void ResetConsumed() => consumed = false;
+#if UNITY_EDITOR
+    [Button("候補IDsをGroupAssetから反映"), ShowIf(nameof(groupRef), GroupRefMode.ByAsset)]
+    private void FillCandidatesFromGroupAsset()
+    {
+        if (!groupAsset || groupAsset.sequences == null) return;
+        candidateSequenceIds = new List<string>();
+        foreach (var seq in groupAsset.sequences)
+            if (seq && !string.IsNullOrWhiteSpace(seq.id))
+                candidateSequenceIds.Add(seq.id);
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+#endif
 }

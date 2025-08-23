@@ -15,11 +15,13 @@ public class GameStateController : Singleton<GameStateController>
     public GameState gameState;
     private PlayerInput playerInput;
     private PlayerStatus playerStatus;
+    private CMFPSController cMFPSController;
     void Start()
     {
         playerStatus = PlayerStatus.instance;
         this.playerInput = playerStatus.playerInput;
         playerInput.SwitchCurrentActionMap("Player");
+        cMFPSController = CMFPSController.instance;
     }
     public void ActionByModeSelect(GameState game_state, bool cursor_display)
     {
@@ -36,7 +38,7 @@ public class GameStateController : Singleton<GameStateController>
     public void GameplayMode()
     {
         //ゲームをプレイしてるとき
-
+        cMFPSController.UnlockView();
         playerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
         playerInput.actions.FindActionMap("ReadEvent").Disable();
         playerInput.actions.FindActionMap("Player").Enable();
@@ -49,8 +51,8 @@ public class GameStateController : Singleton<GameStateController>
 
     public void MenuOnGamePlayMode(bool visibleCursor)
     {
-        //ゲームプレイ中にメニューを開いたとき
-
+        //ゲームプレイ中にメニューを開いたとき readableEventや dialogue時など
+        cMFPSController.LockView();
         playerInput.actions.FindActionMap("MenuOnGamePlay").Enable();
         playerInput.actions.FindActionMap("Player").Disable();
         playerInput.actions.FindActionMap("ReadEvent").Disable();
@@ -61,6 +63,7 @@ public class GameStateController : Singleton<GameStateController>
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
+        
         EventSystem.current.sendNavigationEvents = false;
     }
 
