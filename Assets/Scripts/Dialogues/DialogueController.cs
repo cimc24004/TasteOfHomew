@@ -21,6 +21,7 @@ public class DialogueController : Singleton<DialogueController>
     private Dictionary<string, Dictionary<string, DialogueSequenceAsset>> _lookup;
 
     [Title("UI")]
+    public GameObject speakerBox;
     public TextMeshProUGUI speakerText;
     public TextMeshProUGUI bodyText;
     public Transform choicesRoot;
@@ -156,7 +157,7 @@ public class DialogueController : Singleton<DialogueController>
 
         _runCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
         var token = _runCts.Token;
-
+        Debug.Log("-------------3-------------");
         try
         {
             ThrowIfStale(runId);
@@ -164,7 +165,7 @@ public class DialogueController : Singleton<DialogueController>
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
             if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
-
+            Debug.Log("-------------5-------------");
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
         catch (OperationCanceledException) { }
@@ -196,6 +197,7 @@ public class DialogueController : Singleton<DialogueController>
 
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
+        Debug.Log("RunSequenceAsync");
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
         {
             Debug.LogWarning($"[DialogueController] '{groupKey}:{seqId}' が見つからない/空です。");
@@ -236,20 +238,27 @@ public class DialogueController : Singleton<DialogueController>
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
 
             // Speaker
+            // RunSequenceAsync 内の Speaker 処理を差し替え
+            // --- ここから ---
             if (speakerText)
             {
                 ThrowIfStale(runId);
-                if (string.IsNullOrWhiteSpace(step.speaker))
-                {
-                    speakerText.text = "";
-                    speakerText.enabled = false;
-                }
-                else
+                bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
+
+                if (speakerBox) speakerBox.SetActive(hasSpeaker);
+
+                if (hasSpeaker)
                 {
                     speakerText.text = step.speaker;
                     speakerText.enabled = true;
                 }
+                else
+                {
+                    speakerText.text = "";
+                    speakerText.enabled = false;
+                }
             }
+            // --- ここまで ---
 
             // 本文タイプ
             await TypeTextAsync(runId, step.text, token);
@@ -383,13 +392,21 @@ public class DialogueController : Singleton<DialogueController>
             dialogueBoxLayout.minHeight = boxRT.rect.height + minHeightPadding;
         }
 
-        // フレーム跨ぎ入力を流す
+        // 入力フラッシュ
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
 
-        int len = full.Length, idx = 0;
+        int len = full.Length;
+        int idx = 0;
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
+
+        // ★ ここで1文字目を即表示
+        if (len > 0)
+        {
+            idx = 1;
+            if (bodyText) bodyText.text = full.Substring(0, 1);
+        }
 
         while (idx < len)
         {
@@ -416,7 +433,6 @@ public class DialogueController : Singleton<DialogueController>
                 lastClickTime = now; // 1発目
             }
 
-            // 文字送り
             float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             acc += dt;
             while (acc >= secPerChar && idx < len)

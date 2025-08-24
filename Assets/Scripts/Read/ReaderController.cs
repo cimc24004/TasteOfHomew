@@ -93,10 +93,8 @@ public class ReaderController : Singleton<ReaderController>
         gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
         PlaySE(_now.closeSE);
         SetActive(false);
-        onClosed?.Invoke();
-
         if (switchUIOnOpenClose && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Player);
-
+        onClosed?.Invoke();
         _now = null;
     }
 

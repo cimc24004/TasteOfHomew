@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8561116493870397881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8632685976361106254}
+  - component: {fileID: 6462423695110775457}
+  - component: {fileID: 8985144431943117536}
+  m_Layer: 0
+  m_Name: MorningPhaseStepController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8632685976361106254
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561116493870397881}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -28.05985, y: -0, z: 26.21983}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6462423695110775457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561116493870397881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ccda15c49c97d448bef1f96ff9dd1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PhaseController
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  phases:
+  - phase: 0
+    startStepKey: 1
+    steps:
+    - key: 1
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents: []
+    - key: 2
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
+      onEnterEvents: []
+    - key: 3
+      objectsToShow: []
+      onEnterEvents: []
+    - key: 4
+      objectsToShow: []
+      onEnterEvents: []
+    - key: 5
+      objectsToShow: []
+      onEnterEvents: []
+  autoStartOnEnable: 1
+  startPhase: 0
+  startStepKey: 
+  hideAllObjectsOnStart: 1
+  hardExclusiveShowAcrossPhases: 1
+  onPhaseEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  onPhaseExited:
+    m_PersistentCalls:
+      m_Calls: []
+  onPhaseChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onStepEntered:
+    m_PersistentCalls:
+      m_Calls: []
+  onStepExited:
+    m_PersistentCalls:
+      m_Calls: []
+  onStepChanged:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &8985144431943117536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561116493870397881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.SignalReceiver
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: 7476693b1b2e2ee488699391e9d1836e, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 6462423695110775457}
+          m_TargetAssemblyTypeName: PhaseStepController, Assembly-CSharp
+          m_MethodName: NextStepEvent
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2

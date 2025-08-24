@@ -19,8 +19,7 @@ public class CrossHairController : Singleton<CrossHairController>
     [SerializeField] private TextMeshProUGUI promptText;
 
     [Title("Animator")]
-    [SerializeField, Required] private Animator crosshairAnimator;
-    private static readonly int HighlightHash = Animator.StringToHash("HighlightCrosshair");
+    private Animator crosshairAnimator;
 
     private bool isHighlight;
     private IInteractable currentInteractable;
@@ -99,7 +98,7 @@ public class CrossHairController : Singleton<CrossHairController>
         isHighlight = on;
         if (crosshairAnimator)
         {
-            crosshairAnimator.SetBool(HighlightHash, isHighlight);
+            crosshairAnimator.SetBool("HighLight", isHighlight);
         }
     }
 }
