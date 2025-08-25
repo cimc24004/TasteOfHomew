@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Events;
 
 public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 {
@@ -22,6 +23,10 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
     [Title("Options")]
     [Tooltip("一度だけ起動して以降は無効にする")] public bool once = false;
     [Tooltip("このNPCで会話進行中は新たなTalkを無視（推奨）")] public bool blockWhileTalking = true;
+
+    [Title("Local Events (このCaller専用)")]
+    public UnityEvent onDialogueStarted;
+    public UnityEvent onDialogueClosed;  // ← 会話が閉じた直後にこのCallerだけで発火
 
     private bool consumed = false;
     private bool localBusy = false;
@@ -57,10 +62,15 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         localBusy = true;
         try
         {
-            await ctrl.StartDialogueAsync(gKey, seqId);
-            if (once) consumed = true;
+            onDialogueStarted?.Invoke();                 // ← このCallerの開始イベント
+            await ctrl.StartDialogueAsync(gKey, seqId);  // （ここが戻ってきたら閉じた合図）
         }
-        finally { localBusy = false; }
+        finally
+        {
+            onDialogueClosed?.Invoke();                  // ← このCallerの終了イベント（常に自分だけ）
+            if (once) consumed = true;
+            localBusy = false;
+        }
     }
 
     public void TalkWith(string explicitGroupKey, string sequenceId)
@@ -79,10 +89,15 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         localBusy = true;
         try
         {
+            onDialogueStarted?.Invoke();
             await ctrl.StartDialogueAsync(explicitGroupKey, sequenceId);
-            if (once) consumed = true;
         }
-        finally { localBusy = false; }
+        finally
+        {
+            onDialogueClosed?.Invoke();
+            if (once) consumed = true;
+            localBusy = false;
+        }
     }
 
     // helpers

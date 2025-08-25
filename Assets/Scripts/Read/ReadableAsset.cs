@@ -15,8 +15,11 @@ public class ReadableAsset : ScriptableObject
     [LabelText("ページ本文(複数)")]
     public List<string> pages = new();
 
-    [LabelText("ページ画像(任意)")]
-    public List<Sprite> pageImages = new(); // pages と同インデックス対応（足りない分はnullでOK）
+    [LabelText("背景画像(任意)")]
+    public List<Sprite> backgroundImages = new(); // pagesと同インデックス対応（足りない分はnullでOK）
+
+    [LabelText("前面画像(任意)")]
+    public List<Sprite> foregroundImages = new(); // pagesと同インデックス対応（足りない分はnullでOK）
 
     [Title("UI/挙動")]
     [LabelText("開いたらゲームを一時停止")]

@@ -39,7 +39,7 @@ public class PhaseStepController : SerializedMonoBehaviour
     public int CurrentStepIndex  => FindStepIndex(CurrentPhaseIndex, CurrentStepKey);
 
     // ===== Unity =====
-    void OnEnable()
+    void Start()
     {
         if (hideAllObjectsOnStart) HideAllObjects();
 
@@ -50,6 +50,7 @@ public class PhaseStepController : SerializedMonoBehaviour
             // Fire-and-forget
             SwitchPhaseAsync(phaseToUse, startStepKey, invokeOldExit: false).Forget();
         }
+        Debug.Log("GameFlowController: " + GameFlowController.instance);
     }
 
     void OnDisable()
@@ -253,10 +254,7 @@ public class PhaseStepController : SerializedMonoBehaviour
     {
         if (list == null) return;
         foreach (var ev in list)
-        {
-            try { ev?.Invoke(); }
-            catch (Exception e) { Debug.LogException(e); }
-        }
+            ev?.Invoke();
     }
 
     private int FindPhaseIndex(GameFlowController.Phase phase)

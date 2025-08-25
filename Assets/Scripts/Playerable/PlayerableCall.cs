@@ -55,14 +55,17 @@ public class PlayerableCall : MonoBehaviour, IInteractable
     void Start()
     {
         if (!flow) flow = GameFlowController.instance;
+        Debug.Log("flow: " + flow);
         if (!playback) playback = TimelinePlayback.instance;
 
     }
     public void Interact()
     {
+        if (!flow) flow = GameFlowController.instance;
+        if (!playback) playback = TimelinePlayback.instance;
         if (once && HasExecuted) return;
         if (!ValidateBasics())   return;
-
+        Debug.Log("Flow: " + flow);
         var current = flow.CurrentPhase;
         if (current != requiredPhase)
         {
@@ -115,16 +118,16 @@ public class PlayerableCall : MonoBehaviour, IInteractable
 
     bool ValidateBasics(bool silent = false)
     {
-        if (!flow)
-        {
-            if (!silent) Debug.LogWarning("[PlayerableCall] GameFlowController 未設定", this);
-            return false;
-        }
-        if (!playback)
-        {
-            if (!silent) Debug.LogWarning("[PlayerableCall] TimelinePlayback 未設定", this);
-            return false;
-        }
+        // if (!flow)
+        // {
+        //     if (!silent) Debug.LogWarning("[PlayerableCall] GameFlowController 未設定", this);
+        //     return false;
+        // }
+        // if (!playback)
+        // {
+        //     if (!silent) Debug.LogWarning("[PlayerableCall] TimelinePlayback 未設定", this);
+        //     return false;
+        // }
         return true;
     }
 }

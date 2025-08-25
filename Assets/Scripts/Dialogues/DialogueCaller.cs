@@ -1,59 +1,57 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using UnityEngine.Events;
+using Cysharp.Threading.Tasks; // ← 重要
 
 /// <summary>
 /// ただ Dialogue を呼び出すだけの軽量コンポーネント。
-/// - インスペクタで Group を「Key or Asset」で指定
-/// - SequenceId を指定
-/// - Call() を叩くと DialogueController に委譲
+/// - グローバルイベントに購読しない（自分の開始/終了のみローカルで発火）
+/// - Call() は同期APIだが内部で非同期実行（await）
 /// </summary>
 public class DialogueCaller : SerializedMonoBehaviour
 {
+    [Title("Local Events (このCaller専用)")]
     [SerializeField] private UnityEvent StartUnityEvent;
     [SerializeField] private UnityEvent EndUnityEvent;
+
     public enum GroupRefMode { ByKey, ByAsset }
 
     [Title("Target")]
     [EnumToggleButtons] public GroupRefMode groupRef = GroupRefMode.ByAsset;
 
     [ShowIf(nameof(groupRef), GroupRefMode.ByKey)]
-    [LabelText("Group Key")]
-    public string groupKey;
+    [LabelText("Group Key")] public string groupKey;
 
     [ShowIf(nameof(groupRef), GroupRefMode.ByAsset)]
-    [LabelText("Group Asset")]
-    public DialogueSequenceGroupAsset groupAsset;
+    [LabelText("Group Asset")] public DialogueSequenceGroupAsset groupAsset;
 
     [LabelText("Sequence ID")]
     public string sequenceId;
-    private DialogueController ctrl;
-    void Start()
-    {
-        ctrl = DialogueController.instance;
-        ctrl.onDialogueEnded.AddListener(StartUnityEvent.Invoke);
-        ctrl.onDialogueStarted.AddListener(EndUnityEvent.Invoke);
-    }
+
+    private bool busy; // 連打防止
+
     // ========= Public API =========
 
-    /// <summary>
-    /// インスペクタの設定を使って会話開始。
-    /// </summary>
     [Button("Call()")]
-    public void Call()
+    public void Call() => CallAsync().Forget();
+
+    private async UniTaskVoid CallAsync()
     {
+        if (busy) return;
+
+        var ctrl = DialogueController.instance;
         if (!ctrl)
         {
-            Debug.LogError("[DialogueCaller] DialogueController.instance が見つかりません。シーンに配置してください。", this);
+            Debug.LogError("[DialogueCaller] DialogueController.instance が見つかりません。", this);
             return;
         }
-
         if (string.IsNullOrWhiteSpace(sequenceId))
         {
             Debug.LogWarning("[DialogueCaller] Sequence ID が未設定です。", this);
             return;
         }
 
+        string keyToUse = null;
         if (groupRef == GroupRefMode.ByAsset)
         {
             if (!groupAsset || string.IsNullOrWhiteSpace(groupAsset.groupKey))
@@ -61,26 +59,44 @@ public class DialogueCaller : SerializedMonoBehaviour
                 Debug.LogWarning("[DialogueCaller] Group Asset が未設定、または groupKey が空です。", this);
                 return;
             }
-            ctrl.StartDialogue(groupAsset.groupKey, sequenceId);
+            keyToUse = groupAsset.groupKey;
         }
         else
         {
-            Debug.Log("StartDialogue-------------------DialogueCaller");
             if (string.IsNullOrWhiteSpace(groupKey))
             {
                 Debug.LogWarning("[DialogueCaller] Group Key が未設定です。", this);
                 return;
             }
-            ctrl.StartDialogue(groupKey, sequenceId);
+            keyToUse = groupKey;
         }
-        StartUnityEvent.Invoke();
+
+        busy = true;
+        try
+        {
+            // この Caller の開始イベント（自分だけ）
+            StartUnityEvent?.Invoke();
+
+            // 自分が投げた会話が「閉じるまで」待つ
+            await ctrl.StartDialogueAsync(keyToUse, sequenceId);
+
+            // この Caller の終了イベント（自分だけ）
+            EndUnityEvent?.Invoke();
+        }
+        finally
+        {
+            busy = false;
+        }
     }
 
-    /// <summary>
-    /// UnityEvent から使いやすいオーバーロード（文字列指定）。
-    /// </summary>
+    // UnityEvent から使いやすいオーバーロード（文字列指定）
     public void CallWith(string explicitGroupKey, string explicitSequenceId)
+        => CallWithAsync(explicitGroupKey, explicitSequenceId).Forget();
+
+    private async UniTaskVoid CallWithAsync(string explicitGroupKey, string explicitSequenceId)
     {
+        if (busy) return;
+
         var ctrl = DialogueController.instance;
         if (!ctrl)
         {
@@ -92,14 +108,28 @@ public class DialogueCaller : SerializedMonoBehaviour
             Debug.LogWarning("[DialogueCaller] CallWith: 引数が不正です。", this);
             return;
         }
-        ctrl.StartDialogue(explicitGroupKey, explicitSequenceId);
+
+        busy = true;
+        try
+        {
+            StartUnityEvent?.Invoke();
+            await ctrl.StartDialogueAsync(explicitGroupKey, explicitSequenceId);
+            EndUnityEvent?.Invoke();
+        }
+        finally
+        {
+            busy = false;
+        }
     }
 
-    /// <summary>
-    /// UnityEvent から使いやすいオーバーロード（アセット指定）。
-    /// </summary>
+    // UnityEvent から使いやすいオーバーロード（アセット指定）
     public void CallWithAsset(DialogueSequenceGroupAsset explicitGroupAsset, string explicitSequenceId)
+        => CallWithAssetAsync(explicitGroupAsset, explicitSequenceId).Forget();
+
+    private async UniTaskVoid CallWithAssetAsync(DialogueSequenceGroupAsset explicitGroupAsset, string explicitSequenceId)
     {
+        if (busy) return;
+
         var ctrl = DialogueController.instance;
         if (!ctrl)
         {
@@ -111,6 +141,17 @@ public class DialogueCaller : SerializedMonoBehaviour
             Debug.LogWarning("[DialogueCaller] CallWithAsset: 引数が不正です。", this);
             return;
         }
-        ctrl.StartDialogue(explicitGroupAsset.groupKey, explicitSequenceId);
+
+        busy = true;
+        try
+        {
+            StartUnityEvent?.Invoke();
+            await ctrl.StartDialogueAsync(explicitGroupAsset.groupKey, explicitSequenceId);
+            EndUnityEvent?.Invoke();
+        }
+        finally
+        {
+            busy = false;
+        }
     }
 }
