@@ -55,10 +55,10 @@ public class GameFlowController : Singleton<GameFlowController>
 
     // ===== 実行時状態 =====
     [ShowInInspector, ReadOnly]
-    public Phase CurrentPhase { get; private set; }
+    public Phase CurrentPhase;
 
     [ShowInInspector, ReadOnly]
-    public int CurrentIndex { get; private set; } = -1;
+    public int CurrentIndex { get; private set; } = 0;
 
     // 内部フラグ管理（参照用）
     private readonly Dictionary<string, bool> _flags = new();
@@ -70,7 +70,6 @@ public class GameFlowController : Singleton<GameFlowController>
     protected override void Awake()
     {
         base.Awake();
-        // flowOrder の重複除去（順序維持）
         DedupFlowOrder();
         if (autoStartOnAwake && flowOrder.Count > 0)
         {
@@ -79,8 +78,8 @@ public class GameFlowController : Singleton<GameFlowController>
     }
 
     // ===== パブリック API =====
+    public void NextPhaseForUnityEvent() => NextPhase();
 
-    /// <summary>次のフェーズへ遷移（最後なら何もしない）。</summary>
     [Button("→ Next Phase")]
     public bool NextPhase()
     {
@@ -92,45 +91,32 @@ public class GameFlowController : Singleton<GameFlowController>
         return true;
     }
 
-    /// <summary>特定フェーズへジャンプ（flowOrder に含まれていなくても遷移可）。</summary>
     [Button("Jump To")]
-    public void JumpTo(Phase target)
-    {
-        SwitchTo(target);
-    }
+    public void JumpTo(Phase target) => SwitchTo(target);
 
-    /// <summary>現在フェーズが flowOrder の最後か。</summary>
     public bool IsLastPhase => flowOrder.Count > 0 && IndexOf(CurrentPhase) == flowOrder.Count - 1;
 
-    /// <summary>任意の内部フラグを立てる/下げる（ブロードキャスト・ミラー込み）。</summary>
     public void SetFlag(string key, bool value)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
 
         _flags[key] = value;
 
-        // UnityEvent
         onFlagChanged?.Invoke(key, value);
-        // C# Event
         FlagChanged?.Invoke(key, value);
 
-        // DialogueController へミラー
         if (mirrorToDialogueFlags && DialogueController.instance)
         {
             DialogueController.instance.SetFlag(key, value);
         }
     }
 
-    /// <summary>フラグ取得（なければ defaultValue）。</summary>
     public bool GetFlag(string key, bool defaultValue = false)
         => _flags.TryGetValue(key, out var v) ? v : defaultValue;
 
-    /// <summary>現在フェーズのフラグ（phase.&lt;name&gt;）を返す。</summary>
-    public string GetCurrentPhaseFlagKey()
-        => MakePhaseFlagKey(CurrentPhase);
+    public string GetCurrentPhaseFlagKey() => MakePhaseFlagKey(CurrentPhase);
 
     // ===== 内部実装 =====
-
     private void SwitchTo(Phase newPhase, bool invokeExitOfOld = true)
     {
         var old = CurrentPhase;
@@ -143,7 +129,6 @@ public class GameFlowController : Singleton<GameFlowController>
         CurrentIndex = IndexOf(newPhase); // flowOrderに無い場合は -1 のまま
 
         // 1) フェーズフラグの更新
-        // 直前のフェーズフラグを false、今回のフェーズフラグを true に。
         if (!string.IsNullOrEmpty(_lastPhaseFlagKey))
             SetFlag(_lastPhaseFlagKey, false);
 
@@ -175,7 +160,6 @@ public class GameFlowController : Singleton<GameFlowController>
         flowOrder = list;
     }
 
-    // ===== 便利ボタン（Editor） =====
 #if UNITY_EDITOR
     [Button("Broadcast sample flags")]
     private void DebugBroadcastSample()
