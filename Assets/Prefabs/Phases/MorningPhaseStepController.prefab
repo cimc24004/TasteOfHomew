@@ -61,21 +61,92 @@ MonoBehaviour:
     - key: 1
       objectsToShow:
       - {fileID: 0}
-      onEnterEvents: []
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: PlayerableCall, Assembly-CSharp
+            m_MethodName: Interact
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
     - key: 2
       objectsToShow:
       - {fileID: 0}
       - {fileID: 0}
       onEnterEvents: []
     - key: 3
-      objectsToShow: []
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
       onEnterEvents: []
     - key: 4
-      objectsToShow: []
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
       onEnterEvents: []
-    - key: 5
+  - phase: 1
+    startStepKey: 1
+    steps:
+    - key: 1
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: PlayerableCall, Assembly-CSharp
+            m_MethodName: Interact
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - key: 2
       objectsToShow: []
-      onEnterEvents: []
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: PlayerableCall, Assembly-CSharp
+            m_MethodName: Interact
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - key: 3
+      objectsToShow: []
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: PlayerableCall, Assembly-CSharp
+            m_MethodName: Interact
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
   autoStartOnEnable: 1
   startPhase: 0
   startStepKey: 
@@ -99,6 +170,8 @@ MonoBehaviour:
   onStepChanged:
     m_PersistentCalls:
       m_Calls: []
+  CurrentPhase: 0
+  CurrentStepKey: 
 --- !u!114 &4507124503214975295
 MonoBehaviour:
   m_ObjectHideFlags: 0

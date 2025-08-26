@@ -27,6 +27,7 @@ public class CollisionOrTriggerEvent : MonoBehaviour
     // ==== Collision ====
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log(collision.gameObject);
         if (string.IsNullOrEmpty(targetTag) || collision.collider.CompareTag(targetTag))
             onEnter?.Invoke();
     }
