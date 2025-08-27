@@ -3,17 +3,19 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Playables;
 using Sirenix.OdinInspector;
-// Unity純正 Timeline を明示（型衝突回避用。必要なら使ってOK）
-// using UTimelineAsset = UnityEngine.Timeline.TimelineAsset;
+// using UTimelineAsset = UnityEngine.Timeline.TimelineAsset; // 必要なら
+// ↑基本は UnityEngine.Timeline.TimelineAsset をそのまま使う
 
 [DisallowMultipleComponent]
 public class TimelinePlayback : Singleton<TimelinePlayback>
 {
+    // ===== Refs =====
     [Title("Refs")]
-    private GameFlowController flow;
-    public TimelineController registry;
-    private PlayableDirector director;
+    [SerializeField] private GameFlowController flow;
+    [SerializeField] public TimelineController registry;
+    [SerializeField] private PlayableDirector director;
 
+    // ===== Play Options =====
     [Title("Play Options")]
     [LabelText("再生時に先頭へ巻き戻す")]
     public bool rewindOnPlay = true;
@@ -24,30 +26,56 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
     [LabelText("RebuildGraphしてから再生")]
     public bool rebuildGraphOnPlay = true;
 
-    // 直近の再生命
+    [LabelText("TimeUpdateMode（GameTime/Unscaled/Manual）")]
+    public DirectorUpdateMode updateMode = DirectorUpdateMode.GameTime;
+
+    [LabelText("Play直前にTime.timeScale=1を強制")]
+    public bool forceTimeScaleOne = false;
+
+    [LabelText("RootPlayableのSpeedを毎回1へリセット")]
+    public bool resetRootSpeed = true;
+
+    [LabelText("Playをnフレ遅らせる（競合回避用）"), Min(0)]
+    public int delayFramesBeforePlay = 0;
+
+    [LabelText("Play直後に自動Pause（必要な人だけON）")]
+    public bool autoPauseAfterPlay = false;
+
+    [ShowIf(nameof(autoPauseAfterPlay)), LabelText("Pauseまでの遅延フレーム数"), Min(0)]
+    public int pauseDelayFrames = 1;
+
+    [LabelText("Play時に状態ログを出す")]
+    public bool logStateOnPlay = false;
+
+    // ===== State =====
     [FoldoutGroup("State"), ShowInInspector, ReadOnly]
     public GameFlowController.Phase LastPhase { get; private set; }
 
     [FoldoutGroup("State"), ShowInInspector, ReadOnly]
     public string LastTimelineId { get; private set; }
 
+    [FoldoutGroup("State"), ShowInInspector, ReadOnly]
+    public bool IsPlaying => director && director.state == PlayState.Playing;
+
     // コールバック（必要なら外部で購読）
     public event Action<string> OnTimelineStarted;
     public event Action<string> OnTimelineStopped;
 
+    // ===== Unity =====
     void Reset()
     {
         if (!flow) flow = GameFlowController.instance;
         if (!registry) registry = TimelineController.instance;
         if (!director) director = GetComponent<PlayableDirector>();
     }
+
     void Start()
     {
         if (!flow) flow = GameFlowController.instance;
         if (!registry) registry = TimelineController.instance;
         if (!director) director = GetComponent<PlayableDirector>();
-
     }
+
     void OnEnable()
     {
         if (director) director.stopped += HandleDirectorStopped;
@@ -63,11 +91,9 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         OnTimelineStopped?.Invoke(LastTimelineId);
     }
 
-    /// <summary>
-    /// 現在のPhaseをキーに、指定IDのTimelineをセット → 再生。
-    /// </summary>
-    /// <param name="timelineId">Phase内で登録したID</param>
-    /// <returns>再生開始できたら true</returns>
+    // ===== Public API =====
+
+    /// <summary> 現在のPhaseからidで再生 </summary>
     [Button(ButtonSizes.Medium), LabelText("Play(CurrentPhase, Id)")]
     public bool Play(string timelineId)
     {
@@ -85,9 +111,7 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         return true;
     }
 
-    /// <summary>
-    /// 明示的にPhaseを指定して再生したい場合のオーバーロード。
-    /// </summary>
+    /// <summary> 明示Phase指定で再生 </summary>
     [Button(ButtonSizes.Medium), LabelText("Play(Phase, Id)")]
     public bool Play(GameFlowController.Phase phase, string timelineId)
     {
@@ -104,7 +128,7 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         return true;
     }
 
-    /// <summary> 再生完了まで待つコルーチン（必要なら使用） </summary>
+    /// <summary> 再生完了まで待機 </summary>
     public IEnumerator PlayAndWait(string timelineId)
     {
         if (!Play(timelineId)) yield break;
@@ -132,9 +156,6 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         if (director) director.Resume();
     }
 
-    [FoldoutGroup("State"), ShowInInspector, ReadOnly]
-    public bool IsPlaying => director && director.state == PlayState.Playing;
-
     // ===== 内部 =====
 
     bool ValidateBasics(bool requireFlow = true)
@@ -150,19 +171,92 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         LastPhase = phase;
         LastTimelineId = id;
 
-        if (rewindOnPlay) director.time = 0;
+        // 設定適用順：Asset→Graph→巻戻し→モード/スピード→Play
         director.extrapolationMode = wrapMode;
         director.playableAsset = asset;
-        if (rebuildGraphOnPlay) director.RebuildGraph();
-        director.Play();
 
-        OnTimelineStarted?.Invoke(id);
+        if (rebuildGraphOnPlay) director.RebuildGraph();
+
+        if (rewindOnPlay) director.time = 0;
+
+        director.timeUpdateMode = updateMode;
+
+        if (forceTimeScaleOne && Application.isPlaying) Time.timeScale = 1f;
+
+        if (resetRootSpeed)
+        {
+            var root = director.playableGraph.GetRootPlayable(0);
+            if (root.IsValid()) root.SetSpeed(1);
+        }
+
+        if (logStateOnPlay) LogStateInternal("[Play] before");
+
+        if (delayFramesBeforePlay > 0 && Application.isPlaying)
+            StartCoroutine(Co_PlayDelayed());
+        else
+            DoPlay();
+
+        // 自動Pauseを使う人向け
+        if (autoPauseAfterPlay && Application.isPlaying)
+            StartCoroutine(Co_PauseAfterFrames(pauseDelayFrames));
     }
 
-    // Odin用の簡易テストUI
+    IEnumerator Co_PlayDelayed()
+    {
+        for (int i = 0; i < delayFramesBeforePlay; i++) yield return null;
+        DoPlay();
+    }
+
+    void DoPlay()
+    {
+        director.Play();
+        OnTimelineStarted?.Invoke(LastTimelineId);
+        if (logStateOnPlay) LogStateInternal("[Play] after");
+    }
+
+    IEnumerator Co_PauseAfterFrames(int frames)
+    {
+        for (int i = 0; i < Mathf.Max(0, frames); i++) yield return null;
+        if (IsPlaying) director.Pause();
+    }
+
+    // ===== Debug / Odin =====
     [FoldoutGroup("Debug"), LabelText("テストID")]
     public string debugId;
 
     [FoldoutGroup("Debug"), Button(ButtonSizes.Medium)]
-    public void DebugPlay() => Play(debugId);
+    public void DebugPlay_CurrentPhase() => Play(debugId);
+
+    [FoldoutGroup("Debug"), Button(ButtonSizes.Medium)]
+    public void DebugPlay_PauseResume()
+    {
+        if (Play(debugId))
+        {
+            StartCoroutine(Co_DebugPauseResume());
+        }
+    }
+
+    IEnumerator Co_DebugPauseResume()
+    {
+        // 0.5秒後にPause → 0.5秒後にResume
+        yield return null; yield return null;
+        Pause();
+        yield return new WaitForSeconds(0.5f);
+        Resume();
+    }
+
+    [FoldoutGroup("Debug"), Button(ButtonSizes.Small)]
+    public void LogState() => LogStateInternal("[Manual Log]");
+
+    void LogStateInternal(string tag)
+    {
+        if (!director)
+        {
+            Debug.Log($"{tag} director=null");
+            return;
+        }
+        var root = director.playableGraph.GetRootPlayable(0);
+        var spd = root.IsValid() ? root.GetSpeed() : double.NaN;
+        Debug.Log($"{tag} state={director.state} time={director.time:F3} mode={director.timeUpdateMode} timescale={Time.timeScale} speed={spd}");
+    }
 }

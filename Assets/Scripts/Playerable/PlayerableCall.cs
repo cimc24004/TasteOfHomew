@@ -72,7 +72,7 @@ public class PlayerableCall : MonoBehaviour, IInteractable
             onPhaseMismatch?.Invoke();
             return;
         }
-
+        Debug.Log("playback: " + playback);
         // 再生
         var ok = playback.Play(requiredPhase, timelineId);
         if (!ok)
