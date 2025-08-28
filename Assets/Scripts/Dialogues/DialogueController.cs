@@ -56,6 +56,23 @@ public class DialogueController : Singleton<DialogueController>
     [SerializeField] private UISwitcher uiSwitcher;
     [SerializeField] private bool switchUIOnStartAndEnd = true;
 
+    // ==== 入力ポーズ / レイキャスト停止 ====
+    [Title("Input Lock")]
+    [SerializeField] private bool _pauseAdvanceInput = false;
+
+    [Tooltip("このCanvas(または親Canvas)のGraphicRaycaster。Pause中にOFFにしてクリックを通す")]
+    [SerializeField] private GraphicRaycaster dialogueRaycaster;
+
+    /// <summary>クリック/スキップによる進行を一時停止/再開し、レイキャストも切り替える。</summary>
+    public void PauseAdvance(bool pause = true)
+    {
+        _pauseAdvanceInput = pause;
+        if (dialogueRaycaster) dialogueRaycaster.enabled = !pause;
+    }
+
+    /// <summary>現在ポーズ中かどうか。</summary>
+    public bool IsAdvancePaused => _pauseAdvanceInput;
+
     // ==== 内部 ====
     private PlayerInput playerInput;
     private InputAction advanceAction, skipAction, cancelAction;
@@ -70,14 +87,14 @@ public class DialogueController : Singleton<DialogueController>
     private int _nextRunId = 1;
 
     private const int MaxGotoHops = 64;        // ループ保護
-    private static readonly char[] _groupSep = { ':', '/', '@' }; // グループ区切り（#は除外）
-    private const char _stepSep = '#';         // ステップ区切り
+    private static readonly char[] _groupSep = { ':', '/', '@' };
+    private const char _stepSep = '#';
 
-    void OnValidate() { RebuildLookup(); }     // ★ Awakeでは呼ばない
+    void OnValidate() { RebuildLookup(); }
 
     void Start()
     {
-        RebuildLookup();                       // ★ Startで構築（要望どおり）
+        RebuildLookup();
 
         if (speakerText) speakerText.text = "";
         if (bodyText) bodyText.text = "";
@@ -99,10 +116,17 @@ public class DialogueController : Singleton<DialogueController>
         {
             Debug.LogWarning("[DialogueController] PlayerInput が見つかりません。");
         }
+
+        // 未割当に保険：同階層 or 親から探す
+        if (!dialogueRaycaster)
+        {
+            dialogueRaycaster = GetComponent<GraphicRaycaster>();
+            if (!dialogueRaycaster)
+                dialogueRaycaster = GetComponentInParent<GraphicRaycaster>();
+        }
     }
 
     void OnDisable() { StopCurrent(); }
-
     [Button("Rebuild Lookup")]
     public void RebuildLookup()
     {
@@ -116,7 +140,7 @@ public class DialogueController : Singleton<DialogueController>
             if (!_lookup.TryGetValue(group.groupKey, out var map))
             {
                 map = new Dictionary<string, DialogueSequenceAsset>(StringComparer.Ordinal);
-                _lookup[group.groupKey] = map;
+                _lookup[group.groupKey] = map; // ← ★ここを修正（名前付き引数をやめる）
             }
 
             if (group.sequences != null)
@@ -124,7 +148,7 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var seq in group.sequences)
                 {
                     if (!seq || string.IsNullOrWhiteSpace(seq.id)) continue;
-                    map[seq.id] = seq; // 後勝ち（被らない想定）
+                    map[seq.id] = seq; // 後勝ち
                 }
             }
         }
@@ -157,7 +181,7 @@ public class DialogueController : Singleton<DialogueController>
 
         _runCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
         var token = _runCts.Token;
-        Debug.Log("-------------3-------------");
+
         try
         {
             ThrowIfStale(runId);
@@ -165,7 +189,7 @@ public class DialogueController : Singleton<DialogueController>
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
             if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
-            Debug.Log("-------------5-------------");
+
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
         catch (OperationCanceledException) { }
@@ -184,7 +208,7 @@ public class DialogueController : Singleton<DialogueController>
 
     public void StopCurrent()
     {
-        _runId = _nextRunId++; // 旧ランはUI更新禁止
+        _runId = _nextRunId++;
         if (_runCts != null && !_runCts.IsCancellationRequested) _runCts.Cancel();
         CleanupUI();
     }
@@ -197,7 +221,6 @@ public class DialogueController : Singleton<DialogueController>
 
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
-        Debug.Log("RunSequenceAsync");
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
         {
             Debug.LogWarning($"[DialogueController] '{groupKey}:{seqId}' が見つからない/空です。");
@@ -211,11 +234,11 @@ public class DialogueController : Singleton<DialogueController>
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
 
-            var step = seq.steps[i]; // ★ このステップの“自動ID”は i+1
+            var step = seq.steps[i];
 
             if (!CheckConditions(step.conditions)) continue;
 
-            // ---- Step-level immediate goto（このステップに来た瞬間ジャンプ）----
+            // 即時goto
             if (hop < MaxGotoHops && step.useStepGoto && !string.IsNullOrWhiteSpace(step.stepGotoId))
             {
                 if (!TryParseTarget(step.stepGotoId.Trim(), groupKey, out string ng, out string ns, out int nStep))
@@ -232,14 +255,12 @@ public class DialogueController : Singleton<DialogueController>
                 return;
             }
 
-            // ステップ入場時フラグ編集
+            // 入場フラグ
             if (step.flagEditsOnEnter != null)
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
 
             // Speaker
-            // RunSequenceAsync 内の Speaker 処理を差し替え
-            // --- ここから ---
             if (speakerText)
             {
                 ThrowIfStale(runId);
@@ -258,7 +279,6 @@ public class DialogueController : Singleton<DialogueController>
                     speakerText.enabled = false;
                 }
             }
-            // --- ここまで ---
 
             // 本文タイプ
             await TypeTextAsync(runId, step.text, token);
@@ -269,7 +289,7 @@ public class DialogueController : Singleton<DialogueController>
             {
                 string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
                 ThrowIfStale(runId);
-                if (gotoRaw == null) return; // キャンセル
+                if (gotoRaw == null) return;
 
                 if (!TryParseTarget(gotoRaw.Trim(), groupKey, out string ng, out string ns, out int nStep))
                 {
@@ -283,7 +303,7 @@ public class DialogueController : Singleton<DialogueController>
                 }
 
                 await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
-                return; // 分岐先から戻らない
+                return;
             }
             else
             {
@@ -303,21 +323,6 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     // ===== Target 解析 =====
-    // 同グループ・先頭ステップ："Seq"
-
-    // 同グループ・nステップ目："Seq:n"
-
-    // 別グループ・先頭ステップ："Group:Seq"
-
-    // 別グループ・nステップ目："Group:Seq:n"
-    // 同グループの 3 ステップ目へ：
-    // gotoId = "intro:3"
-
-    // 別グループの 1 ステップ目へ：
-    // gotoId = "MomEvent:intro"
-
-    // 別グループの 5 ステップ目へ：
-    // gotoId = "FriendTalk:greet:5"
     private bool TryParseTarget(string raw, string currentGroup, out string group, out string seq, out int stepId)
     {
         group = currentGroup;
@@ -326,19 +331,16 @@ public class DialogueController : Singleton<DialogueController>
 
         if (string.IsNullOrWhiteSpace(raw)) return false;
 
-        var tokens = raw.Split(':'); // 1〜3個を想定
+        var tokens = raw.Split(':');
         for (int i = 0; i < tokens.Length; i++) tokens[i] = tokens[i].Trim();
 
         if (tokens.Length == 1)
         {
-            // "Seq"
             seq = tokens[0];
             return !string.IsNullOrWhiteSpace(seq);
         }
         else if (tokens.Length == 2)
         {
-            // 曖昧ケース: "Seq:n" か "Group:Seq"
-            // 2番目が整数なら "Seq:n" とみなす。それ以外は "Group:Seq"
             if (int.TryParse(tokens[1], out var n) && n >= 1)
             {
                 seq = tokens[0];
@@ -354,12 +356,10 @@ public class DialogueController : Singleton<DialogueController>
         }
         else if (tokens.Length >= 3)
         {
-            // "Group:Seq:n"（3個以上来たら先頭2つを Group/Seq、最後を n とみなす）
             group = tokens[0];
             seq = tokens[1];
 
-            // 末尾（tokens[^1]）が整数なら step、違えば 1
-            if (int.TryParse(tokens[tokens.Length - 1], out var n) && n >= 1)
+            if (int.TryParse(tokens[^1], out var n) && n >= 1)
                 stepId = n;
 
             return !string.IsNullOrWhiteSpace(group) && !string.IsNullOrWhiteSpace(seq);
@@ -367,6 +367,7 @@ public class DialogueController : Singleton<DialogueController>
 
         return false;
     }
+
     // ===== Lookup =====
     private bool TryGetSequence(string groupKey, string seqId, out DialogueSequenceAsset asset)
     {
@@ -383,7 +384,6 @@ public class DialogueController : Singleton<DialogueController>
         string full = content ?? "";
         if (bodyText) bodyText.text = "";
 
-        // レイアウト高さロック
         RectTransform boxRT = null;
         if (lockHeightWhileTyping && dialogueBoxLayout)
         {
@@ -392,7 +392,6 @@ public class DialogueController : Singleton<DialogueController>
             dialogueBoxLayout.minHeight = boxRT.rect.height + minHeightPadding;
         }
 
-        // 入力フラッシュ
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
 
@@ -401,7 +400,6 @@ public class DialogueController : Singleton<DialogueController>
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
 
-        // ★ ここで1文字目を即表示
         if (len > 0)
         {
             idx = 1;
@@ -413,24 +411,26 @@ public class DialogueController : Singleton<DialogueController>
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
 
-            // 押しっぱスキップ
-            if (skipAction != null && skipAction.IsPressed())
+            // ポーズ中は全文表示/スキップ無効
+            if (!_pauseAdvanceInput)
             {
-                if (bodyText) bodyText.text = full;
-                break;
-            }
-
-            // ダブルクリック全文表示
-            if (advanceAction != null && advanceAction.triggered)
-            {
-                float now = Now;
-                if (now - lastClickTime <= doubleClickSeconds)
+                if (skipAction != null && skipAction.IsPressed())
                 {
                     if (bodyText) bodyText.text = full;
-                    lastClickTime = now;
                     break;
                 }
-                lastClickTime = now; // 1発目
+
+                if (advanceAction != null && advanceAction.triggered)
+                {
+                    float now = Now;
+                    if (now - lastClickTime <= doubleClickSeconds)
+                    {
+                        if (bodyText) bodyText.text = full;
+                        lastClickTime = now;
+                        break;
+                    }
+                    lastClickTime = now;
+                }
             }
 
             float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
@@ -446,7 +446,6 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
         }
 
-        // 高さロック解除
         if (lockHeightWhileTyping && dialogueBoxLayout)
         {
             dialogueBoxLayout.minHeight = 0f;
@@ -468,9 +467,10 @@ public class DialogueController : Singleton<DialogueController>
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
 
-            if (advanceAction != null && advanceAction.triggered)
+            // ポーズ中はadvance無視
+            if (!_pauseAdvanceInput && advanceAction != null && advanceAction.triggered)
             {
-                lastClickTime = Now; // 次行のダブル1発目
+                lastClickTime = Now;
                 return;
             }
 
@@ -507,10 +507,10 @@ public class DialogueController : Singleton<DialogueController>
         string result = null; bool clicked = false;
         foreach (var (ch, btn) in usable)
         {
-            string nextId = ch.gotoId; // "Seq" / "Seq#3" / "Group:Seq" / "Group:Seq#3"
+            string nextId = ch.gotoId;
             btn.onClick.AddListener(() =>
             {
-                if (_runId != runId) return; // stale無視
+                if (_runId != runId) return;
                 result = nextId;
                 clicked = true;
             });
@@ -549,6 +549,10 @@ public class DialogueController : Singleton<DialogueController>
         if (speakerText) { speakerText.text = ""; speakerText.enabled = false; }
         if (bodyText) bodyText.text = "";
         lastClickTime = -999f;
+
+        // 念のため元に戻す
+        if (dialogueRaycaster && !dialogueRaycaster.enabled)
+            dialogueRaycaster.enabled = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
