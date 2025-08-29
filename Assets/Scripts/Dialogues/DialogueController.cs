@@ -21,9 +21,14 @@ public class DialogueController : Singleton<DialogueController>
     private Dictionary<string, Dictionary<string, DialogueSequenceAsset>> _lookup;
 
     [Title("UI")]
+    [Tooltip("スピーカー名を包むボックス（スピーカーが空なら非表示）")]
     public GameObject speakerBox;
     public TextMeshProUGUI speakerText;
+
+    [Tooltip("本文を包むボックス（本文が空なら非表示）")]
+    public GameObject dialogueBox;
     public TextMeshProUGUI bodyText;
+
     public Transform choicesRoot;
     public Button choiceButtonPrefab;
 
@@ -38,11 +43,6 @@ public class DialogueController : Singleton<DialogueController>
 
     [Title("Double Click")]
     public float doubleClickSeconds = 0.30f;
-
-    [Title("Layout Stabilizer")]
-    [SerializeField] private LayoutElement dialogueBoxLayout;
-    [SerializeField] private float minHeightPadding = 4f;
-    [SerializeField] private bool lockHeightWhileTyping = true;
 
     [Title("Flags (条件/演出分岐用)")]
     [OdinSerialize, DictionaryDrawerSettings(KeyLabel = "Key", ValueLabel = "Value")]
@@ -69,8 +69,6 @@ public class DialogueController : Singleton<DialogueController>
         _pauseAdvanceInput = pause;
         if (dialogueRaycaster) dialogueRaycaster.enabled = !pause;
     }
-
-    /// <summary>現在ポーズ中かどうか。</summary>
     public bool IsAdvancePaused => _pauseAdvanceInput;
 
     // ==== 内部 ====
@@ -86,8 +84,7 @@ public class DialogueController : Singleton<DialogueController>
     private int _runId = 0;
     private int _nextRunId = 1;
 
-    private const int MaxGotoHops = 64;        // ループ保護
-    private static readonly char[] _groupSep = { ':', '/', '@' };
+    private const int MaxGotoHops = 64; // ループ保護
     private const char _stepSep = '#';
 
     void OnValidate() { RebuildLookup(); }
@@ -98,6 +95,8 @@ public class DialogueController : Singleton<DialogueController>
 
         if (speakerText) speakerText.text = "";
         if (bodyText) bodyText.text = "";
+        if (speakerBox) speakerBox.SetActive(false);
+        if (dialogueBox) dialogueBox.SetActive(false);
 
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
@@ -117,7 +116,6 @@ public class DialogueController : Singleton<DialogueController>
             Debug.LogWarning("[DialogueController] PlayerInput が見つかりません。");
         }
 
-        // 未割当に保険：同階層 or 親から探す
         if (!dialogueRaycaster)
         {
             dialogueRaycaster = GetComponent<GraphicRaycaster>();
@@ -127,6 +125,7 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     void OnDisable() { StopCurrent(); }
+
     [Button("Rebuild Lookup")]
     public void RebuildLookup()
     {
@@ -140,7 +139,7 @@ public class DialogueController : Singleton<DialogueController>
             if (!_lookup.TryGetValue(group.groupKey, out var map))
             {
                 map = new Dictionary<string, DialogueSequenceAsset>(StringComparer.Ordinal);
-                _lookup[group.groupKey] = map; // ← ★ここを修正（名前付き引数をやめる）
+                _lookup[group.groupKey] = map;
             }
 
             if (group.sequences != null)
@@ -260,12 +259,11 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
 
-            // Speaker
+            // Speaker 表示切替
             if (speakerText)
             {
                 ThrowIfStale(runId);
                 bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
-
                 if (speakerBox) speakerBox.SetActive(hasSpeaker);
 
                 if (hasSpeaker)
@@ -279,6 +277,10 @@ public class DialogueController : Singleton<DialogueController>
                     speakerText.enabled = false;
                 }
             }
+
+            // 本文（空ならボックスを隠す）
+            bool hasBody = !string.IsNullOrWhiteSpace(step.text);
+            if (dialogueBox) dialogueBox.SetActive(hasBody);
 
             // 本文タイプ
             await TypeTextAsync(runId, step.text, token);
@@ -382,14 +384,17 @@ public class DialogueController : Singleton<DialogueController>
     private async UniTask TypeTextAsync(int runId, string content, CancellationToken token)
     {
         string full = content ?? "";
+        bool hasBody = !string.IsNullOrWhiteSpace(full);
+
+        // 本文ボックスの表示/非表示を最初に確定
+        if (dialogueBox) dialogueBox.SetActive(hasBody);
+
         if (bodyText) bodyText.text = "";
 
-        RectTransform boxRT = null;
-        if (lockHeightWhileTyping && dialogueBoxLayout)
+        // テキストが空なら即終了
+        if (!hasBody)
         {
-            boxRT = (RectTransform)dialogueBoxLayout.transform;
-            Canvas.ForceUpdateCanvases();
-            dialogueBoxLayout.minHeight = boxRT.rect.height + minHeightPadding;
+            return;
         }
 
         await UniTask.Yield(PlayerLoopTiming.Update, token);
@@ -400,6 +405,7 @@ public class DialogueController : Singleton<DialogueController>
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
 
+        // 最初の1文字（任意）
         if (len > 0)
         {
             idx = 1;
@@ -411,7 +417,6 @@ public class DialogueController : Singleton<DialogueController>
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
 
-            // ポーズ中は全文表示/スキップ無効
             if (!_pauseAdvanceInput)
             {
                 if (skipAction != null && skipAction.IsPressed())
@@ -445,12 +450,6 @@ public class DialogueController : Singleton<DialogueController>
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
-
-        if (lockHeightWhileTyping && dialogueBoxLayout)
-        {
-            dialogueBoxLayout.minHeight = 0f;
-            if (boxRT) LayoutRebuilder.ForceRebuildLayoutImmediate(boxRT);
-        }
     }
 
     // ===== Wait / Delay =====
@@ -467,7 +466,6 @@ public class DialogueController : Singleton<DialogueController>
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
 
-            // ポーズ中はadvance無視
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.triggered)
             {
                 lastClickTime = Now;
@@ -546,11 +544,15 @@ public class DialogueController : Singleton<DialogueController>
     private void CleanupUI()
     {
         ClearChoices();
+
         if (speakerText) { speakerText.text = ""; speakerText.enabled = false; }
-        if (bodyText) bodyText.text = "";
+        if (bodyText) { bodyText.text = ""; }
+
+        if (speakerBox) speakerBox.SetActive(false);
+        if (dialogueBox) dialogueBox.SetActive(false);
+
         lastClickTime = -999f;
 
-        // 念のため元に戻す
         if (dialogueRaycaster && !dialogueRaycaster.enabled)
             dialogueRaycaster.enabled = true;
     }

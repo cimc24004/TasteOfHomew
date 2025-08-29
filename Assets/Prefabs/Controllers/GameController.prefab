@@ -419,6 +419,9 @@ MonoBehaviour:
   onQuizCompleted:
     m_PersistentCalls:
       m_Calls: []
+  onAllQuestionsAnswered:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!82 &1124011574669436535
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2080,6 +2083,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 44dc11c0dc1959b48b917e6e7b939afe, type: 2}
   speakerBox: {fileID: 3215270681134105835}
   speakerText: {fileID: 5619709962969265680}
+  dialogueBox: {fileID: 4118783511037974046}
   bodyText: {fileID: 1889503752317035665}
   choicesRoot: {fileID: 2641068526899358684}
   choiceButtonPrefab: {fileID: 7867395011094477198, guid: 8f3fde3e9cdc04b4b8f9067818f57494, type: 3}
@@ -2089,9 +2093,6 @@ MonoBehaviour:
   skipActionName: Skip
   cancelActionName: Cancel
   doubleClickSeconds: 1
-  dialogueBoxLayout: {fileID: 0}
-  minHeightPadding: 4
-  lockHeightWhileTyping: 1
   onDialogueStarted:
     m_PersistentCalls:
       m_Calls: []

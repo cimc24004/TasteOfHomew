@@ -29,22 +29,25 @@ public class HomeworkQuizController : MonoBehaviour
     [SerializeField] private AudioClip defaultWrongSfx;
 
     [Header("進行")]
-    [SerializeField] private bool autoProceedNext = true;
+    [SerializeField] private bool autoProceedNext = true;         // 最終問以外は次の問題へ
     [SerializeField, Min(0f)] private float proceedDelaySeconds = 0.6f;
 
     [Header("クリック時の挙動")]
     [Tooltip("true: 押した瞬間に全ての選択肢ボタンを非表示 / false: 押したボタンだけ非表示")]
     [SerializeField] private bool hideAllChoicesOnClick = true;
 
-    [Header("既存のクリック受け（必ずInspectorでアサイン）")]
+    [Header("既存のクリック受け（Inspectorでアサイン）")]
     [SerializeField] private Button revealClickCatcher;  // 透明フルスクリーンの既存Button
 
     [Header("Events")]
     public UnityEvent onQuizStarted;
     public UnityEvent<int> onQuestionStarted;            // (index)
     public UnityEvent<int, bool> onAnswered;             // (index, isCorrect)
-    public UnityEvent onQuizCompleted;
+    public UnityEvent onQuizCompleted;                   // 互換用（従来イベント）
+    [Tooltip("全ての問題に回答し終えた瞬間に発火（即クローズ後）")]
+    public UnityEvent onAllQuestionsAnswered;            // ★ 追加
 
+    // 内部
     private int currentIndex = -1;
     private readonly List<Button> spawned = new();
 
@@ -91,10 +94,11 @@ public class HomeworkQuizController : MonoBehaviour
     private async UniTask NextQuestionAsync()
     {
         currentIndex++;
+
+        // 全問終わっていれば即終了（保険）
         if (currentIndex >= questions.Count)
         {
-            ShowPanel(false);
-            onQuizCompleted?.Invoke();
+            CompleteQuiz();
             return;
         }
 
@@ -116,7 +120,7 @@ public class HomeworkQuizController : MonoBehaviour
             await dlg.StartDialogueAsync(questionGroupKey, q.questionSequenceId);
         }
 
-        // ② 「正解は……？」を固定表示（ダイアログの進行は止める）
+        // ② 「正解は……？」を固定表示（ダイアログ進行は止める）
         if (dlg != null && !string.IsNullOrWhiteSpace(prelineGroupKey) && !string.IsNullOrWhiteSpace(prelineSequenceId))
         {
             dlg.PauseAdvance(true);                               // advance/skip無効。UIはそのまま。
@@ -220,14 +224,35 @@ public class HomeworkQuizController : MonoBehaviour
             dlg.StopCurrent();
         }
 
-        // 5) 次へ
-        if (autoProceedNext) Proceed().Forget();
+        // 5) 最終問なら即クローズ＆イベント、そうでなければ次へ
+        bool isLast = (currentIndex == questions.Count - 1);
+        if (isLast)
+        {
+            CompleteQuiz();               // ← 全問回答の瞬間に閉じてイベント発火
+        }
+        else if (autoProceedNext)
+        {
+            Proceed().Forget();
+        }
     }
 
     private async UniTaskVoid Proceed()
     {
         await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, proceedDelaySeconds)));
         await NextQuestionAsync();
+    }
+
+    private void CompleteQuiz()
+    {
+        // クリック受けを確実にOFF
+        if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
+
+        // UIクローズ
+        ShowPanel(false);
+
+        // イベント発火（新しい方を先に、互換の onQuizCompleted も呼ぶ）
+        onAllQuestionsAnswered?.Invoke();  // ★ 新イベント
+        onQuizCompleted?.Invoke();         // 既存イベント
     }
 
     private void ClearChoices()
@@ -244,7 +269,7 @@ public class HomeworkQuizController : MonoBehaviour
         if (!panelRoot) return;
         panelRoot.SetActive(show);
 
-        // ついでにクリック受けも揃える
+        // パネルOFF時はクリック受けもOFF
         if (!show && revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
     }
 }
