@@ -114,7 +114,7 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
 
         // 5) URP Volume
         if (p.applyVolume && globalVolume && p.volumeProfile)
-            globalVolume.profile = p.volumeProfile;
+            globalVolume.sharedProfile  = p.volumeProfile;
 
         // 6) 環境反映（Skybox/Ambient）
         DynamicGI.UpdateEnvironment();

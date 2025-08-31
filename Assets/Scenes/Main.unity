@@ -1875,7 +1875,7 @@ Light:
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_ColorTemperature: 10708
+  m_ColorTemperature: 9093
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
@@ -3023,6 +3023,7 @@ GameObject:
   m_Component:
   - component: {fileID: 832575519}
   - component: {fileID: 832575518}
+  - component: {fileID: 832575520}
   m_Layer: 0
   m_Name: Global Volume
   m_TagString: Untagged
@@ -3046,7 +3047,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
+  sharedProfile: {fileID: 11400000, guid: d28ebceec5e164d4099319ff81629b0c, type: 2}
 --- !u!4 &832575519
 Transform:
   m_ObjectHideFlags: 0
@@ -3062,6 +3063,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &832575520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 832575517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b900b6d691ae49f8a12753b63b449e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::Beautify.Universal.BeautifySettings
+  sun: {fileID: 410087041}
+  depthOfFieldTarget: {fileID: 0}
 --- !u!1 &839802621
 GameObject:
   m_ObjectHideFlags: 0
@@ -3895,7 +3910,7 @@ MonoBehaviour:
     SerializationNodes: []
   applyOnEnable: 1
   initialTime: 0
-  globalVolume: {fileID: 0}
+  globalVolume: {fileID: 832575518}
   morning:
     activeRoots:
     - {fileID: 410087039}
@@ -3935,8 +3950,8 @@ MonoBehaviour:
     fogDensity: 0.02
     fogStart: 0
     fogEnd: 30
-    applyVolume: 0
-    volumeProfile: {fileID: 0}
+    applyVolume: 1
+    volumeProfile: {fileID: 11400000, guid: 5618a8bec133bd0458259b65e87a3eda, type: 2}
   previewSelection: 0
 --- !u!4 &981418052
 Transform:
@@ -8169,6 +8184,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 3946771529415278672, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
+    - target: {fileID: 4283928938586729049, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.183
+      objectReference: {fileID: 0}
     - target: {fileID: 4700686191314088665, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.5
@@ -8461,19 +8480,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7190868
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.6949203
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -8481,7 +8500,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -88.042
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 2904514605794335626, guid: 33a3321efab252b45afaa0cb4dbd7014, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
