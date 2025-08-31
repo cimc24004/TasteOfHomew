@@ -34,8 +34,14 @@ public class GameFlowController : Singleton<GameFlowController>
         Phase.MotherReturn, Phase.Absence, Phase.Outside, Phase.Shed, Phase.End
     };
 
-    [Tooltip("Awake時に最初のフェーズへ遷移する")]
+    [Tooltip("Awake時に開始する（falseなら手動で呼んでね）")]
     public bool autoStartOnAwake = true;
+
+    [Tooltip("Awake時の開始フェーズ（preferStartPhase が true ならこちらを優先）")]
+    public Phase startPhase = Phase.Morning;
+
+    [Tooltip("flowOrder[0] ではなく startPhase を優先して開始する")]
+    public bool preferStartPhase = true;
 
     [Tooltip("ブロードキャストするフラグ名の接頭辞（phase.XXX）")]
     public string phaseFlagPrefix = "phase";
@@ -70,19 +76,24 @@ public class GameFlowController : Singleton<GameFlowController>
     protected override void Awake()
     {
         base.Awake();
-        // flowOrder の重複除去（順序維持）
         DedupFlowOrder();
-        if (autoStartOnAwake && flowOrder.Count > 0)
+
+        if (autoStartOnAwake)
         {
-            SwitchTo(flowOrder[0], invokeExitOfOld:false);
+            // preferStartPhase が true なら startPhase を使う。
+            // false なら flowOrder[0] を優先（空なら保険で startPhase）。
+            Phase first =
+                preferStartPhase ? startPhase :
+                (flowOrder.Count > 0 ? flowOrder[0] : startPhase);
+
+            // 初回は Exit を発火しない
+            SwitchTo(first, invokeExitOfOld: false);
         }
     }
 
     // ===== パブリック API =====
-    public void NextPhaseForUnityEvent()
-    {
-        NextPhase();
-    }
+    public void NextPhaseForUnityEvent() => NextPhase();
+
     /// <summary>次のフェーズへ遷移（最後なら何もしない）。</summary>
     [Button("→ Next Phase")]
     public bool NextPhase()
@@ -97,10 +108,11 @@ public class GameFlowController : Singleton<GameFlowController>
 
     /// <summary>特定フェーズへジャンプ（flowOrder に含まれていなくても遷移可）。</summary>
     [Button("Jump To")]
-    public void JumpTo(Phase target)
-    {
-        SwitchTo(target);
-    }
+    public void JumpTo(Phase target) => SwitchTo(target);
+
+    /// <summary>インスペクタの startPhase から開始したいとき用のボタン。</summary>
+    [Button("Start From 'startPhase'")]
+    private void StartFromStartPhase() => SwitchTo(startPhase, invokeExitOfOld: false);
 
     /// <summary>現在フェーズが flowOrder の最後か。</summary>
     public bool IsLastPhase => flowOrder.Count > 0 && IndexOf(CurrentPhase) == flowOrder.Count - 1;
@@ -129,11 +141,9 @@ public class GameFlowController : Singleton<GameFlowController>
         => _flags.TryGetValue(key, out var v) ? v : defaultValue;
 
     /// <summary>現在フェーズのフラグ（phase.&lt;name&gt;）を返す。</summary>
-    public string GetCurrentPhaseFlagKey()
-        => MakePhaseFlagKey(CurrentPhase);
+    public string GetCurrentPhaseFlagKey() => MakePhaseFlagKey(CurrentPhase);
 
     // ===== 内部実装 =====
-
     private void SwitchTo(Phase newPhase, bool invokeExitOfOld = true)
     {
         var old = CurrentPhase;
@@ -146,7 +156,6 @@ public class GameFlowController : Singleton<GameFlowController>
         CurrentIndex = IndexOf(newPhase); // flowOrderに無い場合は -1 のまま
 
         // 1) フェーズフラグの更新
-        // 直前のフェーズフラグを false、今回のフェーズフラグを true に。
         if (!string.IsNullOrEmpty(_lastPhaseFlagKey))
             SetFlag(_lastPhaseFlagKey, false);
 
@@ -178,7 +187,6 @@ public class GameFlowController : Singleton<GameFlowController>
         flowOrder = list;
     }
 
-    // ===== 便利ボタン（Editor） =====
 #if UNITY_EDITOR
     [Button("Broadcast sample flags")]
     private void DebugBroadcastSample()
@@ -189,9 +197,6 @@ public class GameFlowController : Singleton<GameFlowController>
 #endif
 
     // ===== ユーティリティ型 =====
-    [Serializable]
-    public class UnityEventPhase : UnityEngine.Events.UnityEvent<Phase> {}
-
-    [Serializable]
-    public class StringBoolEvent : UnityEngine.Events.UnityEvent<string, bool> {}
+    [Serializable] public class UnityEventPhase : UnityEngine.Events.UnityEvent<Phase> {}
+    [Serializable] public class StringBoolEvent : UnityEngine.Events.UnityEvent<string, bool> {}
 }

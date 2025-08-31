@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8034613216484613357}
   - component: {fileID: 796288111440089965}
   - component: {fileID: 8914154347963393541}
+  - component: {fileID: 114506207264804369}
   m_Layer: 0
   m_Name: CMFPS
   m_TagString: Untagged
@@ -218,3 +219,48 @@ MonoBehaviour:
   follow: {fileID: 4898544189673811366}
   disablePanTiltWhileLocked: 0
   disableFollowWhileLocked: 0
+--- !u!114 &114506207264804369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7872613892398570348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.SignalReceiver
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: f0fdbc946c304ba4db8bd2cc7bd570ba, type: 2}
+    - {fileID: 11400000, guid: fdf54bd8e4382854f9bbf5bfff6b2556, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 8914154347963393541}
+          m_TargetAssemblyTypeName: CMFPSController, Assembly-CSharp
+          m_MethodName: LockView
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 8914154347963393541}
+          m_TargetAssemblyTypeName: CMFPSController, Assembly-CSharp
+          m_MethodName: UnlockView
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2

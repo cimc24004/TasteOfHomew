@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
+
 public class HomeSearchGameController : SerializedMonoBehaviour
 {
     [Header("Player")]
@@ -38,6 +39,7 @@ public class HomeSearchGameController : SerializedMonoBehaviour
     {
         if (autoStartOnEnable) StartGame();
     }
+
     [Button]
     public void StartGame()
     {
@@ -48,7 +50,15 @@ public class HomeSearchGameController : SerializedMonoBehaviour
         }
 
         currentIndex = Mathf.Clamp(startIndex, 0, nodes.Count - 1);
-        foreach (var n in nodes) n.Deactivate();
+
+        // いったん全部停止＆非表示
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            var n = nodes[i];
+            if (!n) continue;
+            n.Deactivate();
+            if (n.gameObject.activeSelf) n.gameObject.SetActive(false);
+        }
 
         onGameStart?.Invoke();
         ActivateCurrent();
@@ -57,24 +67,48 @@ public class HomeSearchGameController : SerializedMonoBehaviour
     private void ActivateCurrent()
     {
         var n = Current;
-        if (n == null) { onAllCompleted?.Invoke(); return; }
+        if (n == null)
+        {
+            onAllCompleted?.Invoke();
+            return;
+        }
 
-        n.Activate(player);        // ← ここでは進行を“監視”しない（自動で次へ行かない）
+        // ★ 排他表示：現在ノードだけ true、他は false
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            var node = nodes[i];
+            if (!node) continue;
+
+            bool shouldActive = (i == currentIndex);
+
+            if (shouldActive)
+            {
+                if (!node.gameObject.activeSelf) node.gameObject.SetActive(true);
+            }
+            else
+            {
+                // 一応 Deactivate を呼んでから隠す（音ループ等の停止用）
+                node.Deactivate();
+                if (node.gameObject.activeSelf) node.gameObject.SetActive(false);
+            }
+        }
+
+        // 現在ノードを起動
+        n.Activate(player);
         onNodeActivated?.Invoke();
     }
+
     [Button]
-    // ★ UnityEvent から呼ぶ：任意タイミングで次のノードへ
     public void AdvanceToNextNode()
     {
         var n = Current;
-        if (n != null) n.Deactivate();
+        if (n != null) n.Deactivate(); // 念のため停止
 
         currentIndex++;
         if (currentIndex < nodes.Count) ActivateCurrent();
         else onAllCompleted?.Invoke();
     }
 
-    // 必要なら指定インデックスへ飛ぶ（任意）
     public void JumpToIndex(int index)
     {
         var n = Current;
