@@ -12,10 +12,7 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     [Title("Events")]
     [SerializeField, LabelText("閉じた（毎回）")] private UnityEvent2 onClosedEveryTime;
     [SerializeField, LabelText("閉じた（最初の1回だけ）")] private UnityEvent2 onClosedOnce;
-
-    // 互換用（既存配線があれば引き続き呼ぶ）
-    [SerializeField, LabelText("閉じた（旧）")]
-    [InfoBox("非推奨：今後は『毎回』or『最初の1回だけ』を使ってね", InfoMessageType.Warning)]
+    public AudioClip overrideTurnSE;  // ← 追加
     private UnityEvent2 onClosed;
 
     private bool consumed = false;
@@ -42,7 +39,7 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
         }
 
         _openedByThis = true;
-        ctrl.Open(readable);
+        ctrl.Open(readable, -1, overrideTurnSE);
         // ※ 「once」の消費は“閉じた後”に行う（読み切りで消費）
     }
 

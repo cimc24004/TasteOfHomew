@@ -109,7 +109,7 @@ public class HomeSearchNode : MonoBehaviour
         while (isActive)
         {
             var clip = pingClip != null ? pingClip : audioSource.clip;
-            if (clip != null) audioSource.PlayOneShot(clip, volume);
+            if (clip != null && audioSource.enabled) audioSource.PlayOneShot(clip, volume);
             yield return new WaitForSeconds(Random.Range(pingIntervalMin, pingIntervalMax));
         }
     }

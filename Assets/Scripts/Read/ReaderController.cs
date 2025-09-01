@@ -57,7 +57,7 @@ public class ReaderController : Singleton<ReaderController>
     [SerializeField] private bool logApplyImage = false;                // ← ログ出力
     [Title("ページ番号表示")]
     [SerializeField] private GameObject pageNumberRoot; // ← 未指定なら pageNumberText.gameObject を使う
-
+    private AudioClip _turnSEOverride; // ← ピックアップ側から受け取ったら保持する
     void Start()
     {
         if (!root) Debug.LogWarning("ReaderController: CanvasGroup(root) 未割当");
@@ -79,7 +79,7 @@ public class ReaderController : Singleton<ReaderController>
     }
 
     [Button("Open(Test)")]
-    public void Open(ReadableAsset asset, int startPage1 = -1)
+    public void Open(ReadableAsset asset, int startPage1 = -1, AudioClip overrideTurnSE = null)
     {
         if (!asset) return;
         gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
@@ -88,7 +88,7 @@ public class ReaderController : Singleton<ReaderController>
         int total = Math.Max(0, TotalPages);
         int start1 = (startPage1 > 0 ? startPage1 : Mathf.Max(1, asset.defaultStartPage));
         _page = (total > 0) ? Mathf.Clamp(start1 - 1, 0, total - 1) : 0;
-
+        _turnSEOverride = overrideTurnSE; // ← ここで受け取る
         if (switchUIOnOpenClose && uiSwitcher) uiSwitcher.SwitchTo(uiKindOnOpen);
 
         SetActive(true);
@@ -127,7 +127,7 @@ public class ReaderController : Singleton<ReaderController>
         {
             _page++;
             RefreshPage();
-            PlaySE(_now.turnSE);
+            PlaySE(_turnSEOverride ? _turnSEOverride : _now.turnSE);
             return true;
         }
         return false;
