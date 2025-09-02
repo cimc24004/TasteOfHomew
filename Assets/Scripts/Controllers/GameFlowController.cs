@@ -19,6 +19,7 @@ public class GameFlowController : Singleton<GameFlowController>
         Evening,        // 夕
         HomeSearch,     // 家探索
         MotherReturn,   // 母帰宅
+        OldTale,        // 実の両親視点
         Absence,        // 不在
         Outside,        // 外
         Shed,           // 小屋

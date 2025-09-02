@@ -1,5 +1,68 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7729992440380708257
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 331290417722681137}
+  - component: {fileID: 7628557953564942413}
+  m_Layer: 0
+  m_Name: LockedDialogueCallOnNotHaveKey
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &331290417722681137
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7729992440380708257}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 6.926238, y: 0.61389863, z: 0.96189785}
+  m_LocalScale: {x: 1, y: 0.86224544, z: 0.87721664}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2072306157454998965}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7628557953564942413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7729992440380708257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26aabd47d862a884c91ffd7f13d8ece8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueCaller
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  StartUnityEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  EndUnityEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  groupRef: 0
+  groupKey: Michibiki
+  groupAsset: {fileID: 0}
+  sequenceId: 4
 --- !u!1001 &1966091738720819806
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78,7 +141,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 331290417722681137}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
       insertIndex: -1
@@ -89,6 +155,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 405214341114601689}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5620724038284312406}
   m_SourcePrefab: {fileID: 100100000, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
 --- !u!1 &1696062471426926351 stripped
 GameObject:
@@ -135,6 +204,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 0
+  keyController: {fileID: 5620724038284312406}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &174901870746283307
 AudioSource:
   m_ObjectHideFlags: 0
@@ -253,3 +330,53 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.62757486, y: 1.7639115, z: 0.22424261}
   m_Center: {x: -0.31378743, y: 0.881956, z: -0.02534431}
+--- !u!114 &5620724038284312406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696062471426926351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5a3b4b7c60310c45b657130df126567, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorKeyController
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  lockMode: 1
+  initiallyLocked: 1
+  relockOnClose: 0
+  relockRequireAllLinkedDoorsClosed: 1
+  requiredKeyId: Key_None
+  consumeKeyOnUnlock: 0
+  lockedDisplayText: 
+  lockedSfx: {fileID: 0}
+  unlockSfx: {fileID: 0}
+  lockSfx: {fileID: 0}
+  OnLocked:
+    m_PersistentCalls:
+      m_Calls: []
+  OnUnlocked:
+    m_PersistentCalls:
+      m_Calls: []
+  OnUnlockFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  linkedDoors:
+  - {fileID: 8791450737557963101}
+  _locked: 0
+  LockedDialogueCallerOnNotHaveKey: {fileID: 7628557953564942413}
+  LockedDialogueCallerOnHaveKey: {fileID: 0}
+--- !u!4 &2072306157454998965 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d967e5bbe2724a848aae48e9361a81e5, type: 3}
+  m_PrefabInstance: {fileID: 1966091738720819806}
+  m_PrefabAsset: {fileID: 0}

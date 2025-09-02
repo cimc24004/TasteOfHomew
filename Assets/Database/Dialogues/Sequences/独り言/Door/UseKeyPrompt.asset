@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76cfb6b3f6987af48a96b1c169385173, type: 3}
+  m_Name: UseKeyPrompt
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSequenceAsset
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  id: UseKeyPrompt
+  memo: "\u9375\u304C\u304B\u304B\u3063\u3066\u3044\u308B\u2026\u2026\u3002\u304B\u3089\u9078\u629E\u80A2\u3067\u4F7F\u3046\u304B\u4F7F\u308F\u306A\u3044\u304B"
+  steps:
+  - displayStepId: 1
+    speaker: 
+    text: "\u9375\u304C\u304B\u304B\u3063\u3066\u3044\u308B\u2026\u2026\u3002"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0.25
+    choices: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 2
+    speaker: 
+    text: "\u9375\u3092\u4F7F\u3046\uFF1F\uFF1F"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0.25
+    choices:
+    - text: "\u4F7F\u3046"
+      gotoId: Door:UseKeyPrompt:3
+      conditions: []
+    - text: "\u4F7F\u308F\u306A\u3044"
+      gotoId: Door:UseKeyPrompt:4
+      conditions: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 3
+    speaker: 
+    text: "\u9375\u3092\u4F7F\u7528\u3057\u305F"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0
+    choices: []
+    flagEditsOnEnter:
+    - key: __door_use_key_tmp
+      value: 1
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 4
+    speaker: 
+    text: 
+    conditions: []
+    autoNext: 1
+    autoNextDelay: 0
+    choices: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  useGoto: 0
+  gotoId: 
