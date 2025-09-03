@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76cfb6b3f6987af48a96b1c169385173, type: 3}
+  m_Name: EscapeChoose
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSequenceAsset
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  id: EscapeChoose
+  memo: "\u3069\u3063\u3061\u306B\u9003\u3052\u308B\u304B\u9078\u629E\u3059\u308B\u30B7\u30FC\u30F3"
+  steps:
+  - displayStepId: 1
+    speaker: 
+    text: "\u3069\u3053\u304B\u306B\u52A9\u3051\u3092\u6C42\u3081\u306A\u304D\u3083...\u3002"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0.25
+    choices: []
+    flagEditsOnEnter:
+    - key: 
+      value: 0
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 2
+    speaker: 
+    text: "\u3069\u3053\u306B\u884C\u3053\u3046...?"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0.25
+    choices:
+    - text: "\u81EA\u5206\u306E\u5BB6"
+      gotoId: EscapeChoose:EscapeMyHouse
+      conditions: []
+    - text: "\u53CB\u9054\u306E\u5BB6"
+      gotoId: EscapeChoose:EscapeFriendHouse
+      conditions: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  useGoto: 0
+  gotoId: 

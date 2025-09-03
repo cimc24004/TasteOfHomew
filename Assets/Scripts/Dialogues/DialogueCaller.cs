@@ -37,7 +37,7 @@ public class DialogueCaller : SerializedMonoBehaviour
 
     private async UniTaskVoid CallAsync()
     {
-        if (busy) return;
+        if (busy || !this.gameObject.activeSelf) return;
 
         var ctrl = DialogueController.instance;
         if (!ctrl)
