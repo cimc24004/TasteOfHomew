@@ -4,7 +4,6 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
 
-[AddComponentMenu("Game/Controllers/EscapeControllerNoPoll_WithFlagEnd")]
 public class EscapeController : MonoBehaviour
 {
     [Header("DialogueController（任意：Inspectorでセット）")]
@@ -20,12 +19,16 @@ public class EscapeController : MonoBehaviour
 
     public UnityEvent onMyStart;
     public UnityEvent onMyEnd;
-
+    private DataShareController dataShareController;
     private void Awake()
     {
         if (dialogueController == null) TryFindDialogueControllerSingleton();
+        
     }
-
+    void Start()
+    {
+        dataShareController = DataShareController.Instance;
+    }
     // --- 既存の Start 呼び出し用メソッド（そのまま） ---
     public void OnFriendSelected()
     {
@@ -37,6 +40,7 @@ public class EscapeController : MonoBehaviour
     {
         Debug.Log("[EscapeController] Friend end");
         onFriendEnd?.Invoke();
+        dataShareController.SetFlagToTrue("FriendHouseEnd");
     }
 
     public void OnMySelected()
@@ -47,6 +51,7 @@ public class EscapeController : MonoBehaviour
 
     public void OnMyEnded()
     {
+        dataShareController.SetFlagToTrue("MyHouseEnd");
         Debug.Log("[EscapeController] My end");
         onMyEnd?.Invoke();
     }

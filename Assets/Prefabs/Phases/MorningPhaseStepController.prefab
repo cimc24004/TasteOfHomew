@@ -91,7 +91,7 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
-    - key: 2
+    - key: 2 Gohan
       objectsToShow:
       - {fileID: 0}
       - {fileID: 0}
@@ -305,7 +305,9 @@ MonoBehaviour:
     startStepKey: 1
     steps:
     - key: 1
-      objectsToShow: []
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls:
@@ -336,6 +338,7 @@ MonoBehaviour:
     - key: 2 (HomeSearchGame)
       objectsToShow:
       - {fileID: 0}
+      - {fileID: 0}
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls:
@@ -353,6 +356,8 @@ MonoBehaviour:
             m_CallState: 2
     - key: 3 (HomeSearchEnd)
       objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
       - {fileID: 0}
       onEnterEvents:
       - m_PersistentCalls:
@@ -378,6 +383,18 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
     - key: 2
       objectsToShow:
       - {fileID: 0}
@@ -385,11 +402,12 @@ MonoBehaviour:
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls: []
-  - phase: 6
+  - phase: 5
     startStepKey: 1
     steps:
     - key: 1 (WorryForMom)
-      objectsToShow: []
+      objectsToShow:
+      - {fileID: 0}
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls:
@@ -429,13 +447,22 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
-  - phase: 7
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+  - phase: 6
     startStepKey: 
-    steps: []
-  - phase: 8
-    startStepKey: 1
     steps:
-    - key: 1 (WorryForMom)
+    - key: 1
       objectsToShow:
       - {fileID: 0}
       onEnterEvents:
@@ -451,6 +478,184 @@ MonoBehaviour:
               m_IntArgument: 0
               m_FloatArgument: 0
               m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
+            m_MethodName: SetNight
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - key: 2
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
+      onEnterEvents: []
+  - phase: 7
+    startStepKey: 
+    steps:
+    - key: 1
+      objectsToShow:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: DoorKeyController, Assembly-CSharp
+            m_MethodName: Unlock
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
+            m_MethodName: SetNight
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - key: 2
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: DialogueCaller, Assembly-CSharp
+            m_MethodName: Call
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+  - phase: 8
+    startStepKey: 1
+    steps:
+    - key: '1 '
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: DoorKeyController, Assembly-CSharp
+            m_MethodName: Unlock
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
+            m_MethodName: SetNight
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - key: 2
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: EscapeController, Assembly-CSharp
+            m_MethodName: ExecuteStartFromFlags
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+  - phase: 9
+    startStepKey: 1
+    steps:
+    - key: 1
+      objectsToShow:
+      - {fileID: 0}
+      onEnterEvents:
+      - m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: SceneManagerController, Assembly-CSharp
+            m_MethodName: LoadScene
+            m_Mode: 5
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: End
               m_BoolArgument: 0
             m_CallState: 2
   autoStartOnEnable: 1
