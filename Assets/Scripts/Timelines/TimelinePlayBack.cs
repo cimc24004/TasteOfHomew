@@ -2,10 +2,15 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Playables;
+using UnityEngine.Timeline;
 using Sirenix.OdinInspector;
-// using UTimelineAsset = UnityEngine.Timeline.TimelineAsset; // 必要なら
-// ↑基本は UnityEngine.Timeline.TimelineAsset をそのまま使う
 
+/// <summary>
+/// Timeline 再生を安全に扱うラッパー。
+/// - PlayableGraph の無効チェックを徹底して例外を防ぐ
+/// - root speed のリセットは Play() 後に再試行する（Graph がまだ構築されていない場合があるため）
+/// - ロギングや遅延再生オプションは既存挙動を維持
+/// </summary>
 [DisallowMultipleComponent]
 public class TimelinePlayback : Singleton<TimelinePlayback>
 {
@@ -47,6 +52,13 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
     [LabelText("Play時に状態ログを出す")]
     public bool logStateOnPlay = false;
 
+    // ルート速度の再試行回数／待機フレーム
+    [Title("内部：RootReset Retry")]
+    [LabelText("再試行回数")]
+    public int rootResetRetryCount = 3;
+    [LabelText("再試行フレーム間隔（フレーム）")]
+    public int rootResetRetryIntervalFrames = 1;
+
     // ===== State =====
     [FoldoutGroup("State"), ShowInInspector, ReadOnly]
     public GameFlowController.Phase LastPhase { get; private set; }
@@ -57,7 +69,7 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
     [FoldoutGroup("State"), ShowInInspector, ReadOnly]
     public bool IsPlaying => director && director.state == PlayState.Playing;
 
-    // コールバック（必要なら外部で購読）
+    // コールバック
     public event Action<string> OnTimelineStarted;
     public event Action<string> OnTimelineStopped;
 
@@ -78,12 +90,12 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
 
     void OnEnable()
     {
-        if (director) director.stopped += HandleDirectorStopped;
+        if (director != null) director.stopped += HandleDirectorStopped;
     }
 
     void OnDisable()
     {
-        if (director) director.stopped -= HandleDirectorStopped;
+        if (director != null) director.stopped -= HandleDirectorStopped;
     }
 
     void HandleDirectorStopped(PlayableDirector _)
@@ -166,7 +178,7 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         return true;
     }
 
-    void ApplyAndPlay(GameFlowController.Phase phase, string id, UnityEngine.Timeline.TimelineAsset asset)
+    void ApplyAndPlay(GameFlowController.Phase phase, string id, TimelineAsset asset)
     {
         LastPhase = phase;
         LastTimelineId = id;
@@ -175,19 +187,17 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         director.extrapolationMode = wrapMode;
         director.playableAsset = asset;
 
-        if (rebuildGraphOnPlay) director.RebuildGraph();
+        if (rebuildGraphOnPlay)
+        {
+            try { director.RebuildGraph(); }
+            catch (Exception ex) { Debug.LogWarning($"[TimelinePlayback] RebuildGraph threw: {ex.Message}"); }
+        }
 
         if (rewindOnPlay) director.time = 0;
 
         director.timeUpdateMode = updateMode;
 
         if (forceTimeScaleOne && Application.isPlaying) Time.timeScale = 1f;
-
-        if (resetRootSpeed)
-        {
-            var root = director.playableGraph.GetRootPlayable(0);
-            if (root.IsValid()) root.SetSpeed(1);
-        }
 
         if (logStateOnPlay) LogStateInternal("[Play] before");
 
@@ -209,7 +219,17 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
 
     void DoPlay()
     {
+        if (!director) return;
+
         director.Play();
+
+        // Play 後に Graph が構築されることが多いのでここでリセットを試みる
+        TryResetRootSpeedImmediate();
+
+        // immediate で失敗したら少し待って再試行する
+        if (resetRootSpeed)
+            StartCoroutine(TryResetRootSpeedWithRetries(rootResetRetryCount, rootResetRetryIntervalFrames));
+
         OnTimelineStarted?.Invoke(LastTimelineId);
         if (logStateOnPlay) LogStateInternal("[Play] after");
     }
@@ -218,6 +238,57 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
     {
         for (int i = 0; i < Mathf.Max(0, frames); i++) yield return null;
         if (IsPlaying) director.Pause();
+    }
+
+    // Try reset root speed immediately if possible (no allocation of coroutines)
+    void TryResetRootSpeedImmediate()
+    {
+        if (!resetRootSpeed || director == null) return;
+
+        var graph = director.playableGraph;
+        if (graph.IsValid())
+        {
+            try
+            {
+                var root = graph.GetRootPlayable(0);
+                if (root.IsValid()) root.SetSpeed(1);
+            }
+            catch (Exception ex)
+            {
+                if (logStateOnPlay) Debug.LogWarning($"[TimelinePlayback] TryResetRootSpeedImmediate failed: {ex.Message}");
+            }
+        }
+    }
+
+    IEnumerator TryResetRootSpeedWithRetries(int retries, int intervalFrames)
+    {
+        if (!resetRootSpeed || director == null) yield break;
+
+        for (int attempt = 0; attempt < Mathf.Max(0, retries); attempt++)
+        {
+            var graph = director.playableGraph;
+            if (graph.IsValid())
+            {
+                try
+                {
+                    var root = graph.GetRootPlayable(0);
+                    if (root.IsValid())
+                    {
+                        root.SetSpeed(1);
+                        yield break; // 成功したら終わり
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (logStateOnPlay) Debug.LogWarning($"[TimelinePlayback] Root reset attempt threw: {ex.Message}");
+                }
+            }
+
+            // 次フレーム待ち（複数フレーム間隔にしたい場合は intervalFrames を使う）
+            for (int f = 0; f < Mathf.Max(1, intervalFrames); f++) yield return null;
+        }
+
+        if (logStateOnPlay) Debug.LogWarning("[TimelinePlayback] Failed to reset root speed after retries");
     }
 
     // ===== Debug / Odin =====
@@ -255,8 +326,22 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
             Debug.Log($"{tag} director=null");
             return;
         }
-        var root = director.playableGraph.GetRootPlayable(0);
-        var spd = root.IsValid() ? root.GetSpeed() : double.NaN;
+
+        var graph = director.playableGraph;
+        double spd = double.NaN;
+        if (graph.IsValid())
+        {
+            try
+            {
+                var root = graph.GetRootPlayable(0);
+                if (root.IsValid()) spd = root.GetSpeed();
+            }
+            catch (Exception ex)
+            {
+                if (logStateOnPlay) Debug.LogWarning($"[TimelinePlayback] LogStateInternal failed: {ex.Message}");
+            }
+        }
+
         Debug.Log($"{tag} state={director.state} time={director.time:F3} mode={director.timeUpdateMode} timescale={Time.timeScale} speed={spd}");
     }
 }
