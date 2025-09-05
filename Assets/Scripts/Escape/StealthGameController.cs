@@ -1,10 +1,12 @@
 // StealthGameController.cs
 // Manager版 + Odin対応 + 一定待機時間 + 往復(Ping-Pong) + 到着判定強化 + Gizmos強化
+// ＋ 残り時間カウントダウン（mm:ss表示 / 満了でPolice arrive）
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Sirenix.OdinInspector;
+using TMPro; // ← 追加
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,14 +17,12 @@ public class StealthGameController : SerializedMonoBehaviour
 {
     // ======= References =======
     [TitleGroup("References"), PropertyOrder(-100)]
-    [Tooltip("進行管理の核。検知時に NotifyPlayerDetected() を呼ぶ")]
+    [Tooltip("進行管理の核。検知時に NotifyPlayerDetected() / 満了時に NotifyPoliceArrived() を呼ぶ")]
     [Required] public MyHouseEscapeGameController myHouseEscapeGameController;
 
     [TitleGroup("References")]
     [Tooltip("プレイヤー Transform。未設定なら Tag=Player を探索")]
     public Transform player;
-
-    // ★追加: PlayerStatusのシングルトンから頭を参照
     private PlayerStatus playerStatus;
     private Transform playerHead;
 
@@ -40,6 +40,27 @@ public class StealthGameController : SerializedMonoBehaviour
     [Tooltip("全ガードの待機時間に掛ける倍率。0.5=半分, 2=2倍")]
     [MinValue(0f)]
     public float waitTimeScale = 1f;
+
+    // ======= Timer (Police到着まで) =======
+    [TitleGroup("Timer"), PropertySpace]
+    [LabelText("Enable Timer")]
+    [Tooltip("残り時間のカウントダウンを有効化")]
+    public bool enableTimer = true;
+
+    [TitleGroup("Timer")]
+    public TextMeshProUGUI timerText;
+    [Tooltip("タイマーの枠（開始でON／終了でOFFにする）")]
+    public GameObject timerBox;  // ← 追加
+
+    [TitleGroup("Timer")]
+    [LabelText("Hide When Idle")]
+    [Tooltip("非ステルス時は Text を空にする")]
+    public bool hideTimerWhenIdle = true;
+
+    private Coroutine timerCo;
+
+    [Tooltip("現在のタイマー値")]
+    [SerializeField] private float timerRemain;
 
     // ======= Guard 設定 =======
     [System.Serializable]
@@ -59,49 +80,23 @@ public class StealthGameController : SerializedMonoBehaviour
         [ListDrawerSettings(Expanded = true, DraggableItems = true)]
         [LabelText("Patrol Points")] public List<Transform> patrolPoints = new();
 
-        [FoldoutGroup("Patrol")]
-        [LabelText("Random Patrol")] public bool randomPatrol = false;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Ping-Pong (非ランダム時)")] public bool pingPong = true;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Start From Closest")] public bool startFromClosestPoint = true;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Arrive Threshold")] public float arriveThreshold = 0.2f;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Use Agent.autoBraking")] public bool useAutoBraking = true;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("CloseEnough Dist (fallback)")] public float closeEnoughDistance = 0.5f;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Arrival Timeout (s)")] public float arrivalTimeoutSeconds = 6f;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Planar Distance (XZ) で到着判定も見る")] public bool usePlanarDistance = true;
-
-        [FoldoutGroup("Patrol")]
-        [LabelText("Wait (s) 一定時間"), MinValue(0f)]
-        [Tooltip("各ポイントで待機する“固定”秒数（min/maxは使わない）")]
-        public float waitAtPointSeconds = 1.0f;
+        [FoldoutGroup("Patrol")] [LabelText("Random Patrol")] public bool randomPatrol = false;
+        [FoldoutGroup("Patrol")] [LabelText("Ping-Pong (非ランダム時)")] public bool pingPong = true;
+        [FoldoutGroup("Patrol")] [LabelText("Start From Closest")] public bool startFromClosestPoint = true;
+        [FoldoutGroup("Patrol")] [LabelText("Arrive Threshold")] public float arriveThreshold = 0.2f;
+        [FoldoutGroup("Patrol")] [LabelText("Use Agent.autoBraking")] public bool useAutoBraking = true;
+        [FoldoutGroup("Patrol")] [LabelText("CloseEnough Dist (fallback)")] public float closeEnoughDistance = 0.5f;
+        [FoldoutGroup("Patrol")] [LabelText("Arrival Timeout (s)")] public float arrivalTimeoutSeconds = 6f;
+        [FoldoutGroup("Patrol")] [LabelText("Planar Distance (XZ) で到着判定も見る")] public bool usePlanarDistance = true;
+        [FoldoutGroup("Patrol")] [LabelText("Wait (s) 一定時間"), MinValue(0f)] public float waitAtPointSeconds = 1.0f;
 
         [FoldoutGroup("Vision", true)]
         [Range(10f, 180f), LabelText("View Angle")] public float viewAngle = 70f;
-
-        [FoldoutGroup("Vision")]
-        [LabelText("View Distance")] public float viewDistance = 12f;
-
-        [FoldoutGroup("Vision")]
-        [LabelText("Eye Height (Y)")] public float eyeHeight = 1.6f;
-
-        [FoldoutGroup("Vision")]
-        [LabelText("Player Layer")] public LayerMask playerLayer = 1 << 6;
-
-        [FoldoutGroup("Vision")]
-        [LabelText("Obstruction Layers")] public LayerMask obstructionLayers = ~0;
+        [FoldoutGroup("Vision")] [LabelText("View Distance")] public float viewDistance = 12f;
+        [FoldoutGroup("Vision")] [LabelText("Eye Height (Y)")] public float eyeHeight = 1.6f;
+        [FoldoutGroup("Vision")] [LabelText("Player Height (Y)")] public float playerHeight = 1.6f; // （ヘッド優先にしたい場合はここを無視して playerHead を使う実装に差し替え可）
+        [FoldoutGroup("Vision")] [LabelText("Player Layer")] public LayerMask playerLayer = 1 << 6;
+        [FoldoutGroup("Vision")] [LabelText("Obstruction Layers")] public LayerMask obstructionLayers = ~0;
 
         // Runtime
         [HideInInspector] public bool active;
@@ -126,6 +121,10 @@ public class StealthGameController : SerializedMonoBehaviour
             if (p) player = p.transform;
         }
 
+        // Timer開始
+        if (enableTimer) StartTimer();
+
+        // ガード開始
         foreach (var g in guards) StartGuard(g);
     }
 
@@ -134,6 +133,7 @@ public class StealthGameController : SerializedMonoBehaviour
     public void StopAllGuards()
     {
         foreach (var g in guards) StopGuard(g);
+        StopTimer();
     }
 
     [ButtonGroup("Controls/Row2"), GUIColor(0.35f, 0.6f, 1f)]
@@ -165,7 +165,7 @@ public class StealthGameController : SerializedMonoBehaviour
     // ======= Lifecycle =======
     private void Awake()
     {
-        // PlayerStatusのシングルトン取得（順序の都合で null なら Start でもう一度取得）
+        // PlayerStatus シングルトン（あれば）
         playerStatus = PlayerStatus.instance;
         if (playerStatus != null)
         {
@@ -174,7 +174,6 @@ public class StealthGameController : SerializedMonoBehaviour
         }
         else
         {
-            // フォールバック
             if (player == null)
             {
                 var p = GameObject.FindGameObjectWithTag("Player");
@@ -183,41 +182,29 @@ public class StealthGameController : SerializedMonoBehaviour
         }
     }
 
-    void Start()
+    private void OnDisable()
     {
-        // Start時点で再確認（Awake順序の保険）
-        if (playerStatus == null) playerStatus = PlayerStatus.instance;
-        if (playerStatus != null)
-        {
-            player = playerStatus.transform;
-            if (playerHead == null) playerHead = playerStatus.playerHead;
-        }
+        StopAllGuards();
+        StopTimer();
+        if (hideTimerWhenIdle) UpdateTimerText(null);
     }
-
-    private void OnDisable() => StopAllGuards();
 
     private void Update()
     {
         if (autoStopWhenStateChanged && myHouseEscapeGameController != null)
         {
             var s = myHouseEscapeGameController.CurrentState;
-            if (s != MyHouseEscapeGameController.State.Stealth &&
-                s != MyHouseEscapeGameController.State.MotherEntered &&
-                s != MyHouseEscapeGameController.State.PhoneCalled)
+            if (s == MyHouseEscapeGameController.State.Success ||
+                s == MyHouseEscapeGameController.State.Failed)
             {
                 StopAllGuards();
+                StopTimer();
+                if (hideTimerWhenIdle) UpdateTimerText(null);
                 return;
             }
         }
 
-        // ★ playerHead 優先で存在確認
-        if (playerHead == null)
-        {
-            // 遅延初期化（シーン上で後から設定された場合の保険）
-            if (playerStatus == null) playerStatus = PlayerStatus.instance;
-            if (playerStatus != null) playerHead = playerStatus.playerHead;
-            if (playerHead == null) return;
-        }
+        if (player == null) return;
 
         // 可視判定
         foreach (var g in guards)
@@ -226,11 +213,94 @@ public class StealthGameController : SerializedMonoBehaviour
             if (IsPlayerVisible(g))
             {
                 myHouseEscapeGameController?.NotifyPlayerDetected();
-                if (stopAllOnDetect) StopAllGuards();
+                if (stopAllOnDetect) { StopAllGuards(); StopTimer(); }
                 else g.active = false; // このガードだけ停止
                 break;
             }
         }
+    }
+
+    // ======= Timer =======
+    private void StartTimer()
+    {
+        if (timerCo != null) StopCoroutine(timerCo);
+
+        timerRemain = Mathf.Max(0f, myHouseEscapeGameController.policeArrivalSeconds);
+        if (timerBox != null) timerBox.SetActive(true);   // ← 追加
+
+        // MyHouse側の進捗イベントを使いたいUI用に初期値も投げる
+        if (myHouseEscapeGameController != null)
+        {
+            float p = (myHouseEscapeGameController.policeArrivalSeconds <= 0f) ? 1f : Mathf.Clamp01(1f - (timerRemain / myHouseEscapeGameController.policeArrivalSeconds));
+            myHouseEscapeGameController.onStealthTick?.Invoke(p);
+        }
+
+        // 初期表示
+        UpdateTimerText(timerRemain);
+
+        // 状態を Stealth にしたい場合は、必要なら MyHouse 側の onStealthStart 経由で行う運用でOK
+        timerCo = StartCoroutine(TimerLoop());
+    }
+
+    private void StopTimer()
+    {
+        if (timerBox != null) timerBox.SetActive(false);  // ← 追加
+        if (timerCo != null) { StopCoroutine(timerCo); timerCo = null; }
+    }
+
+    private IEnumerator TimerLoop()
+    {
+        // 0秒なら即到着
+        if (timerRemain <= 0f)
+        {
+            TriggerPoliceArrive();
+            yield break;
+        }
+
+        while (timerRemain > 0f)
+        {
+            timerRemain -= Time.deltaTime;
+            if (timerRemain < 0f) timerRemain = 0f;
+
+            // 表示更新
+            UpdateTimerText(timerRemain);
+
+            // 進捗イベント（0..1）
+            if (myHouseEscapeGameController != null && myHouseEscapeGameController.policeArrivalSeconds > 0f)
+            {
+                float p = Mathf.Clamp01(1f - (timerRemain / myHouseEscapeGameController.policeArrivalSeconds));
+                myHouseEscapeGameController.onStealthTick?.Invoke(p);
+            }
+
+            yield return null;
+        }
+
+        TriggerPoliceArrive();
+    }
+
+    private void TriggerPoliceArrive()
+    {
+        // 最終表示を 0:00 に
+        UpdateTimerText(0f);
+        if (timerBox != null) timerBox.SetActive(false);  // ← 追加
+        // MyHouse 側へ通知（成功扱い）
+        myHouseEscapeGameController?.NotifyPoliceArrived();
+    }
+
+    private void UpdateTimerText(float? remainNullable)
+    {
+        if (timerText == null) return;
+
+        if (!remainNullable.HasValue)
+        {
+            timerText.SetText(""); // 非表示
+            return;
+        }
+
+        int t = Mathf.Max(0, Mathf.FloorToInt(remainNullable.Value));
+        int m = t / 60;
+        int s = t % 60;
+        timerText.SetText("{0}:{1:00}", m, s); // 例: 0:59 / 0:01
     }
 
     // ======= Guard 制御 =======
@@ -241,7 +311,7 @@ public class StealthGameController : SerializedMonoBehaviour
         g.active = true;
         g.direction = 1;
         g.currentIndex = 0;
-        
+
         // Agent 初期化
         g.agent.autoBraking = g.useAutoBraking;
         if (g.arriveThreshold > 0f)
@@ -278,17 +348,14 @@ public class StealthGameController : SerializedMonoBehaviour
                 float sinceSet = 0f;
                 while (g.active)
                 {
-                    // path 計算が済んでいる時に各種到着判定を評価
                     if (!g.agent.pathPending)
                     {
                         float stopThresh = Mathf.Max(g.agent.stoppingDistance, g.arriveThreshold);
 
-                        // 1) official: remainingDistance と速度
                         if (g.agent.remainingDistance <= stopThresh &&
                             (!g.agent.hasPath || g.agent.velocity.sqrMagnitude < 0.01f))
                             break;
 
-                        // 2) fallback: 物理的な距離（XZ平面）
                         if (g.usePlanarDistance)
                         {
                             float planar = PlanarDistance(g.agent.transform.position, targetPos);
@@ -296,7 +363,6 @@ public class StealthGameController : SerializedMonoBehaviour
                                 break;
                         }
 
-                        // 3) パス無効/部分的なら諦めて次へ
                         if (g.agent.pathStatus == NavMeshPathStatus.PathInvalid ||
                             g.agent.pathStatus == NavMeshPathStatus.PathPartial)
                         {
@@ -305,7 +371,6 @@ public class StealthGameController : SerializedMonoBehaviour
                         }
                     }
 
-                    // 4) タイムアウト保険
                     sinceSet += Time.deltaTime;
                     if (g.arrivalTimeoutSeconds > 0f && sinceSet >= g.arrivalTimeoutSeconds)
                     {
@@ -388,12 +453,10 @@ public class StealthGameController : SerializedMonoBehaviour
         return best;
     }
 
-    // ======= 視認判定（★ playerHead を狙う） =======
     private bool IsPlayerVisible(GuardEntry g)
     {
-        if (playerHead == null) return false;
+        if (player == null) return false;
 
-        // 目の位置＆向き
         Vector3 eyePos;
         Vector3 forward;
         if (g.eye != null) { eyePos = g.eye.position; forward = g.eye.forward; }
@@ -404,8 +467,8 @@ public class StealthGameController : SerializedMonoBehaviour
             forward = baseT.forward;
         }
 
-        // ★ Head に向けて判定（playerHeight は使わない）
-        Vector3 target = playerHead.position;
+        // ここは現行仕様に合わせて playerHeight を使ったまま
+        Vector3 target = player.position + Vector3.up * g.playerHeight;
         Vector3 toPlayer = target - eyePos;
         float dist = toPlayer.magnitude;
         if (dist > g.viewDistance) return false;
@@ -416,7 +479,6 @@ public class StealthGameController : SerializedMonoBehaviour
         int mask = g.playerLayer | g.obstructionLayers;
         if (Physics.Raycast(eyePos, toPlayer.normalized, out var hit, dist, mask, QueryTriggerInteraction.Ignore))
         {
-            // Debug.Log("hit.collider: " + hit.collider.gameObject);
             return (g.playerLayer.value & (1 << hit.collider.gameObject.layer)) != 0;
         }
         return false;
@@ -429,9 +491,7 @@ public class StealthGameController : SerializedMonoBehaviour
     }
 
     // ======= Gizmos（各ガードの目から描画） =======
-    [FoldoutGroup("Gizmos", expanded: true), PropertySpace]
-    public bool gizmoAlways = true;
-
+    [FoldoutGroup("Gizmos", expanded: true), PropertySpace] public bool gizmoAlways = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawFOV = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawPatrol = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawNavPath = true;
@@ -492,10 +552,10 @@ public class StealthGameController : SerializedMonoBehaviour
                 Handles.DrawWireDisc(eyePos, Vector3.up, g.viewDistance * 0.66f);
                 Handles.DrawWireDisc(eyePos, Vector3.up, g.viewDistance);
 
-                // ★視線（Head を狙う）
-                if (playerHead != null)
+                // 視線ライン（playerHeight基準）
+                if (player != null)
                 {
-                    var target = playerHead.position;
+                    var target = player.position + Vector3.up * g.playerHeight;
                     bool visible = IsPlayerVisible(g);
                     Handles.color = visible ? gizmoSightRayVisible : gizmoSightRayBlocked;
                     Handles.DrawAAPolyLine(3f, eyePos, target);

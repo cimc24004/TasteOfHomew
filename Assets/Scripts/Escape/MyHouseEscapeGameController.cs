@@ -19,7 +19,7 @@ public class MyHouseEscapeGameController : MonoBehaviour
 
     [Header("ステルス（警察到着まで）")]
     [Tooltip("警察到着までの秒数")]
-    [SerializeField] private float policeArrivalSeconds = 150f;
+    [SerializeField] public float policeArrivalSeconds = 150f;
 
     [Tooltip("ステルス開始時に呼ぶ（UI表示/BGM切替など）")]
     public UnityEvent onStealthStart;
@@ -81,6 +81,7 @@ public class MyHouseEscapeGameController : MonoBehaviour
 
     public void OnStealthGameStart()
     {
+        CurrentState = State.Stealth;
         onStealthStart.Invoke();
         // 必要なら BeginStealth(); を呼ぶ
     }

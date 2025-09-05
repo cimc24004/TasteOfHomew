@@ -63,16 +63,19 @@ public class PlayerableCall : MonoBehaviour, IInteractable
     {
         if (!flow) flow = GameFlowController.instance;
         if (!playback) playback = TimelinePlayback.instance;
+        Debug.Log("flow: " + flow + "playback: " + playback + "once: " + once + "HasExecuted: " + HasExecuted);
         if (once && HasExecuted) return;
         if (!ValidateBasics())   return;
         Debug.Log("Flow: " + flow);
         var current = flow.CurrentPhase;
         if (current != requiredPhase)
         {
+            Debug.Log("current != requiredPhase");
+            Debug.Log("current: " + current + "requiredPhase: " + requiredPhase);
             onPhaseMismatch?.Invoke();
             return;
         }
-        Debug.Log("playback: " + playback);
+        Debug.Log("playback: " + playback + "再生されまーす");
         // 再生
         var ok = playback.Play(requiredPhase, timelineId);
         if (!ok)

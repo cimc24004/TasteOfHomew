@@ -286,7 +286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   keyEvents:
-  - key: FriendHouseEnd
+  - key: EscapeFriendHouseEnd
     onTrue:
       m_PersistentCalls:
         m_Calls:
@@ -304,7 +304,7 @@ MonoBehaviour:
           m_CallState: 2
     invokeOnlyOnce: 1
     invoked: 0
-  - key: MyHouseEnd
+  - key: EscapeMyHouseEnd
     onTrue:
       m_PersistentCalls:
         m_Calls:
@@ -563,10 +563,6 @@ PrefabInstance:
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 976165019357173174, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
-      propertyPath: startPhase
-      value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 976165019357173174, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 976165019357173174, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
@@ -650,6 +646,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BackgroundImage
       objectReference: {fileID: 0}
+    - target: {fileID: 3736698254393571675, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 3736698254393571675, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
     - target: {fileID: 3905794332751795840, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -742,6 +742,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 7471780351950171466, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+    - target: {fileID: 7759669392250049767, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8066153428199261657, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -775,6 +779,9 @@ PrefabInstance:
     - {fileID: 3196882847794839245, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
     - {fileID: 2399370020716131101, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
     - {fileID: 8154981906662825525, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+    - {fileID: 7759669392250049767, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+    - {fileID: 2282925627977861183, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+    - {fileID: 2556233749691396825, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
@@ -1400,17 +1407,12 @@ PrefabInstance:
       objectReference: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModifications.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: 'serializationData.PrefabModifications.Array.data[0]'
-      value: '"path":"shareDictionary.{\"FriendHouseEnd\"}","value":{"$id":0,"$type":"System.Boolean,
+      value: '"path":"EndingShareDictionary.{\"EscapeMyHouseEnd\"}","value":{"$id":0,"$type":"System.Boolean,
         mscorlib",false}'
-      objectReference: {fileID: 0}
-    - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
-      propertyPath: 'serializationData.PrefabModifications.Array.data[1]'
-      value: '"path":"shareDictionary.{\"MyHouseEnd\"}","value":{"$id":0,"$type":"System.Boolean,
-        mscorlib",true}'
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModificationsReferencedUnityObjects.Array.size
@@ -1419,6 +1421,10 @@ PrefabInstance:
     - target: {fileID: 1314783631412454932, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: m_Name
       value: DataShareController
+      objectReference: {fileID: 0}
+    - target: {fileID: 1314783631412454932, guid: 054373c8846598143a537cea765d8087, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7726598574313896825, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: m_LocalPosition.x

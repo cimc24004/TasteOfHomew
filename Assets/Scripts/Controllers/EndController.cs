@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -25,18 +26,14 @@ public class EndController : MonoBehaviour
 
     private DataShareController dataShareController;
 
-    void Start()
+    private async void Start()
     {
-        dataShareController = DataShareController.Instance;
-        if (dataShareController == null)
-        {
-            Debug.LogWarning("[EndController] DataShareController.Instance が見つかりません。");
-            return;
-        }
+        // ★ ここで1フレーム待ってから実行
+        await UniTask.WaitForSeconds(1f);
 
-        // 起動時にチェックしてイベントを呼ぶ
         CheckKeys();
     }
+
 
     // Inspector からもコンテキストメニューで呼べる
     [ContextMenu("Check Keys (Run)")]
@@ -54,17 +51,20 @@ public class EndController : MonoBehaviour
 
         foreach (var ke in keyEvents)
         {
+            Debug.Log("ke: " + ke);
+            Debug.Log("ke.key: " + ke.key);
             if (string.IsNullOrEmpty(ke.key)) continue;
 
             // DataShareController の API に合わせて取得する（GetFlag / TryGetFlag どちらでもOK）
             bool value = dataShareController.GetFlag(ke.key); // 既存の GetFlag を使う想定
-
+            Debug.Log("value: " + value);
             if (value)
             {
+                Debug.Log("ke.invokeOnlyOnce  && ke.invoked: " + (ke.invokeOnlyOnce  && ke.invoked));
                 if (ke.invokeOnlyOnce && ke.invoked) continue;
-
                 try
                 {
+                    Debug.Log("OnTrueのため実行！！！！！！！！！！！！！");
                     ke.onTrue?.Invoke();
                     ke.invoked = true;
                 }

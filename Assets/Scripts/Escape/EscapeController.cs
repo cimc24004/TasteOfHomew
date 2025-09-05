@@ -51,7 +51,7 @@ public class EscapeController : MonoBehaviour
 
     public void OnMyEnded()
     {
-        dataShareController.SetFlagToTrue("MyHouseEnd");
+        dataShareController.SetFlagToTrue("EscapeMyHouseEnd");
         Debug.Log("[EscapeController] My end");
         onMyEnd?.Invoke();
     }
