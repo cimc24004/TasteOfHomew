@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 207437495381362608, guid: fee747db169506247a464281344bfe09, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 207437495381362608, guid: fee747db169506247a464281344bfe09, type: 3}
       propertyPath: m_TagString
@@ -68,9 +68,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u5BB610Unity\u5ECA\u4E0BTo\u5E83\u3044\u548C\u5BA4\u6249"
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: fee747db169506247a464281344bfe09, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 8767282694164357152, guid: fee747db169506247a464281344bfe09, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 8767282694164357152, guid: fee747db169506247a464281344bfe09, type: 3}
       propertyPath: m_TagString
@@ -125,12 +129,12 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  TriggerChangeModeOpenClose: 1
   open_type: 0
   nowDoorStatus: 0
   ToOpenTransform: {fileID: 2834008162122130217}
   TargetRotateVector: {x: 0, y: 0, z: 0}
   Duration: 0.5
+  TriggerChangeModeOpenClose: 1
   OpenStartEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -144,6 +148,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &421383201388652226
 AudioSource:
   m_ObjectHideFlags: 0
@@ -298,12 +310,12 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  TriggerChangeModeOpenClose: 1
   open_type: 0
   nowDoorStatus: 0
   ToOpenTransform: {fileID: 1955741633898327798}
   TargetRotateVector: {x: 0, y: 0, z: 0}
   Duration: 0.5
+  TriggerChangeModeOpenClose: 1
   OpenStartEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -317,6 +329,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &2467545739589299291
 AudioSource:
   m_ObjectHideFlags: 0

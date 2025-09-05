@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1080127721275556409}
-  - component: {fileID: -79240561536096387}
   m_Layer: 0
   m_Name: "\u3075\u3064\u3046\u306E\u7A93"
   m_TagString: Untagged
@@ -34,31 +33,6 @@ Transform:
   - {fileID: 114149177671758606}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!114 &-79240561536096387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 411713074049767555}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2637990453
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!1 &3465649589111148383
 GameObject:
   m_ObjectHideFlags: 0
@@ -72,8 +46,6 @@ GameObject:
   - component: {fileID: 8669246019357374012}
   - component: {fileID: 6245763114800663741}
   - component: {fileID: 2051983267155045803}
-  - component: {fileID: 256413365130823871}
-  - component: {fileID: 3529778759474073330}
   m_Layer: 3
   m_Name: "\u5C0F\u3055\u3044\u7A931.020"
   m_TagString: Window
@@ -124,6 +96,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -147,6 +121,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -269,63 +244,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &256413365130823871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3465649589111148383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8301d5f16a05bea4a8435ce30b0cb757, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  door_open_close_controllers:
-  - {fileID: 3529778759474073330}
-  door_status_network:
-    m_InternalValue: 0
-  NeededKey:
-    m_InternalValue: 0
-  OpenedClosedCompletedAnimation: 1
-  OpenedClosedCompleted: 1
-  open_permit_by_key_controller: {fileID: 0}
-  door_attacked_controller: {fileID: 0}
---- !u!114 &3529778759474073330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3465649589111148383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b8728f332782f94b9c49389b064e289, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  TriggerChangeModeOpenClose: 1
-  open_type: 0
-  ToOpenTransform: {fileID: 1179395566541834707}
-  TargetRotateVector: {x: 0, y: 0, z: 0}
-  the_door_controller: {fileID: 256413365130823871}
-  Duration: 0.5
-  OpenStartEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  CloseCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenClip: {fileID: 8300000, guid: e4494953b8655664fb42555201b50c9b, type: 3}
-  CloseClip: {fileID: 8300000, guid: e4494953b8655664fb42555201b50c9b, type: 3}
-  CloseCompletedClip: {fileID: 0}
-  ItemAppearanceWhenOpened: 0
-  AlreadyOpened: 0
-  move_x_y_z: 2
 --- !u!1 &7068510313723935997
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,8 +257,6 @@ GameObject:
   - component: {fileID: 3989936882940618606}
   - component: {fileID: 4320174239024581953}
   - component: {fileID: 2433182165657371351}
-  - component: {fileID: 938473570907538100}
-  - component: {fileID: 7615654758420920859}
   m_Layer: 3
   m_Name: "\u5C0F\u3055\u3044\u7A931.019"
   m_TagString: Window
@@ -391,6 +307,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -414,6 +332,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -536,60 +455,3 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &938473570907538100
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7068510313723935997}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8301d5f16a05bea4a8435ce30b0cb757, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  door_open_close_controllers:
-  - {fileID: 7615654758420920859}
-  door_status_network:
-    m_InternalValue: 0
-  NeededKey:
-    m_InternalValue: 0
-  OpenedClosedCompletedAnimation: 1
-  OpenedClosedCompleted: 1
-  open_permit_by_key_controller: {fileID: 0}
-  door_attacked_controller: {fileID: 0}
---- !u!114 &7615654758420920859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7068510313723935997}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b8728f332782f94b9c49389b064e289, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  TriggerChangeModeOpenClose: 1
-  open_type: 0
-  ToOpenTransform: {fileID: 114149177671758606}
-  TargetRotateVector: {x: 0, y: 0, z: 0}
-  the_door_controller: {fileID: 938473570907538100}
-  Duration: 0.5
-  OpenStartEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  CloseCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenClip: {fileID: 8300000, guid: e4494953b8655664fb42555201b50c9b, type: 3}
-  CloseClip: {fileID: 8300000, guid: e4494953b8655664fb42555201b50c9b, type: 3}
-  CloseCompletedClip: {fileID: 0}
-  ItemAppearanceWhenOpened: 0
-  AlreadyOpened: 0
-  move_x_y_z: 2

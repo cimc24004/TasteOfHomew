@@ -24,6 +24,35 @@ public class PhaseStepController : SerializedMonoBehaviour
     [LabelText("フェーズ跨ぎで他フェーズの表示物を全消しする")]
     public bool hardExclusiveShowAcrossPhases = true;
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 追加：フェーズ範囲ゲート
+    // ─────────────────────────────────────────────────────────────────────────────
+    [Title("Phase Range Gates（範囲内ならイベント実行）")]
+    [Tooltip("起動時と（オプションで）フェーズ遷移時に、現在フェーズが各ゲートの範囲内ならそのUnityEventを実行")]
+    public bool enablePhaseRangeGates = true;
+
+    [ShowIf(nameof(enablePhaseRangeGates))]
+    [Tooltip("フェーズの並び順。未設定なら GameFlowController.flowOrder、さらに無ければ enum 順を使用")]
+    public List<GameFlowController.Phase> phaseOrderOverride = new();
+
+    [ShowIf(nameof(enablePhaseRangeGates))]
+    [Tooltip("範囲ゲートのリスト。各要素で [開始→終了] を指定して、その区間に現在フェーズが入っていれば eventOnMatch を実行")]
+    [ListDrawerSettings(Expanded = true, DraggableItems = true)]
+    public List<PhaseRangeGate> phaseRangeGates = new();
+
+    [ShowIf(nameof(enablePhaseRangeGates))]
+    [Tooltip("OnEnable 初期化完了時に範囲ゲートを評価してイベント実行")]
+    public bool evaluateRangeOnEnable = true;
+
+    [ShowIf(nameof(enablePhaseRangeGates))]
+    [Tooltip("フェーズが変わるたびに範囲ゲートを再評価してイベント実行")]
+    public bool evaluateRangeOnPhaseChanged = false;
+
+    // 実行済みゲートを記録（InvokeOnce 用）
+    private readonly HashSet<int> _invokedGateIndices = new();
+
+    // ─────────────────────────────────────────────────────────────────────────────
+
     [Title("Events")]
     public UnityEventPhase   onPhaseEntered;
     public UnityEventPhase   onPhaseExited;
@@ -46,23 +75,20 @@ public class PhaseStepController : SerializedMonoBehaviour
     private void OnEnable()
     {
         if (hideAllObjectsOnStart) HideAllObjects();
-
-        // 初期化はOnEnableで行う（1フレ待って各Awake/Startを待つ）
         InitializeOnEnableAsync().Forget();
     }
 
     private void OnDisable()
     {
-        // 現在のステップの表示物を消す
         if (TryGetStep(CurrentPhaseIndex, CurrentStepIndex, out var step))
             SetActiveList(step.objectsToShow, false, this.gameObject);
 
-        // イベント購読解除（nullガード）
         if (GameFlowController.instance)
             GameFlowController.instance.PhaseChanged -= OnGameFlowPhaseChanged;
 
         _subscribed = false;
         _autoStarted = false;
+        // ゲートの InvokeOnce 状態は保持（必要ならここで _invokedGateIndices.Clear() してリセット運用に）
     }
 
     private async UniTask InitializeOnEnableAsync()
@@ -72,24 +98,26 @@ public class PhaseStepController : SerializedMonoBehaviour
 
         TrySubscribeGameFlow();
 
-        if (!autoStartOnEnable || phases.Count == 0 || _autoStarted)
-            return;
-
-        // すでにGameFlowControllerが動いているならそれに同期、
-        // まだなら startPhase / startStepKey から開始
-        var gfc = GameFlowController.instance;
-        if (gfc && gfc.CurrentIndex >= 0)
+        // autoStart
+        if (autoStartOnEnable && phases.Count > 0 && !_autoStarted)
         {
-            await SwitchPhaseAsync(gfc.CurrentPhase, null, invokeOldExit: false);
-        }
-        else
-        {
-            var has = FindPhaseIndex(startPhase) >= 0;
-            var phaseToUse = has ? startPhase : phases[0].phase;
-            await SwitchPhaseAsync(phaseToUse, startStepKey, invokeOldExit: false);
+            var gfc = GameFlowController.instance;
+            if (gfc && gfc.CurrentIndex >= 0)
+            {
+                await SwitchPhaseAsync(gfc.CurrentPhase, null, invokeOldExit: false);
+            }
+            else
+            {
+                var has = FindPhaseIndex(startPhase) >= 0;
+                var phaseToUse = has ? startPhase : phases[0].phase;
+                await SwitchPhaseAsync(phaseToUse, startStepKey, invokeOldExit: false);
+            }
+            _autoStarted = true;
         }
 
-        _autoStarted = true;
+        // 起動時の範囲評価
+        if (enablePhaseRangeGates && evaluateRangeOnEnable)
+            EvaluatePhaseRangeGates();
     }
 
     private void TrySubscribeGameFlow()
@@ -105,9 +133,105 @@ public class PhaseStepController : SerializedMonoBehaviour
     {
         // Stepの初期キーはPhaseBlock.startStepKeyを使う（null指定で内部ロジック任せ）
         SwitchPhaseAsync(newP, null, invokeOldExit: true).Forget();
+
+        if (enablePhaseRangeGates && evaluateRangeOnPhaseChanged)
+            EvaluatePhaseRangeGates(newP);
     }
 
-    // ===== Public API =====
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 範囲ゲート：評価ロジック
+    // ─────────────────────────────────────────────────────────────────────────────
+    /// <summary>現在フェーズ（引数なし時は GameFlow / CurrentPhase）で範囲ゲートを評価し、該当イベントを実行</summary>
+    public void EvaluatePhaseRangeGates(GameFlowController.Phase? phaseOverride = null)
+    {
+        if (!enablePhaseRangeGates || phaseRangeGates == null || phaseRangeGates.Count == 0)
+            return;
+
+        var phase = phaseOverride ?? (GameFlowController.instance && GameFlowController.instance.CurrentIndex >= 0
+                    ? GameFlowController.instance.CurrentPhase
+                    : CurrentPhase);
+
+        // 並び順のマップを作成
+        var orderMap = BuildPhaseOrderIndex();
+
+        // 不明な並びは弾く
+        if (!orderMap.TryGetValue(phase, out int curIdx))
+        {
+            Debug.LogWarning($"[PhaseStepController] Phase order not defined for '{phase}'");
+            return;
+        }
+
+        for (int i = 0; i < phaseRangeGates.Count; i++)
+        {
+            var gate = phaseRangeGates[i];
+
+            // 開始/終了のインデックスが取れない場合はスキップ
+            if (!orderMap.TryGetValue(gate.fromPhase, out int fromIdx)) continue;
+            if (!orderMap.TryGetValue(gate.toPhase, out int toIdx)) continue;
+
+            // from > to の場合は自動で入れ替え（運用ミス防止）
+            if (fromIdx > toIdx)
+            {
+                var t = fromIdx; fromIdx = toIdx; toIdx = t;
+            }
+
+            // 境界の包含/非包含
+            bool lowerOk = gate.inclusiveFrom ? curIdx >= fromIdx : curIdx > fromIdx;
+            bool upperOk = gate.inclusiveTo   ? curIdx <= toIdx   : curIdx < toIdx;
+
+            if (lowerOk && upperOk)
+            {
+                if (gate.invokeOnce && _invokedGateIndices.Contains(i))
+                    continue;
+
+                try
+                {
+                    gate.eventOnMatch?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[PhaseStepController] PhaseRangeGate '{gate.label}' 実行中に例外: {ex}");
+                }
+
+                if (gate.invokeOnce)
+                    _invokedGateIndices.Add(i);
+            }
+        }
+    }
+
+    /// <summary>フェーズの並び順インデックスを構築（Override → GameFlow → enum）</summary>
+    private Dictionary<GameFlowController.Phase, int> BuildPhaseOrderIndex()
+    {
+        var map = new Dictionary<GameFlowController.Phase, int>();
+
+        // 1) 明示オーバーライド
+        if (phaseOrderOverride != null && phaseOrderOverride.Count > 0)
+        {
+            for (int i = 0; i < phaseOrderOverride.Count; i++)
+                map[phaseOrderOverride[i]] = i;
+            return map;
+        }
+
+        // 2) GameFlowController の flowOrder
+        var gfc = GameFlowController.instance;
+        if (gfc != null && gfc.flowOrder != null && gfc.flowOrder.Count > 0)
+        {
+            for (int i = 0; i < gfc.flowOrder.Count; i++)
+                map[gfc.flowOrder[i]] = i;
+            return map;
+        }
+
+        // 3) enum の宣言順
+        var values = (GameFlowController.Phase[])Enum.GetValues(typeof(GameFlowController.Phase));
+        for (int i = 0; i < values.Length; i++)
+            map[values[i]] = i;
+
+        return map;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Public API（従来）
+    // ─────────────────────────────────────────────────────────────────────────────
 
     [Button("UnityEvent → NextStep")]
     public void NextStepEvent() => NextStep();
@@ -137,7 +261,6 @@ public class PhaseStepController : SerializedMonoBehaviour
         return SwitchStepByIndex(pi, prevSi);
     }
 
-    /// <summary>同一フェーズ内で Step をキー指定で切替。現在と同じなら何もしない。</summary>
     public bool SwitchStep(string stepKey)
     {
         if (string.IsNullOrWhiteSpace(stepKey)) return false;
@@ -150,37 +273,29 @@ public class PhaseStepController : SerializedMonoBehaviour
         return SwitchStepByIndex(pi, si);
     }
 
-    /// <summary>
-    /// フェーズを切り替え（非同期・戻り値あり）
-    /// </summary>
     public async UniTask<bool> SwitchPhaseAsync(GameFlowController.Phase phase, string firstStepKey = null, bool invokeOldExit = true)
     {
         int newPi = FindPhaseIndex(phase);
         if (newPi < 0) { Debug.LogWarning($"Phase '{phase}' not found in list."); return false; }
 
-        // === 同一フェーズ要求の取り扱い ===
         if (Equals(phase, CurrentPhase))
         {
-            // まだステップが未設定なら初期ステップへ
             if (string.IsNullOrWhiteSpace(CurrentStepKey))
             {
                 if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var siInit))
-                    return false; // ステップが無い
+                    return false;
                 return SwitchStepByIndex(newPi, siInit);
             }
 
-            // 既にステップが入っていて、かつ firstStepKey 未指定 or 同じなら何もしない
             if (string.IsNullOrWhiteSpace(firstStepKey) ||
                 string.Equals(firstStepKey, CurrentStepKey, StringComparison.Ordinal))
                 return false;
 
-            // 同一フェーズ内で別ステップに飛びたいとき
             int siSame = FindStepIndex(newPi, firstStepKey);
             if (siSame < 0) return false;
             return SwitchStepByIndex(newPi, siSame);
         }
 
-        // === フェーズが変わる場合 ===
         var oldPhase = CurrentPhase;
         var oldStep  = CurrentStepKey;
 
@@ -199,7 +314,6 @@ public class PhaseStepController : SerializedMonoBehaviour
         if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var si))
             return false;
 
-        // 1フレ待ってからEnter系（初期化順の保険）
         await UniTask.Yield();
 
         onPhaseEntered?.Invoke(CurrentPhase);
@@ -208,15 +322,9 @@ public class PhaseStepController : SerializedMonoBehaviour
         return SwitchStepByIndex(newPi, si);
     }
 
-    /// <summary>
-    /// 互換用：非同期をFire-and-forgetで叩きたいとき（戻り値いらない運用）
-    /// </summary>
     public void SwitchPhase(GameFlowController.Phase phase, string firstStepKey = null, bool invokeOldExit = true)
         => SwitchPhaseAsync(phase, firstStepKey, invokeOldExit).Forget();
 
-    /// <summary>
-    /// フェーズ＋ステップをキー指定で切替（非同期・戻り値あり）
-    /// </summary>
     public UniTask<bool> SwitchAsync(GameFlowController.Phase phase, string stepKey)
     {
         if (Equals(phase, CurrentPhase) && string.Equals(stepKey, CurrentStepKey, StringComparison.Ordinal))
@@ -227,34 +335,26 @@ public class PhaseStepController : SerializedMonoBehaviour
         int si = FindStepIndex(pi, stepKey);
         if (si < 0) return UniTask.FromResult(false);
 
-        // SwitchPhaseAsync 内に同一フェーズ時の最適化がある
         return SwitchPhaseAsync(phase, stepKey);
     }
 
-    /// <summary>
-    /// 互換用：戻り値不要のFire-and-forget
-    /// </summary>
     public void Switch(GameFlowController.Phase phase, string stepKey)
         => SwitchAsync(phase, stepKey).Forget();
 
     // ===== Internals =====
 
-    // 初期ステップ解決を一本化（firstStepKey → PhaseBlock.startStepKey → 0番）
     private bool TryResolveFirstStepIndex(int phaseIndex, string preferredKey, out int stepIndex)
     {
         stepIndex = -1;
         if (!TryGetPhase(phaseIndex, out var ph) || ph.steps == null || ph.steps.Count == 0)
             return false;
 
-        // 1) 引数で指定された firstStepKey を最優先
         if (!string.IsNullOrWhiteSpace(preferredKey))
             stepIndex = FindStepIndex(phaseIndex, preferredKey);
 
-        // 2) PhaseBlock に設定された startStepKey
         if (stepIndex < 0 && !string.IsNullOrWhiteSpace(ph.startStepKey))
             stepIndex = FindStepIndex(phaseIndex, ph.startStepKey);
 
-        // 3) どちらも見つからなければ 0 番
         if (stepIndex < 0) stepIndex = 0;
 
         stepIndex = Mathf.Clamp(stepIndex, 0, ph.steps.Count - 1);
@@ -288,7 +388,6 @@ public class PhaseStepController : SerializedMonoBehaviour
         if (!string.IsNullOrEmpty(oldStepKey))
             onStepChanged?.Invoke(oldStepKey, CurrentStepKey);
 
-        // Debug.Log($"{CurrentPhase} / {CurrentStepKey} / {CurrentStepIndex}");
         return true;
     }
 
@@ -299,7 +398,6 @@ public class PhaseStepController : SerializedMonoBehaviour
                 SetActiveList(st.objectsToShow, false, this.gameObject);
     }
 
-    // 自分自身を誤ってSetActive(false)しないようにselfガード
     private static void SetActiveList(List<GameObject> list, bool active, GameObject self = null)
     {
         if (list == null) return;
@@ -349,6 +447,8 @@ public class PhaseStepController : SerializedMonoBehaviour
         step = ph.steps[stepIndex]; return true;
     }
 
+    // ===== データ定義 =====
+
     [Serializable]
     public class PhaseBlock
     {
@@ -372,6 +472,26 @@ public class PhaseStepController : SerializedMonoBehaviour
         public List<UnityEvent> onEnterEvents = new();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 範囲ゲート用データ
+    // ─────────────────────────────────────────────────────────────────────────────
+    [Serializable]
+    public class PhaseRangeGate
+    {
+        [LabelText("ラベル（任意）")] public string label;
+
+        [LabelText("開始フェーズ")] public GameFlowController.Phase fromPhase = GameFlowController.Phase.HomeSearch;
+        [LabelText("終了フェーズ")] public GameFlowController.Phase toPhase   = GameFlowController.Phase.Escape;
+
+        [LabelText("開始を含む")] public bool inclusiveFrom = true;
+        [LabelText("終了を含む")] public bool inclusiveTo   = true;
+
+        [LabelText("一致時イベント")] public UnityEvent eventOnMatch;
+
+        [LabelText("一度だけ実行")] public bool invokeOnce = true;
+    }
+
+    // ===== UnityEvent ジェネリック（外部定義の UnityEvent2 を利用） =====
     [Serializable] public class UnityEventPhase   : UnityEvent2<GameFlowController.Phase> {}
     [Serializable] public class UnityEventPhase2  : UnityEvent2<GameFlowController.Phase, GameFlowController.Phase> {}
     [Serializable] public class UnityEventString  : UnityEvent2<string> {}

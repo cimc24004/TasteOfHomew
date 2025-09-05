@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 public class PlayerStatus : Singleton<PlayerStatus>
 {
     public PlayerInput playerInput;
+    public Transform playerHead;
+    public GameObject CameraRoot;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -9049132808808881180, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: -9049132808808881180, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_TagString
@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -2922767352018641119, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: -2922767352018641119, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_TagString
@@ -75,6 +75,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_Name
       value: "\u3075\u3059\u307E (1)"
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
+      propertyPath: m_Layer
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 8805825691427625288, guid: ff7494b3149e6184c95ffd87fa69adfd, type: 3}
       propertyPath: m_LocalScale.y
@@ -177,6 +181,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 2
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &8646798988429166799
 AudioSource:
   m_ObjectHideFlags: 0
@@ -340,6 +352,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 2
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &5456142955750057641
 AudioSource:
   m_ObjectHideFlags: 0

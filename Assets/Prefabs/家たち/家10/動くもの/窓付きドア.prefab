@@ -62,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: b91ac597547485448836992de8d9fb4a, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: b91ac597547485448836992de8d9fb4a, type: 3}
       propertyPath: m_TagString
@@ -224,6 +224,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!65 &2960428867610727360
 BoxCollider:
   m_ObjectHideFlags: 0

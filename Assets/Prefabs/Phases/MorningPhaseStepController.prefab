@@ -424,18 +424,6 @@ MonoBehaviour:
               m_BoolArgument: 0
             m_CallState: 2
           - m_Target: {fileID: 0}
-            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
-            m_MethodName: SetNight
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-          - m_Target: {fileID: 0}
             m_TargetAssemblyTypeName: DoorKeyController, Assembly-CSharp
             m_MethodName: Lock
             m_Mode: 1
@@ -492,18 +480,6 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
-          - m_Target: {fileID: 0}
-            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
-            m_MethodName: SetNight
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
     - key: 2
       objectsToShow:
       - {fileID: 0}
@@ -535,18 +511,6 @@ MonoBehaviour:
           - m_Target: {fileID: 0}
             m_TargetAssemblyTypeName: DoorKeyController, Assembly-CSharp
             m_MethodName: Unlock
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-          - m_Target: {fileID: 0}
-            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
-            m_MethodName: SetNight
             m_Mode: 1
             m_Arguments:
               m_ObjectArgument: {fileID: 0}
@@ -607,20 +571,9 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
-          - m_Target: {fileID: 0}
-            m_TargetAssemblyTypeName: TimeOfDayRenderer, Assembly-CSharp
-            m_MethodName: SetNight
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
     - key: 2
       objectsToShow:
+      - {fileID: 0}
       - {fileID: 0}
       onEnterEvents:
       - m_PersistentCalls:
@@ -641,11 +594,22 @@ MonoBehaviour:
     startStepKey: 1
     steps:
     - key: 1
-      objectsToShow:
-      - {fileID: 0}
+      objectsToShow: []
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: EscapeController, Assembly-CSharp
+            m_MethodName: ExecuteEndFromFlags
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
           - m_Target: {fileID: 0}
             m_TargetAssemblyTypeName: SceneManagerController, Assembly-CSharp
             m_MethodName: LoadScene
@@ -663,6 +627,74 @@ MonoBehaviour:
   startStepKey: 
   hideAllObjectsOnStart: 1
   hardExclusiveShowAcrossPhases: 1
+  enablePhaseRangeGates: 1
+  phaseOrderOverride: 
+  phaseRangeGates:
+  - label: 
+    fromPhase: 4
+    toPhase: 8
+    inclusiveFrom: 1
+    inclusiveTo: 1
+    eventOnMatch:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: FlagEventRunner, Assembly-CSharp
+          m_MethodName: SetTrue
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: HomeSearchEnd
+            m_BoolArgument: 0
+          m_CallState: 2
+    invokeOnce: 1
+  - label: 
+    fromPhase: 6
+    toPhase: 8
+    inclusiveFrom: 1
+    inclusiveTo: 1
+    eventOnMatch:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: FlagEventRunner, Assembly-CSharp
+          m_MethodName: SetTrue
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: Key1Destroy
+            m_BoolArgument: 0
+          m_CallState: 2
+    invokeOnce: 1
+  - label: 
+    fromPhase: 3
+    toPhase: 8
+    inclusiveFrom: 1
+    inclusiveTo: 1
+    eventOnMatch:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: FlagEventRunner, Assembly-CSharp
+          m_MethodName: SetTrue
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: SetNight
+            m_BoolArgument: 0
+          m_CallState: 2
+    invokeOnce: 1
+  evaluateRangeOnEnable: 1
+  evaluateRangeOnPhaseChanged: 0
   onPhaseEntered:
     m_PersistentCalls:
       m_Calls: []

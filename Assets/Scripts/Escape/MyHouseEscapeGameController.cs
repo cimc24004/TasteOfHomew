@@ -1,25 +1,18 @@
 // MyHouseEscapeGameController.cs
 using System.Collections;
+using Cysharp.Threading.Tasks;          // ← UniTask だけ使う
 using UnityEngine;
 using UnityEngine.Events;
 
 [AddComponentMenu("Game/Controllers/MyHouseEscapeGameController")]
 public class MyHouseEscapeGameController : MonoBehaviour
 {
-    public enum State { Idle, PhoneCalled, Stealth, Success, Failed }
+    public enum State { Idle, PhoneCalled, MotherEntered, Stealth, Success, Failed }
     public State CurrentState { get; private set; } = State.Idle;
 
     [Header("電話インタラクト後の挙動")]
     [Tooltip("電話にインタラクトした瞬間に呼ばれる（通報SE/画面表示などを割り当て）")]
     public UnityEvent onPhoneInteracted;
-
-    [Header("母親の登場")]
-    [Tooltip("母親をプレハブから生成したい場合に設定（空なら生成しない）")]
-    [SerializeField] private GameObject motherPrefab;
-    [Tooltip("母親のスポーン位置（未設定ならこのオブジェクトの位置）")]
-    [SerializeField] private Transform motherSpawnPoint;
-    [Tooltip("電話後に自動で母親をスポーンさせる")]
-    [SerializeField] private bool spawnMotherOnPhone = true;
 
     [Tooltip("母親が“登場した”タイミングで呼ぶ（ドア開閉SE/カメラ/AI起動など）")]
     public UnityEvent onMotherEnter;
@@ -41,53 +34,70 @@ public class MyHouseEscapeGameController : MonoBehaviour
     public UnityEvent onStealthFailed;
 
     // ランタイム
-    private GameObject motherInstance;
+    [Header("発見時の演出")]
+    [SerializeField] private GameObject motherCPUHead;                 // カメラ注視ターゲット
+    [SerializeField] private CameraFocusController cameraFocusController;
+    [SerializeField] private AudioSource FoundOutAudioSource;
+
+    [Header("UI/その他")]
+    [SerializeField] private GameOverController gameOverController;    // Inspector で設定可（未設定なら自動取得）
+
     private Coroutine stealthCo;
     private float remain;
+    private bool _failing; // 多重起動防止
 
-    /// <summary>
-    /// 電話機のインタラクトから呼ぶ。InspectorでButtonや自作Interactから紐付け推奨。
-    /// </summary>
+    void Awake()
+    {
+        // 参照の自動補完
+        if (gameOverController == null)
+        {
+            // あなたの実装が Singleton の場合
+            // （無い場合でも FindObjectOfType で拾う）
+            try { gameOverController = GameOverController.instance; } catch { /* ignore */ }
+            if (gameOverController == null)
+                gameOverController = FindObjectOfType<GameOverController>(true);
+        }
+
+        if (cameraFocusController == null)
+            cameraFocusController = FindObjectOfType<CameraFocusController>(true);
+    }
+
+    void Start()
+    {
+        // 必要ならここで追加の参照取得をしてOK
+    }
+
     public void OnPhoneInteracted()
     {
-        if (CurrentState != State.Idle) return;
-
         CurrentState = State.PhoneCalled;
         onPhoneInteracted?.Invoke();
-
-        // 母親登場処理
-        if (spawnMotherOnPhone)
-        {
-            SpawnOrShowMother();
-        }
-        onMotherEnter?.Invoke();
-
-        // ステルス開始（警察が来るまで耐える）
-        BeginStealth();
     }
 
-    /// <summary>
-    /// AIやトリガーから「プレイヤーが見つかった」と通知する。
-    /// </summary>
+    public void OnMotherEntered()
+    {
+        onMotherEnter?.Invoke();
+        CurrentState = State.MotherEntered;
+    }
+
+    public void OnStealthGameStart()
+    {
+        onStealthStart.Invoke();
+        // 必要なら BeginStealth(); を呼ぶ
+    }
+
+    /// <summary>AIやトリガーから「プレイヤーが見つかった」と通知する。</summary>
     public void NotifyPlayerDetected()
     {
-        if (CurrentState != State.Stealth) return;
-        FailStealth();
+        // ここはイベントハンドラなので「火を付けて放置」でOK
+        if (!_failing) FailStealthAsync().Forget();
     }
 
-    /// <summary>
-    /// 外部（カットシーン等）から「警察が到着した」と通知する場合に使用。
-    /// 自動カウントダウンを使わず、演出のタイミングで成功にしたい時に便利。
-    /// </summary>
+    /// <summary>外部（カットシーン等）から「警察が到着した」と通知</summary>
     public void NotifyPoliceArrived()
     {
-        if (CurrentState != State.Stealth) return;
         SucceedStealth();
     }
 
-    /// <summary>
-    /// 進捗（0..1）付きで現在の残り時間をUIなどから参照したい時。
-    /// </summary>
     public float GetStealthProgress01()
     {
         if (policeArrivalSeconds <= 0f) return 1f;
@@ -95,21 +105,6 @@ public class MyHouseEscapeGameController : MonoBehaviour
     }
 
     // ===== 内部処理 =====
-
-    private void SpawnOrShowMother()
-    {
-        if (motherInstance != null)
-        {
-            motherInstance.SetActive(true);
-            return;
-        }
-
-        if (motherPrefab == null) return;
-
-        var pos = motherSpawnPoint != null ? motherSpawnPoint.position : transform.position;
-        var rot = motherSpawnPoint != null ? motherSpawnPoint.rotation : Quaternion.identity;
-        motherInstance = Instantiate(motherPrefab, pos, rot);
-    }
 
     private void BeginStealth()
     {
@@ -122,7 +117,6 @@ public class MyHouseEscapeGameController : MonoBehaviour
 
     private IEnumerator StealthCountdown()
     {
-        // 0秒設定なら即成功
         if (remain <= 0f)
         {
             SucceedStealth();
@@ -136,10 +130,7 @@ public class MyHouseEscapeGameController : MonoBehaviour
             yield return null;
         }
 
-        if (CurrentState == State.Stealth)
-        {
-            SucceedStealth();
-        }
+        if (CurrentState == State.Stealth) SucceedStealth();
     }
 
     private void SucceedStealth()
@@ -147,14 +138,34 @@ public class MyHouseEscapeGameController : MonoBehaviour
         if (stealthCo != null) { StopCoroutine(stealthCo); stealthCo = null; }
         CurrentState = State.Success;
         onStealthSuccess?.Invoke();
-        // 成功時の後片付け（必要なら母親AI停止など）をUnityEvent側で実装推奨
     }
 
-    private void FailStealth()
+    /// <summary>
+    /// 失敗処理：音→カメラ注視→少し待つ→GameOver→イベント
+    /// fire-and-forget 用に UniTask で実装
+    /// </summary>
+    private async UniTask FailStealthAsync()
     {
+        _failing = true;
+
         if (stealthCo != null) { StopCoroutine(stealthCo); stealthCo = null; }
         CurrentState = State.Failed;
+
+        if (FoundOutAudioSource != null) FoundOutAudioSource.Play();
+
+        if (cameraFocusController != null && motherCPUHead != null)
+            cameraFocusController.FocusOnTransform(motherCPUHead.transform);
+
+        // タイムスケール0でも確実に待つ
+        await UniTask.WaitForSeconds(1f, ignoreTimeScale: true);
+
+        if (gameOverController != null)
+            gameOverController.GameOver();
+        else
+            Debug.LogWarning("[MyHouseEscape] GameOverController の参照がありません。");
+
         onStealthFailed?.Invoke();
-        // 失敗時の後片付けもUnityEventで
+
+        _failing = false;
     }
 }

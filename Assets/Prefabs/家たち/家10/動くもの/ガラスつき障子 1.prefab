@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8966142420477549944, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: -8966142420477549944, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
       propertyPath: m_TagString
@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4357004213452203586, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: -4357004213452203586, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
       propertyPath: m_TagString
@@ -67,6 +67,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
       propertyPath: m_Name
       value: "\u30AC\u30E9\u30B9\u3064\u304D\u969C\u5B50 1"
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: f3dbf72e049037748a2899913ff0c52a, type: 3}
+      propertyPath: m_Layer
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -167,6 +171,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 2
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &3062723860265542586
 AudioSource:
   m_ObjectHideFlags: 0
@@ -330,6 +342,14 @@ MonoBehaviour:
   CloseClip: {fileID: 0}
   CloseCompletedClip: {fileID: 0}
   move_x_y_z: 2
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!82 &8277014078659484671
 AudioSource:
   m_ObjectHideFlags: 0
