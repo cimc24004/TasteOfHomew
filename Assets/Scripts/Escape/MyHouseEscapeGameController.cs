@@ -7,7 +7,7 @@ using UnityEngine.Events;
 [AddComponentMenu("Game/Controllers/MyHouseEscapeGameController")]
 public class MyHouseEscapeGameController : MonoBehaviour
 {
-    public enum State { Idle, PhoneCalled, MotherEntered, Stealth, Success, Failed }
+    public enum State { Idle, PhoneCalled, MotherEntered, Stealth,MotherKill, Success, Failed }
     public State CurrentState { get; private set; } = State.Idle;
 
     [Header("電話インタラクト後の挙動")]

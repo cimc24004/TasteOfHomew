@@ -12,6 +12,7 @@ public class EscapeController : MonoBehaviour
     [Header("フラグキー")]
     [SerializeField] private string friendHouseKey = "EscapeFriendHouse";
     [SerializeField] private string myHouseKey = "EscapeMyHouse";
+    [SerializeField] private string myMotherKilledKey = "EscapeMyHouseMotherKiled"; // ← これを“使う”ようにした
 
     [Header("イベント（Start / End を外部からアサイン）")]
     public UnityEvent onFriendStart;
@@ -19,17 +20,20 @@ public class EscapeController : MonoBehaviour
 
     public UnityEvent onMyStart;
     public UnityEvent onMyEnd;
+
     private DataShareController dataShareController;
+
     private void Awake()
     {
         if (dialogueController == null) TryFindDialogueControllerSingleton();
-        
     }
+
     void Start()
     {
         dataShareController = DataShareController.Instance;
     }
-    // --- 既存の Start 呼び出し用メソッド（そのまま） ---
+
+    // --- Start 系（既存） ---
     public void OnFriendSelected()
     {
         Debug.Log("[EscapeController] Friend selected");
@@ -56,54 +60,71 @@ public class EscapeController : MonoBehaviour
         onMyEnd?.Invoke();
     }
 
-    // ---------- ここから追加メソッド ----------
+    // ★ 追加：母殺しエンド（専用フラグを立てて、基本は onMyEnd を流用）
+    public void OnMyMotherKilledEnded()
+    {
+        dataShareController.SetFlagToTrue(myMotherKilledKey);
+        Debug.Log("[EscapeController] My Mother Killed end");
+        onMyEnd?.Invoke(); // 別イベントが欲しければ onMyMotherKilledEnd を新設して差し替え可
+    }
+
+    // ---------- ここからフラグ駆動 ----------
     /// <summary>
-    /// DialogueController の flags から判断して、
-    /// friend が立っていれば OnFriendEnded() を、そうでなければ my が立っていれば OnMyEnded() を呼ぶ。
-    /// 優先度：Friend > My
+    /// DialogueController の flags から判断して End を実行。
+    /// 優先度：Friend > MyMotherKilled > My
     /// </summary>
     public void ExecuteEndFromFlags()
     {
-        // try to ensure dialogueController reference
         if (dialogueController == null) TryFindDialogueControllerSingleton();
 
-        bool friendVal = false;
-        bool myVal = false;
+        bool friendVal, myVal, mkVal;
         bool friendFound = TryGetFlagValue(friendHouseKey, out friendVal);
-        bool myFound = TryGetFlagValue(myHouseKey, out myVal);
+        bool myFound     = TryGetFlagValue(myHouseKey, out myVal);
+        bool mkFound     = TryGetFlagValue(myMotherKilledKey, out mkVal);
 
-        // ログ（デバッグ用）
-        Debug.Log($"[EscapeController] ExecuteEndFromFlags: friendFound={friendFound}, friendVal={friendVal}, myFound={myFound}, myVal={myVal}");
+        Debug.Log($"[EscapeController] ExecuteEndFromFlags: friend({friendFound}:{friendVal}) / motherKill({mkFound}:{mkVal}) / my({myFound}:{myVal})");
 
-        // 優先度：友達フラグが true ならそちらの End を実行
-        if (friendFound && friendVal)
-        {
-            OnFriendEnded();
-            return;
-        }
+        // 優先度：Friend > MotherKilled > My
+        if (friendFound && friendVal) { OnFriendEnded(); return; }
+        if (mkFound && mkVal)         { OnMyMotherKilledEnded(); return; }
+        if (myFound && myVal)         { OnMyEnded(); return; }
 
-        if (myFound && myVal)
-        {
-            OnMyEnded();
-            return;
-        }
-
-        // どちらも見つからない or false のときは何もしない（必要ならログを追加）
         Debug.LogWarning("[EscapeController] No matching escape flag was true. ExecuteEndFromFlags did nothing.");
     }
 
-    // --- フラグ取得の柔軟処理（DialogueController 実装に依存しない） ---
+    /// <summary>
+    /// flags をチェックして該当する Start を呼ぶ。
+    /// 優先度：Friend > MyMotherKilled > My（Start は MotherKilled でも My 側で開始する想定）
+    /// </summary>
+    public void ExecuteStartFromFlags()
+    {
+        if (dialogueController == null) TryFindDialogueControllerSingleton();
+
+        bool friendVal, myVal, mkVal;
+        bool friendFound = TryGetFlagValue(friendHouseKey, out friendVal);
+        bool myFound     = TryGetFlagValue(myHouseKey, out myVal);
+        bool mkFound     = TryGetFlagValue(myMotherKilledKey, out mkVal);
+
+        Debug.Log($"[EscapeController] ExecuteStartFromFlags: friend({friendFound}:{friendVal}) / motherKill({mkFound}:{mkVal}) / my({myFound}:{myVal})");
+
+        if (friendFound && friendVal) { OnFriendSelected(); return; }
+
+        // 母殺しルートは基本「自宅ルートの派生」なので Start は My 側に寄せる
+        if ((mkFound && mkVal) || (myFound && myVal)) { OnMySelected(); return; }
+
+        Debug.LogWarning("[EscapeController] ExecuteStartFromFlags: no true flag found, nothing executed.");
+    }
+
+    // ---------- フラグ取得（既存の柔軟ロジック） ----------
     private bool TryGetFlagValue(string key, out bool value)
     {
         value = false;
-
         if (string.IsNullOrEmpty(key)) return false;
 
         if (dialogueController != null)
         {
             Type t = dialogueController.GetType();
 
-            // よくあるメソッド名を試す（Has/Get系）
             string[] methodNames = { "HasFlag", "Has", "HasGameFlag", "GetFlag", "GetBool", "IsFlagSet" };
             foreach (var mn in methodNames)
             {
@@ -113,17 +134,12 @@ public class EscapeController : MonoBehaviour
                     try
                     {
                         object ret = mi.Invoke(dialogueController, new object[] { key });
-                        if (ret is bool b)
-                        {
-                            value = b;
-                            return true;
-                        }
+                        if (ret is bool b) { value = b; return true; }
                     }
-                    catch { /* ignore */ }
+                    catch { }
                 }
             }
 
-            // 'flags' 等のフィールド/プロパティを探す
             string[] fieldNames = { "flags", "gameFlags", "GameFlags" };
             foreach (var fn in fieldNames)
             {
@@ -143,7 +159,6 @@ public class EscapeController : MonoBehaviour
             }
         }
 
-        // 静的 GameFlags クラスがあればそれを試す（任意）
         Type gfType = Type.GetType("GameFlags") ?? Type.GetType("GameFlags,Assembly-CSharp");
         if (gfType != null)
         {
@@ -154,17 +169,12 @@ public class EscapeController : MonoBehaviour
                 try
                 {
                     object ret = mi.Invoke(null, new object[] { key });
-                    if (ret is bool b)
-                    {
-                        value = b;
-                        return true;
-                    }
+                    if (ret is bool b) { value = b; return true; }
                 }
-                catch { /* ignore */ }
+                catch { }
             }
         }
 
-        // 見つからなかった
         return false;
     }
 
@@ -173,7 +183,6 @@ public class EscapeController : MonoBehaviour
         value = false;
         if (container == null) return false;
 
-        // IDictionary 風の取り扱い
         if (container is System.Collections.IDictionary dict)
         {
             try
@@ -181,11 +190,7 @@ public class EscapeController : MonoBehaviour
                 if (dict.Contains(key))
                 {
                     object v = dict[key];
-                    if (v is bool b)
-                    {
-                        value = b;
-                        return true;
-                    }
+                    if (v is bool b) { value = b; return true; }
                 }
             }
             catch { }
@@ -201,71 +206,29 @@ public class EscapeController : MonoBehaviour
                 try
                 {
                     object ret = mi.Invoke(container, new object[] { key });
-                    if (ret is bool b)
-                    {
-                        value = b;
-                        return true;
-                    }
+                    if (ret is bool b) { value = b; return true; }
                 }
                 catch { }
             }
         }
 
-        // インデクサ試行
         try
         {
             PropertyInfo indexer = ct.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
             if (indexer != null)
             {
                 object ret = indexer.GetValue(container, new object[] { key });
-                if (ret is bool b)
-                {
-                    value = b;
-                    return true;
-                }
+                if (ret is bool b) { value = b; return true; }
             }
         }
         catch { }
 
         return false;
     }
-    /// <summary>
-    /// flags をチェックして該当する Start メソッドを呼ぶ。
-    /// 優先度：Friend > My
-    /// DialogueController の flags を参照する実装（dialogueController フィールドに依存）。
-    /// </summary>
-    public void ExecuteStartFromFlags()
-    {
-        // dialogueController が未設定なら探す（既存のヘルパを利用）
-        if (dialogueController == null) TryFindDialogueControllerSingleton();
-
-        bool friendVal = false;
-        bool myVal = false;
-        bool friendFound = TryGetFlagValue(friendHouseKey, out friendVal);
-        bool myFound = TryGetFlagValue(myHouseKey, out myVal);
-
-        Debug.Log($"[EscapeController] ExecuteStartFromFlags: friendFound={friendFound}, friendVal={friendVal}, myFound={myFound}, myVal={myVal}");
-
-        // friend優先
-        if (friendFound && friendVal)
-        {
-            OnFriendSelected(); // Start イベントを呼ぶ
-            return;
-        }
-
-        if (myFound && myVal)
-        {
-            OnMySelected(); // Start イベントを呼ぶ
-            return;
-        }
-
-        Debug.LogWarning("[EscapeController] ExecuteStartFromFlags: no true flag found, nothing executed.");
-    }
 
     // シーンから DialogueController を探す簡易ヘルパ
     private void TryFindDialogueControllerSingleton()
     {
-        // try static Instance property first
         Type dcType = Type.GetType("DialogueController") ?? Type.GetType("DialogueController,Assembly-CSharp");
         if (dcType != null)
         {
@@ -293,7 +256,6 @@ public class EscapeController : MonoBehaviour
             }
         }
 
-        // fallback: find by name in scene
         foreach (var mb in FindObjectsOfType<MonoBehaviour>())
         {
             if (mb.GetType().Name == "DialogueController")

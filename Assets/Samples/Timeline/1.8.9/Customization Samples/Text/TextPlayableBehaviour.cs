@@ -3,7 +3,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Playables;
-
+using Sirenix.OdinInspector;
 namespace Timeline.Samples
 {
     // Runtime representation of a TextClip.
@@ -16,7 +16,7 @@ namespace Timeline.Samples
 
         [Tooltip("The size of the font to use")]
         public int fontSize = 14;
-
+        [TextArea(10, 20)]
         [Tooltip("The text to display")]
         public string text = "";
     }

@@ -120,7 +120,7 @@ public class StealthGameController : SerializedMonoBehaviour
             var p = GameObject.FindGameObjectWithTag("Player");
             if (p) player = p.transform;
         }
-
+        myHouseEscapeGameController.OnStealthGameStart();
         // Timer開始
         if (enableTimer) StartTimer();
 
@@ -242,7 +242,7 @@ public class StealthGameController : SerializedMonoBehaviour
         timerCo = StartCoroutine(TimerLoop());
     }
 
-    private void StopTimer()
+    public void StopTimer()
     {
         if (timerBox != null) timerBox.SetActive(false);  // ← 追加
         if (timerCo != null) { StopCoroutine(timerCo); timerCo = null; }
