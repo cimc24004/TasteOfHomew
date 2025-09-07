@@ -140,6 +140,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "FriendGameJump",
+                    "type": "Button",
+                    "id": "d0bab97d-8c5b-4c32-aa1f-1277986788a4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -624,6 +633,17 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "LightWheelAction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "579a5c0a-8fb4-4b07-8779-5d41b20305f7",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "FriendGameJump",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
