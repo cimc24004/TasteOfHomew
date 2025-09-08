@@ -13709,6 +13709,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 731968534120736071, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_SegmentsPerUnit
+      value: 48.11
+      objectReference: {fileID: 0}
     - target: {fileID: 958066724711403234, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_LocalScale.y
       value: 1.9999998
@@ -13740,6 +13744,14 @@ PrefabInstance:
     - target: {fileID: 1618800448369105456, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_LocalScale.z
       value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1849331107627670905, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_SegmentsPerUnit
+      value: 48.11
+      objectReference: {fileID: 0}
+    - target: {fileID: 1849519021951186345, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_Mesh
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1872888414689674205, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: serializationData.Prefab
@@ -13923,7 +13935,7 @@ PrefabInstance:
       objectReference: {fileID: 2428109202163194080, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
     - target: {fileID: 2490428122467062417, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_LocalScale.x
-      value: 4.767353
+      value: 4.7673535
       objectReference: {fileID: 0}
     - target: {fileID: 2490428122467062417, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_LocalScale.y
@@ -13937,6 +13949,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 2558764450415684346, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+    - target: {fileID: 2701958271249404805, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2838849397710449101, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -14193,6 +14209,10 @@ PrefabInstance:
       propertyPath: onClosedOnce.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
       objectReference: {fileID: 1682412782}
+    - target: {fileID: 7164334608777396117, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7260636759074110133, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -14892,7 +14912,6 @@ Transform:
   - {fileID: 496572358}
   - {fileID: 315718229}
   - {fileID: 914382918}
-  - {fileID: 1980239149}
   - {fileID: 725590969}
   - {fileID: 1985891074}
   - {fileID: 1879786755}
@@ -16454,94 +16473,6 @@ MonoBehaviour:
   onNotFound:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &1980239148
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1980239149}
-  - component: {fileID: 1980239151}
-  - component: {fileID: 1980239150}
-  m_Layer: 6
-  m_Name: ChooseCollider (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1980239149
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1980239148}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.698, y: 0, z: -16.888}
-  m_LocalScale: {x: 0.40603, y: 0.40603, z: 0.40603}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1747736189}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1980239150
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1980239148}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
-  targetTag: Player
-  onEnter:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 618233590}
-        m_TargetAssemblyTypeName: DialogueCaller, Assembly-CSharp
-        m_MethodName: Call
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onExit:
-    m_PersistentCalls:
-      m_Calls: []
-  layerMask:
-    serializedVersion: 2
-    m_Bits: 511
---- !u!65 &1980239151
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1980239148}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 3.1713712, z: 5.2215424}
-  m_Center: {x: 0, y: 1.0856856, z: 0.12231445}
 --- !u!1 &1985891073
 GameObject:
   m_ObjectHideFlags: 0
