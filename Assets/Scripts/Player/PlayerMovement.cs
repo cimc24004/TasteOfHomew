@@ -1,39 +1,45 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Sirenix.OdinInspector;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : SerializedMonoBehaviour
 {
     [Header("移動")]
     public float speed = 5f;
+    public float runSpeed = 8f;
+    public float crouchSpeed = 2f;
     public float gravity = -9.81f;
 
     [Header("Cinemachine3 ターゲット")]
     [Tooltip("CinemachineのFollow/LookAtに設定しているターゲット(子)")]
     public Transform cameraRoot;
 
-    [Header("しゃがみ(カメラのみ)")]
-    [Tooltip("立ち時の cameraRoot の localY。0ならStart時に自動取得")]
+    [Header("頭のTransform (任意)")]
+    [Tooltip("モデルのHeadボーンなど。cameraRootと同じように上下移動する")]
+    public Transform head;
+
+    [Header("しゃがみ(カメラ&Head)")]
     public float cameraStandLocalY = 0f;
-    [Tooltip("しゃがみ時の cameraRoot の localY。0なら自動計算(standY - crouchDrop)")]
     public float cameraCrouchLocalY = 0f;
-    [Tooltip("立ち→しゃがみの落差(自動計算用)")]
     public float crouchDrop = 0.5f;
-    [Tooltip("カメラY補間速度")]
     public float cameraLerpSpeed = 12f;
-    [Tooltip("トグル式(ON) / ホールド式(OFF)")]
     public bool crouchToggle = true;
 
-    [Header("オプション: コリジョンも低くする? (デフォルトOFF)")]
+    [Header("オプション: コリジョンも低くする?")]
     public bool applyControllerCrouch = false;
     public float standHeight = 1.8f;
     public float crouchHeight = 1.2f;
-    public float crouchSpeedMultiplier = 0.6f;
     public LayerMask ceilingMask = ~0;
 
     [Header("Input System (Action名)")]
     public string moveActionName = "Move";
+    public string sprintActionName = "Sprint";
     public string crouchActionName = "Crouch";
+
+    [Header("参照コンポーネント")]
+    [SerializeField] private FootStepController playerFootStepController;
+    [SerializeField] private GroundCheck groundCheck;
 
     private CharacterController controller;
     private Vector3 velocity;
@@ -41,34 +47,33 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerInput playerInput;
     private InputAction moveAction;
+    private InputAction sprintAction;
     private InputAction crouchAction;
 
     // 状態
     private bool isCrouching = false;
+    private bool isRunning = false;
     private float targetCameraLocalY;
-    private float moveSpeedScale => (isCrouching && applyControllerCrouch) ? crouchSpeedMultiplier : 1f;
+    private float targetHeadLocalY;
 
-    // CC初期
     private float defaultHeight;
     private Vector3 defaultCenter;
+    private float headStandLocalY;
+    private float headCrouchLocalY;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         mainCamera = Camera.main;
 
-        // PlayerInputの取得（PlayerStatus経由があるならそっちでもOK）
         playerInput = GetComponent<PlayerInput>();
         if (!playerInput && PlayerStatus.instance != null)
             playerInput = PlayerStatus.instance.playerInput;
 
-        moveAction   = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(moveActionName)   ? "Move"   : moveActionName);
+        moveAction   = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(moveActionName) ? "Move" : moveActionName);
+        sprintAction = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(sprintActionName) ? "Sprint" : sprintActionName);
         crouchAction = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(crouchActionName) ? "Crouch" : crouchActionName);
 
-        if (!cameraRoot)
-            Debug.LogWarning("cameraRoot 未設定。Cinemachineのターゲット(子)を割り当ててね。");
-
-        // カメラYの初期化
         if (cameraRoot)
         {
             var lp = cameraRoot.localPosition;
@@ -78,19 +83,27 @@ public class PlayerMovement : MonoBehaviour
             cameraRoot.localPosition = new Vector3(lp.x, targetCameraLocalY, lp.z);
         }
 
-        // CC初期値
+        if (head)
+        {
+            var lp = head.localPosition;
+            headStandLocalY = lp.y;
+            headCrouchLocalY = headStandLocalY - Mathf.Abs(crouchDrop);
+            targetHeadLocalY = headStandLocalY;
+            head.localPosition = new Vector3(lp.x, targetHeadLocalY, lp.z);
+        }
+
         defaultHeight = controller.height;
         defaultCenter = controller.center;
         if (standHeight <= 0f) standHeight = defaultHeight;
         if (crouchHeight <= 0f) crouchHeight = Mathf.Max(0.8f, standHeight * 0.65f);
 
-        // 立ち姿勢適用（ただし applyControllerCrouch がONのときのみCC変更）
         if (applyControllerCrouch) ApplyControllerStand();
     }
 
     void Update()
     {
         // ===== 移動 =====
+        isRunning = sprintAction != null ? sprintAction.IsPressed() : false;
         Vector2 input = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
 
         Vector3 basisRight = mainCamera ? mainCamera.transform.right : transform.right;
@@ -98,23 +111,81 @@ public class PlayerMovement : MonoBehaviour
         basisRight.y = 0f; basisFwd.y = 0f;
         basisRight.Normalize(); basisFwd.Normalize();
 
+        float moveSpd;
+        if (isCrouching)
+        {
+            moveSpd = crouchSpeed;
+        }
+        else if (isRunning)
+        {
+            moveSpd = runSpeed;
+        }
+        else
+        {
+            moveSpd = speed;
+        }
+
         Vector3 move = (basisRight * input.x + basisFwd * input.y).normalized;
-        controller.Move(move * speed * moveSpeedScale * Time.deltaTime);
+        controller.Move(move * moveSpd * Time.deltaTime);
 
         // ===== 重力 =====
-        if (controller.isGrounded && velocity.y < 0) velocity.y = -2f;
+        if (groundCheck.IsGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
 
         // ===== しゃがみ入力 =====
         HandleCrouchInput();
 
-        // ===== カメラLerp（cameraRootだけ動かす）=====
+        // ===== カメラ & Head Lerp =====
         if (cameraRoot)
         {
             var lp = cameraRoot.localPosition;
             float newY = Mathf.Lerp(lp.y, targetCameraLocalY, Time.deltaTime * cameraLerpSpeed);
             cameraRoot.localPosition = new Vector3(lp.x, newY, lp.z);
+        }
+        if (head)
+        {
+            var lp = head.localPosition;
+            float newY = Mathf.Lerp(lp.y, targetHeadLocalY, Time.deltaTime * cameraLerpSpeed);
+            head.localPosition = new Vector3(lp.x, newY, lp.z);
+        }
+        
+        // ===== 足音コントローラーの状態を更新 =====
+        UpdateFootstepState();
+    }
+    
+    void UpdateFootstepState()
+    {
+        if (playerFootStepController == null || groundCheck == null) return;
+
+        bool isGrounded = groundCheck.IsGrounded;
+        bool isMoving = moveAction.ReadValue<Vector2>().magnitude > 0;
+        
+        if (isGrounded)
+        {
+            if (isCrouching && isMoving)
+            {
+                playerFootStepController.CurrentState = MovementState.Crouching;
+            }
+            else if (isMoving && isRunning)
+            {
+                playerFootStepController.CurrentState = MovementState.Running;
+            }
+            else if (isMoving)
+            {
+                playerFootStepController.CurrentState = MovementState.Walking;
+            }
+            else
+            {
+                playerFootStepController.CurrentState = MovementState.Idle;
+            }
+        }
+        else
+        {
+            playerFootStepController.CurrentState = MovementState.Idle;
         }
     }
 
@@ -122,13 +193,21 @@ public class PlayerMovement : MonoBehaviour
     {
         if (crouchAction == null) return;
 
+        if (isCrouching && isRunning)
+        {
+            if (!applyControllerCrouch || CanStandUp())
+            {
+                SetCrouch(false);
+            }
+            return;
+        }
+        
         if (crouchToggle)
         {
             if (crouchAction.triggered)
             {
                 if (isCrouching)
                 {
-                    // 立てるか判定（CC変更しないなら常にOK）
                     if (!applyControllerCrouch || CanStandUp())
                         SetCrouch(false);
                 }
@@ -158,18 +237,16 @@ public class PlayerMovement : MonoBehaviour
         if (isCrouching == crouch) return;
         isCrouching = crouch;
 
-        // cameraRootだけ上下させる（Cinemachineはターゲット追従なのでOK）
         targetCameraLocalY = isCrouching ? cameraCrouchLocalY : cameraStandLocalY;
+        if (head) targetHeadLocalY = isCrouching ? headCrouchLocalY : headStandLocalY;
 
-        // 必要ならコリジョンも変更
         if (applyControllerCrouch)
         {
             if (isCrouching) ApplyControllerCrouch();
-            else             ApplyControllerStand();
+            else ApplyControllerStand();
         }
     }
 
-    // --- ここから下は「CCも低くする」オプション用 ---
     void ApplyControllerStand()
     {
         controller.height = standHeight;

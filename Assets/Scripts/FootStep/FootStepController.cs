@@ -1,126 +1,110 @@
 using UnityEngine;
 using System.Collections.Generic;
-
-// Odin Inspectorを使用している場合、Dictionaryがインスペクタに表示されます。
-using Sirenix.OdinInspector; // 必要に応じてコメントを外してください
+using Sirenix.OdinInspector;
 
 /// <summary>
-/// Raycastを使用して地面のタグを検出し、対応する足音を再生するコントローラー。
+/// プレイヤーの移動状態に応じて足音の再生を制御するコントローラー。
 /// </summary>
-[RequireComponent(typeof(AudioSource))]
-public class FootstepController : SerializedMonoBehaviour
+public enum MovementState
 {
-    // --- インスペクタ設定項目 ---
+    Idle,      // 待機中（音は鳴らない）
+    Walking,   // 歩行中
+    Running,   // 走行中
+    Crouching  // しゃがみ中（音は鳴らない）
+}
 
+[RequireComponent(typeof(AudioSource))]
+public class FootStepController : SerializedMonoBehaviour
+{
     [Header("必須コンポーネント")]
-    [Tooltip("足音を再生するためのAudioSource")]
-    [SerializeField] private AudioSource audioSource;
-
-    [Header("レイキャスト設定")]
-    [Tooltip("レイキャストの発射地点となるTransform")]
-    [SerializeField] private Transform raycastOrigin;
-
-    [Tooltip("レイキャストが届く最大距離")]
-    [SerializeField] private float raycastDistance = 1.2f;
-
-    [Tooltip("地面として認識するオブジェクトのレイヤー")]
-    [SerializeField] private LayerMask groundLayer;
+    [SerializeField]
+    private AudioSource audioSource;
+    [Tooltip("地面判定を行うGroundCheckコンポーネント")]
+    [SerializeField]
+    private GroundCheck groundCheck;
 
     [Header("足音設定")]
-    [Tooltip("歩いている間の足音の再生間隔（秒）")]
-    [SerializeField] private float stepInterval = 0.5f;
-
-    // Odin InspectorのおかげでDictionaryがインスペクタに表示されます。
-    [Tooltip("地面のタグと、それに対応するAudioClipのリスト")]
+    [SerializeField]
+    private float walkStepInterval = 0.5f;
+    [SerializeField]
+    private float runStepInterval = 0.3f;
     public Dictionary<string, List<AudioClip>> footstepSounds = new Dictionary<string, List<AudioClip>>();
 
+    [ShowInInspector, ReadOnly]
+    public MovementState CurrentState { get; set; } = MovementState.Idle;
 
-    // --- 内部変数 ---
     private float stepTimer = 0f;
-
-    // --- 初期化処理 ---
 
     private void Reset()
     {
-        // コンポーネントがアタッチされた時に自動でAudioSourceを取得
         audioSource = GetComponent<AudioSource>();
+        // 同じオブジェクトにGroundCheckがあれば自動で設定
+        groundCheck = GetComponent<GroundCheck>();
     }
 
     private void Update()
     {
-        // タイマーを更新
         if (stepTimer > 0)
         {
             stepTimer -= Time.deltaTime;
         }
-    }
 
-    // --- publicメソッド ---
-
-    /// <summary>
-    /// プレイヤーが歩いている時に外部のスクリプトから呼び出すメソッド。
-    /// 設定されたインターバルごとに足音を再生しようと試みます。
-    /// </summary>
-    public void TryPlayFootstep()
-    {
-        // タイマーが0以下の場合のみ処理を実行
-        if (stepTimer <= 0)
+        if (ShouldPlaySound() && stepTimer <= 0)
         {
-            PlayFootstepSound();
-            // タイマーをリセット
-            stepTimer = stepInterval;
+            HandleFootstep();
         }
     }
 
+    private bool ShouldPlaySound()
+    {
+        return CurrentState == MovementState.Walking || CurrentState == MovementState.Running;
+    }
 
-    // --- privateメソッド ---
+    private void HandleFootstep()
+    {
+        PlaySoundBasedOnGround();
+        
+        switch (CurrentState)
+        {
+            case MovementState.Walking:
+                stepTimer = walkStepInterval;
+                break;
+            case MovementState.Running:
+                stepTimer = runStepInterval;
+                break;
+        }
+    }
 
     /// <summary>
-    /// 実際にRaycastを飛ばして足音を再生する処理。
+    /// GroundCheckの結果を参照して、地面に応じたサウンドを再生する
     /// </summary>
-    private void PlayFootstepSound()
+    private void PlaySoundBasedOnGround()
     {
-        // raycastOriginが設定されていなければ処理を中断
-        if (raycastOrigin == null)
+        // GroundCheckが設定されていないか、接地していなければ処理しない
+        if (groundCheck == null || !groundCheck.IsGrounded || groundCheck.GroundCollider == null)
         {
-            Debug.LogWarning("Raycast Originが設定されていません。", this);
             return;
         }
+        
+        // 接地している地面のタグを取得
+        string groundTag = groundCheck.GroundCollider.tag;
+        Debug.Log($"[Footstep] Ground detected by GroundCheck. Tag: '{groundTag}'");
 
-        // 真下にRaycastを飛ばす
-        if (Physics.Raycast(raycastOrigin.position, Vector3.down, out RaycastHit hit, raycastDistance, groundLayer))
+        // 辞書にタグが存在するかどうかをチェック
+        if (footstepSounds.TryGetValue(groundTag, out List<AudioClip> clips) && clips != null && clips.Count > 0)
         {
-            // ヒットしたオブジェクトのタグを取得
-            string groundTag = hit.collider.tag;
-
-            // Dictionaryにそのタグのキーが存在するかチェック
-            if (footstepSounds.TryGetValue(groundTag, out List<AudioClip> clips))
+            Debug.Log($"[Footstep] Found tag '{groundTag}' in dictionary. Playing sound.");
+            // リストからランダムにクリップを選択
+            AudioClip clipToPlay = clips[Random.Range(0, clips.Count)];
+            if (clipToPlay != null)
             {
-                // AudioClipのリストが空でなく、要素が存在する場合
-                if (clips != null && clips.Count > 0)
-                {
-                    // リストからランダムにAudioClipを1つ選択
-                    AudioClip clipToPlay = clips[Random.Range(0, clips.Count)];
-
-                    // サウンドを再生
-                    if (clipToPlay != null)
-                    {
-                        audioSource.PlayOneShot(clipToPlay);
-                    }
-                }
+                audioSource.PlayOneShot(clipToPlay);
             }
         }
-    }
-
-    /// <summary>
-    /// SceneビューにRaycastのデバッグ情報を表示するためのギズモ。
-    /// </summary>
-    private void OnDrawGizmosSelected()
-    {
-        if (raycastOrigin != null)
+        else
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(raycastOrigin.position, raycastOrigin.position + Vector3.down * raycastDistance);
+            // 辞書に見つからなかった場合の警告
+            Debug.LogWarning($"[Footstep] Tag '{groundTag}' not found in footstepSounds dictionary, or the clip list is empty.");
         }
     }
 }

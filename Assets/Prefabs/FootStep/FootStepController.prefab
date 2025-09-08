@@ -48,7 +48,13 @@ MonoBehaviour:
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
-    ReferencedUnityObjects: []
+    ReferencedUnityObjects:
+    - {fileID: 8300000, guid: 00f70b52d2bfa2e4d962bb55dc32029a, type: 3}
+    - {fileID: 8300000, guid: 6b5bad74ab28c5146957833e07027530, type: 3}
+    - {fileID: 8300000, guid: fdb0fcf8f172078499277c282a48ab4a, type: 3}
+    - {fileID: 8300000, guid: f0376a6b76430964e89f13e6542dba27, type: 3}
+    - {fileID: 8300000, guid: d9b6004bcba4c834aaa67e6be05c14f7, type: 3}
+    - {fileID: 8300000, guid: 6c28e9c7c302ee5459339eb4048dc1c7, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -67,7 +73,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 1
+      Data: 3
     - Name: 
       Entry: 7
       Data: 
@@ -77,6 +83,37 @@ MonoBehaviour:
     - Name: $v
       Entry: 7
       Data: 2|System.Collections.Generic.List`1[[UnityEngine.AudioClip, UnityEngine.AudioModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 10
+      Data: 0
+    - Name: 
+      Entry: 10
+      Data: 1
+    - Name: 
+      Entry: 10
+      Data: 2
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: Tatami
+    - Name: $v
+      Entry: 7
+      Data: 3|System.Collections.Generic.List`1[[UnityEngine.AudioClip, UnityEngine.AudioModule]],
         mscorlib
     - Name: 
       Entry: 12
@@ -94,18 +131,46 @@ MonoBehaviour:
       Entry: 8
       Data: 
     - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: Stone
+    - Name: $v
+      Entry: 7
+      Data: 4|System.Collections.Generic.List`1[[UnityEngine.AudioClip, UnityEngine.AudioModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 10
+      Data: 3
+    - Name: 
+      Entry: 10
+      Data: 4
+    - Name: 
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
       Entry: 13
       Data: 
     - Name: 
       Entry: 8
       Data: 
   audioSource: {fileID: 3687384154483900869}
-  raycastOrigin: {fileID: 0}
-  raycastDistance: 1.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 2112
-  stepInterval: 0.5
+  groundCheck: {fileID: 0}
+  walkStepInterval: 0.7
+  runStepInterval: 0.3
 --- !u!82 &3687384154483900869
 AudioSource:
   m_ObjectHideFlags: 0
