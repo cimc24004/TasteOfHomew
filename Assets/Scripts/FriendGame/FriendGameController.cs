@@ -35,6 +35,8 @@ public class FriendGameController : Singleton<FriendGameController>
     public UnityEvent OnGameStart;
     public UnityEvent OnGameReset;
     public UnityEvent OnGameOver;
+    public UnityEvent OnFriendGameEnd;
+
 
     [Title("Fail 判定")]
     [LabelText("落下しきい値 (Y)")] public float fallKillY = -10f;
@@ -44,6 +46,11 @@ public class FriendGameController : Singleton<FriendGameController>
     [Required, LabelText("GameOver用SE出力先")] public AudioSource gameOverAudioSource;
     [LabelText("落下時に鳴らすSE")] public AudioClip fallGameOverClip;
     [MinValue(0f), LabelText("GameOverUIを出すまでの待機秒数")] public float gameOverDelay = 1.0f;
+    [Title("GameClear 演出")]
+    [Required, LabelText("GameClear用SE出力先")] 
+    public AudioSource gameClearAudioSource;  // ★追加
+    [LabelText("GameClear時に鳴らすSE")] 
+    public AudioClip gameClearClip; // ★追加
 
     [Title("CountDown SFX")]
     [Required, LabelText("カウントダウンSE出力先")] public AudioSource countdownAudioSource;
@@ -58,9 +65,10 @@ public class FriendGameController : Singleton<FriendGameController>
     private Vector3 initialPlayerPos;
     private CanvasGroup AdvertCanvasGroup;
     private Tween _gameOverDelayTween;
-
+    private GameStateController gameStateController;
     void Start()
     {
+        gameStateController = GameStateController.instance;
         AdvertCanvasGroup = friendGameAdvert.FriendGameAdvertCanvasGroup;
         RetryButton.onClick.AddListener(() =>
         {
@@ -71,6 +79,7 @@ public class FriendGameController : Singleton<FriendGameController>
             if (retryCount >= 2)
             {
                 FriendGameEnd();
+                return;
             }
 
             GameReset();
@@ -137,9 +146,10 @@ public class FriendGameController : Singleton<FriendGameController>
     [Button]
     public void GameReset()
     {
+        gameStateController.GameplayMode();
+
         _gameOverDelayTween?.Kill();
         _gameOverDelayTween = null;
-
         GameOverUI.SetActive(false);
         gameClearUI.SetActive(false);
 
@@ -160,6 +170,7 @@ public class FriendGameController : Singleton<FriendGameController>
 
         OnGameReset?.Invoke();
         isGameOver = false;
+        GameStart();
     }
 
     public void CoinGet(int GetCount)
@@ -170,14 +181,9 @@ public class FriendGameController : Singleton<FriendGameController>
     }
 
     [Button(ButtonSizes.Medium)]
-    public void GameOver()
+    private void GameOver()
     {
-        if (isGameOver) return;
-        isGameOver = true;
-
-        friendGamePlayerController.moveMode = false;
-        friendGamePlayerController.Stop();
-
+        gameStateController.MenuOnGamePlayMode(true);
         GameOverUI.SetActive(true);
         OnGameOver?.Invoke();
     }
@@ -194,8 +200,7 @@ public class FriendGameController : Singleton<FriendGameController>
 
         _gameOverDelayTween = DOVirtual.DelayedCall(gameOverDelay, () =>
         {
-            GameOverUI.SetActive(true);
-            OnGameOver?.Invoke();
+            GameOver();
         });
     }
 
@@ -203,17 +208,24 @@ public class FriendGameController : Singleton<FriendGameController>
     [Button("GameClear")]
     public void GameClear()
     {
+        gameStateController.MenuOnGamePlayMode(true);
         gameClearUI.SetActive(true);
         friendGamePlayerController.Stop();
+        if (gameClearClip)
+        {
+            gameClearAudioSource.PlayOneShot(gameClearClip);
+        }
     }
 
     [Button("FriendGameEnd")]
     public void FriendGameEnd()
     {
+        gameStateController.MenuOnGamePlayMode(true);
         // ここにステージ遷移や集計、シーンロード等を書く想定
         GameOverUI.SetActive(false);
         gameClearUI.SetActive(false);
         // gameClearUI.SetActive(false);
+        OnFriendGameEnd.Invoke();
         friendGamePlayerController.Stop();
         Debug.Log("シューーーリョオウウ");
         friendGameAdvert.gameObject.SetActive(true);

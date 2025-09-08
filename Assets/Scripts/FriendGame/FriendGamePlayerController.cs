@@ -62,7 +62,7 @@ public class FriendGamePlayerController : SerializedMonoBehaviour
     // Start で Input 初期化（AwakeにSingleton参照を書かない方針）
     private void Start()
     {
-        jumpAction = PlayerStatus.instance.playerInput.actions["FriendGameJump"];
+        jumpAction = PlayerStatus.instance.playerInput.actions["InteractAction"];
     }
 
     private void Update()

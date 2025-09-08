@@ -6,7 +6,8 @@ public class ObjectiveMarkerController : MonoBehaviour
     public enum MarkerType
     {
         Trigger,
-        Manual
+        Manual,
+        ActiveAll
     }
 
     [Header("基本設定")]
@@ -17,7 +18,8 @@ public class ObjectiveMarkerController : MonoBehaviour
     [SerializeField] private string playerTag = "Player";
     void Awake()
     {
-        Hide();
+        if(markerType != MarkerType.ActiveAll)
+            Hide();
     }
     // ====== Triggerモード ======
     private void OnTriggerEnter(Collider other)

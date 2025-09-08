@@ -8,7 +8,7 @@ using Sirenix.OdinInspector;
 public class FriendGameCoin : MonoBehaviour
 {
     private FriendGameController friendGameController;
-
+    [SerializeField] private int GetCount = 1;
     [Title("演出")]
     [MinValue(0f)] public float riseDistance = 1.0f;
     [MinValue(0f)] public float tweenDuration = 0.45f;
@@ -56,7 +56,7 @@ public class FriendGameCoin : MonoBehaviour
     {
         if (collision.gameObject.name == "Player2D")
         {
-            friendGameController.CoinGet(1);
+            friendGameController.CoinGet(GetCount);
 
             if (disableColliderOnPickup && triggerCollider)
                 triggerCollider.enabled = false;
