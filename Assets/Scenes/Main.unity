@@ -15747,6 +15747,11 @@ MonoBehaviour:
   onNotFound:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1978986740 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2709770079091786880, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
+  m_PrefabInstance: {fileID: 3503071842413028194}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1985891073
 GameObject:
   m_ObjectHideFlags: 0
@@ -16711,6 +16716,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3255864804474954324, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
+      propertyPath: m_Data.m_SourceObjects.m_Item0.transform
+      value: 
+      objectReference: {fileID: 3503071842413028195}
     - target: {fileID: 7291599205150724531, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
       propertyPath: m_Name
       value: "\u5C0F\u5B66\u751F1 bone\u4ED8\u304D"
@@ -16721,7 +16730,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7960999048804551433, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.00000059604645
+      value: 0.113
       objectReference: {fileID: 0}
     - target: {fileID: 7960999048804551433, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -16754,6 +16763,14 @@ PrefabInstance:
     - target: {fileID: 7960999048804551433, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8175562930333511484, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8175562930333511484, guid: 43d80d1c3051d9c4aacd098cd20d252c, type: 3}
+      propertyPath: m_WarningMessage
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -18630,6 +18647,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 2709770079091786880, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3946771529415278672, guid: b01ebc70f91ed2347aa768604bb11c72, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -19570,6 +19591,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1985891073}
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phaseRangeGates.Array.data[0].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1510978494}
@@ -19582,6 +19611,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1510978494}
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 1978986740}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phaseRangeGates.Array.data[3].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1333480791}
@@ -19589,6 +19622,14 @@ PrefabInstance:
       propertyPath: phaseRangeGates.Array.data[4].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 227953025}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: SetActive
+      objectReference: {fileID: 0}
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phases.Array.data[0].steps.Array.data[1].onEnterEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.size
       value: 0
@@ -19612,6 +19653,14 @@ PrefabInstance:
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phases.Array.data[6].steps.Array.data[1].onEnterEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.size
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: UnityEngine.GameObject, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phases.Array.data[0].steps.Array.data[0].onEnterEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.data[2].m_Mode
@@ -20040,6 +20089,10 @@ PrefabInstance:
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phases.Array.data[6].steps.Array.data[1].onEnterEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: Call
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
+      propertyPath: phaseRangeGates.Array.data[2].eventOnMatch.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 6462423695110775457, guid: 0a18b6496a922e645bdfd826d2ea1b28, type: 3}
       propertyPath: phases.Array.data[0].steps.Array.data[0].onEnterEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.data[2].m_TargetAssemblyTypeName
