@@ -14,7 +14,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
     public OpenType open_type;
     public DoorStatus nowDoorStatus;
 
-    [ShowIf("open_type", OpenType.SideOpen)] [Required] public Transform ToOpenTransform;
+    [ShowIf("open_type", OpenType.SideOpen)][Required] public Transform ToOpenTransform;
     [ShowIf("open_type", OpenType.Rotate)] public Vector3 TargetRotateVector;
 
     private Vector3 DefaultLocalPosition;
@@ -255,5 +255,51 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
                 if (keyController != null) keyController.NotifyDoorClosed(this);
             });
         }
+    }
+
+    [Button("即座に開ける (音・アニメなし)")]
+    public void ForceOpen()
+    {
+        // ロック状態を無視して強制的に開きます
+        nowDoorStatus = DoorStatus.Opened;
+        OpenedClosedCompletedAnimation = false; // 念のため処理中はフラグを更新
+
+        if (open_type == OpenType.SideOpen)
+        {
+            transform.localPosition = OpenLocalPosition;
+        }
+        else if (open_type == OpenType.Rotate)
+        {
+            transform.localEulerAngles = TargetRotateVector;
+            // 開いた状態でのコライダー設定を反映
+            if (TriggerChangeModeOpenClose && collider) collider.isTrigger = false; 
+        }
+
+        OpenedClosedCompletedAnimation = true; // 処理完了
+        OpenCompleted?.Invoke(); // イベントを呼び出す
+    }
+
+    [Button("即座に閉める (音・アニメなし)")]
+    public void ForceClose()
+    {
+        nowDoorStatus = DoorStatus.Closed;
+        OpenedClosedCompletedAnimation = false; // 念のため処理中はフラグを更新
+
+        if (open_type == OpenType.SideOpen)
+        {
+            transform.localPosition = DefaultLocalPosition;
+        }
+        else if (open_type == OpenType.Rotate)
+        {
+            transform.localEulerAngles = DefaultRotateVector;
+        }
+
+        // 閉じた状態ではコライダーを通常状態に戻す
+        if (collider) collider.isTrigger = false; 
+        OpenedClosedCompletedAnimation = true; // 処理完了
+        CloseCompleted?.Invoke(); // イベントを呼び出す
+
+        // 自動再ロックの通知
+        if (keyController != null) keyController.NotifyDoorClosed(this);
     }
 }

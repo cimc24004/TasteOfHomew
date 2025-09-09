@@ -125,6 +125,8 @@ MonoBehaviour:
       - {fileID: 0}
       - {fileID: 0}
       - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
       onEnterEvents: []
   - phase: 1
     startStepKey: 1
@@ -222,11 +224,23 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
-    - key: 3 FriendGameEnd
+    - key: 3 AccessingSite
       objectsToShow: []
       onEnterEvents:
       - m_PersistentCalls:
           m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
           - m_Target: {fileID: 0}
             m_TargetAssemblyTypeName: PlayerableCall, Assembly-CSharp
             m_MethodName: Interact
@@ -238,18 +252,6 @@ MonoBehaviour:
               m_FloatArgument: 0
               m_StringArgument: 
               m_BoolArgument: 0
-            m_CallState: 2
-          - m_Target: {fileID: 0}
-            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-            m_MethodName: SetActive
-            m_Mode: 6
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 1
             m_CallState: 2
     - key: 4
       objectsToShow: []
@@ -284,6 +286,18 @@ MonoBehaviour:
               m_FloatArgument: 0
               m_StringArgument: 
               m_BoolArgument: 0
+            m_CallState: 2
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_MethodName: SetActive
+            m_Mode: 6
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 1
             m_CallState: 2
     - key: 6
       objectsToShow: []
@@ -715,6 +729,7 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     invokeOnce: 1
+    evaluateOnPhaseChange: 0
   - label: 
     fromPhase: 6
     toPhase: 8
@@ -736,6 +751,7 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     invokeOnce: 1
+    evaluateOnPhaseChange: 0
   - label: 
     fromPhase: 3
     toPhase: 8
@@ -757,8 +773,53 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     invokeOnce: 1
+    evaluateOnPhaseChange: 0
+  - label: 
+    fromPhase: 1
+    toPhase: 8
+    inclusiveFrom: 1
+    inclusiveTo: 1
+    eventOnMatch:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: SetNight
+            m_BoolArgument: 0
+          m_CallState: 2
+    invokeOnce: 1
+    evaluateOnPhaseChange: 0
+  - label: 
+    fromPhase: 1
+    toPhase: 8
+    inclusiveFrom: 1
+    inclusiveTo: 1
+    eventOnMatch:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: DoorsController, Assembly-CSharp
+          m_MethodName: CloseAllDoors
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: SetNight
+            m_BoolArgument: 0
+          m_CallState: 2
+    invokeOnce: 0
+    evaluateOnPhaseChange: 1
   evaluateRangeOnEnable: 1
-  evaluateRangeOnPhaseChanged: 0
+  evaluateRangeOnPhaseChanged: 1
   onPhaseEntered:
     m_PersistentCalls:
       m_Calls: []

@@ -129,7 +129,7 @@ GameObject:
   - component: {fileID: 7358357618065684203}
   m_Layer: 6
   m_Name: "\u3075\u3059\u307E.007"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -388,7 +388,7 @@ GameObject:
   - component: {fileID: 6028570400589930309}
   m_Layer: 6
   m_Name: "\u969C\u5B50.006"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -649,7 +649,7 @@ GameObject:
   - component: {fileID: 4548463096609603133}
   m_Layer: 6
   m_Name: "\u3075\u3059\u307E.008"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -908,7 +908,7 @@ GameObject:
   - component: {fileID: 8771629875563118503}
   m_Layer: 6
   m_Name: "\u969C\u5B50.005"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1232,7 +1232,7 @@ MonoBehaviour:
       m_Calls: []
   linkedDoors:
   - {fileID: 0}
-  - {fileID: 455858403740306349}
+  - {fileID: 0}
   _locked: 0
   LockedDialogueCallerOnNotHaveKey: {fileID: 7092041606713260217}
   LockedDialogueCallerOnHaveKey: {fileID: 4578523545330412988}
@@ -1527,7 +1527,7 @@ GameObject:
   - component: {fileID: 1370755170207537292}
   m_Layer: 6
   m_Name: "\u969C\u5B50.005"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2054,7 +2054,7 @@ GameObject:
   - component: {fileID: 854527093092940051}
   m_Layer: 6
   m_Name: "\u3075\u3059\u307E.008"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2965,7 +2965,7 @@ GameObject:
   - component: {fileID: 5549190429021694078}
   m_Layer: 6
   m_Name: "\u969C\u5B50.006"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3992,7 +3992,7 @@ GameObject:
   - component: {fileID: 3944255804377020582}
   m_Layer: 6
   m_Name: "\u969C\u5B50.006"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4386,7 +4386,7 @@ GameObject:
   - component: {fileID: 2910159050208700541}
   m_Layer: 6
   m_Name: "\u969C\u5B50.006 (1)"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5131,7 +5131,7 @@ GameObject:
   - component: {fileID: 2461427333262293515}
   m_Layer: 6
   m_Name: "\u969C\u5B50.005"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5392,7 +5392,7 @@ GameObject:
   - component: {fileID: 6941605924824704160}
   m_Layer: 6
   m_Name: "\u3075\u3059\u307E.007"
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6052,7 +6052,6 @@ GameObject:
   - component: {fileID: 1143287762811652000}
   - component: {fileID: 7724689950280892915}
   - component: {fileID: 5118525163787478338}
-  - component: {fileID: 455858403740306349}
   - component: {fileID: 929968534217610463}
   - component: {fileID: 8960805604152282429}
   m_Layer: 6
@@ -6135,54 +6134,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &455858403740306349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8513483265651700651}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4681bae13e40f649ad58594f6d72d45, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DoorController
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  open_type: 0
-  nowDoorStatus: 0
-  ToOpenTransform: {fileID: 5134466700806585805}
-  TargetRotateVector: {x: 0, y: 0, z: 0}
-  Duration: 0.5
-  TriggerChangeModeOpenClose: 1
-  OpenStartEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  CloseCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  OpenClip: {fileID: 0}
-  CloseClip: {fileID: 0}
-  CloseCompletedClip: {fileID: 0}
-  move_x_y_z: 0
-  keyController: {fileID: 71400084682881433}
-  LockedClip: {fileID: 0}
-  OnOpenBlockedByLock:
-    m_PersistentCalls:
-      m_Calls: []
-  useKeyGroupKey: Door
-  useKeySequenceId: UseKeyPrompt
-  useKeyFlagKey: __door_use_key_tmp
 --- !u!65 &929968534217610463
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -60,7 +60,13 @@ public class PlayerMovement : SerializedMonoBehaviour
     private Vector3 defaultCenter;
     private float headStandLocalY;
     private float headCrouchLocalY;
-
+    void OnDisable()
+    {
+        playerFootStepController.CurrentState = MovementState.Idle;
+    }
+    // void OnEnable()
+    // {
+    // }
     void Start()
     {
         controller = GetComponent<CharacterController>();

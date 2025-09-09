@@ -117,7 +117,8 @@ public class PhaseStepController : SerializedMonoBehaviour
 
         // 起動時の範囲評価
         if (enablePhaseRangeGates && evaluateRangeOnEnable)
-            EvaluatePhaseRangeGates();
+            EvaluatePhaseRangeGates(phaseOverride: null, isFromPhaseChange: false);
+
     }
 
     private void TrySubscribeGameFlow()
@@ -134,15 +135,16 @@ public class PhaseStepController : SerializedMonoBehaviour
         // Stepの初期キーはPhaseBlock.startStepKeyを使う（null指定で内部ロジック任せ）
         SwitchPhaseAsync(newP, null, invokeOldExit: true).Forget();
 
+        // ★ 変更点：第2引数に isFromPhaseChange: true を渡す
         if (enablePhaseRangeGates && evaluateRangeOnPhaseChanged)
-            EvaluatePhaseRangeGates(newP);
+            EvaluatePhaseRangeGates(newP, isFromPhaseChange: true); 
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
     // 範囲ゲート：評価ロジック
     // ─────────────────────────────────────────────────────────────────────────────
     /// <summary>現在フェーズ（引数なし時は GameFlow / CurrentPhase）で範囲ゲートを評価し、該当イベントを実行</summary>
-    public void EvaluatePhaseRangeGates(GameFlowController.Phase? phaseOverride = null)
+    public void EvaluatePhaseRangeGates(GameFlowController.Phase? phaseOverride = null, bool isFromPhaseChange = false)
     {
         if (!enablePhaseRangeGates || phaseRangeGates == null || phaseRangeGates.Count == 0)
             return;
@@ -164,7 +166,10 @@ public class PhaseStepController : SerializedMonoBehaviour
         for (int i = 0; i < phaseRangeGates.Count; i++)
         {
             var gate = phaseRangeGates[i];
-
+            if (isFromPhaseChange && !gate.evaluateOnPhaseChange)
+            {
+                continue;
+            }
             // 開始/終了のインデックスが取れない場合はスキップ
             if (!orderMap.TryGetValue(gate.fromPhase, out int fromIdx)) continue;
             if (!orderMap.TryGetValue(gate.toPhase, out int toIdx)) continue;
@@ -481,14 +486,19 @@ public class PhaseStepController : SerializedMonoBehaviour
         [LabelText("ラベル（任意）")] public string label;
 
         [LabelText("開始フェーズ")] public GameFlowController.Phase fromPhase = GameFlowController.Phase.HomeSearch;
-        [LabelText("終了フェーズ")] public GameFlowController.Phase toPhase   = GameFlowController.Phase.Escape;
+        [LabelText("終了フェーズ")] public GameFlowController.Phase toPhase = GameFlowController.Phase.Escape;
 
         [LabelText("開始を含む")] public bool inclusiveFrom = true;
-        [LabelText("終了を含む")] public bool inclusiveTo   = true;
+        [LabelText("終了を含む")] public bool inclusiveTo = true;
 
         [LabelText("一致時イベント")] public UnityEvent eventOnMatch;
 
         [LabelText("一度だけ実行")] public bool invokeOnce = true;
+
+        [Tooltip("trueなら、フェーズが変更されるたびにこのゲートの条件を再評価します。")]
+        [LabelText("フェーズ変更時にも評価")] 
+        public bool evaluateOnPhaseChange = false;
+
     }
 
     // ===== UnityEvent ジェネリック（外部定義の UnityEvent2 を利用） =====
