@@ -291,7 +291,6 @@ GameObject:
   m_Component:
   - component: {fileID: 34827104}
   - component: {fileID: 34827107}
-  - component: {fileID: 34827106}
   - component: {fileID: 34827105}
   m_Layer: 0
   m_Name: HouseCamera2
@@ -359,14 +358,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!81 &34827106
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 34827103}
-  m_Enabled: 1
 --- !u!20 &34827107
 Camera:
   m_ObjectHideFlags: 0
@@ -4083,7 +4074,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u5305\u4E011Equip"
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8577867297170976521, guid: c3b82d898efbcf84d956210f77f83004, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -11920,7 +11912,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1468170250}
   - component: {fileID: 1468170253}
-  - component: {fileID: 1468170252}
   - component: {fileID: 1468170251}
   m_Layer: 0
   m_Name: HouseCamera1
@@ -11988,14 +11979,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!81 &1468170252
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1468170249}
-  m_Enabled: 1
 --- !u!20 &1468170253
 Camera:
   m_ObjectHideFlags: 0
