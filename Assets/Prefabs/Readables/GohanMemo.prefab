@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 6676685502991631505}
   - component: {fileID: 4406993126927853908}
   - component: {fileID: 5546739166863595872}
-  - component: {fileID: 2139775705147153793}
   - component: {fileID: 3997881469929567765}
+  - component: {fileID: 7538522880961765611}
   m_Layer: 6
   m_Name: GohanMemo
   m_TagString: Untagged
@@ -28,9 +28,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3338915560572303081}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -28.14, y: 0.714, z: 26.24}
-  m_LocalScale: {x: 0.39896, y: 0.35292, z: 0.39896}
+  m_LocalRotation: {x: 0, y: -0.69165283, z: 0, w: 0.7222302}
+  m_LocalPosition: {x: -26.705061, y: 1.3199999, z: 24.181269}
+  m_LocalScale: {x: 0.015985625, y: 0.032311004, z: 0.02362838}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5084287239864111938}
@@ -44,7 +44,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3338915560572303081}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &5546739166863595872
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: f0f65ff85304f6d4dac0e2fae5df6a3b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -93,27 +93,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &2139775705147153793
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3338915560572303081}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &3997881469929567765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -137,9 +116,34 @@ MonoBehaviour:
     SerializationNodes: []
   readable: {fileID: 11400000, guid: 345f2dac6dc15424d8ac03d6a077bf9f, type: 2}
   once: 0
-  onClosed:
+  onClosedEveryTime:
     m_PersistentCalls:
       m_Calls: []
+  onClosedOnce:
+    m_PersistentCalls:
+      m_Calls: []
+  overrideTurnSE: {fileID: 8300000, guid: d1142e59ee3c0df46890e8054801c1d1, type: 3}
+--- !u!65 &7538522880961765611
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3338915560572303081}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 2.2204459e-16, z: 10.000001}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4672811151792219466
 GameObject:
   m_ObjectHideFlags: 0
@@ -193,6 +197,12 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  StartUnityEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  EndUnityEvent:
+    m_PersistentCalls:
+      m_Calls: []
   groupRef: 0
   groupKey: MorningHitorigoto
   groupAsset: {fileID: 0}
@@ -235,15 +245,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7045404347127612317, guid: c592c7abbe2c74f4f93e88adc3f8440e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 12.532585
+      value: 312.78098
       objectReference: {fileID: 0}
     - target: {fileID: 7045404347127612317, guid: c592c7abbe2c74f4f93e88adc3f8440e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.8335035
+      value: 30.94921
       objectReference: {fileID: 0}
     - target: {fileID: 7045404347127612317, guid: c592c7abbe2c74f4f93e88adc3f8440e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 12.532585
+      value: 211.60991
       objectReference: {fileID: 0}
     - target: {fileID: 7045404347127612317, guid: c592c7abbe2c74f4f93e88adc3f8440e, type: 3}
       propertyPath: m_LocalPosition.x

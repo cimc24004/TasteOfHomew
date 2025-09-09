@@ -33,7 +33,26 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
         [ShowIf(nameof(applyFog))] public FogMode fogMode = FogMode.ExponentialSquared;
         [ShowIf(nameof(applyFog)), Min(0f)] public float fogDensity = 0.02f; // Exp/Exp2用
         [ShowIf(nameof(applyFog))] public float fogStart = 0f;               // Linear用
-        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;              // Linear用
+        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;               // Linear用
+
+        // ===== 👇ここから追加 =====
+        [Header("Ambient Light (任意)")]
+        public bool applyAmbient = false;
+        [ShowIf(nameof(applyAmbient))] public AmbientMode ambientMode = AmbientMode.Skybox;
+        [ShowIf(nameof(applyAmbient)), Range(0, 8)] public float ambientIntensity = 1f;
+
+        // Gradient (Trilight) モード用の色設定
+        [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
+        [ColorUsage(false, true)] public Color ambientSkyColor = new(0.21f, 0.23f, 0.26f);
+        [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
+        [ColorUsage(false, true)] public Color ambientEquatorColor = new(0.11f, 0.12f, 0.13f);
+        [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
+        [ColorUsage(false, true)] public Color ambientGroundColor = new(0.05f, 0.05f, 0.05f);
+        
+        // Color (Flat) モード用の色設定
+        [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Flat")]
+        [ColorUsage(false, true)] public Color ambientLight = new(0.21f, 0.23f, 0.26f);
+        // ===== 👆ここまで追加 =====
 
         [Header("URP Volume Profile (任意)")]
         public bool applyVolume = false;
@@ -50,7 +69,6 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
     [ReadOnly, ShowInInspector, LabelText("現在の時間帯")]
     public TimeOfDay Current { get; private set; }
 
-    // 3プロファイルに登録された全ルートを一括管理
     private readonly HashSet<GameObject> allRoots = new();
 
     void OnEnable()
@@ -111,12 +129,35 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
                 RenderSettings.fogDensity = p.fogDensity;
             }
         }
+        
+        // ===== 👇ここから追加 =====
+        // 5) Ambient Light
+        if (p.applyAmbient)
+        {
+            RenderSettings.ambientMode = p.ambientMode;
+            RenderSettings.ambientIntensity = p.ambientIntensity;
+            switch (p.ambientMode)
+            {
+                case AmbientMode.Trilight: // Gradient
+                    RenderSettings.ambientSkyColor = p.ambientSkyColor;
+                    RenderSettings.ambientEquatorColor = p.ambientEquatorColor;
+                    RenderSettings.ambientGroundColor = p.ambientGroundColor;
+                    break;
+                case AmbientMode.Flat: // Color
+                    RenderSettings.ambientLight = p.ambientLight;
+                    break;
+                case AmbientMode.Skybox:
+                    // Skyboxモードは強度を更新するだけでよい
+                    break;
+            }
+        }
+        // ===== 👆ここまで追加 =====
 
-        // 5) URP Volume
+        // 6) URP Volume
         if (p.applyVolume && globalVolume && p.volumeProfile)
             globalVolume.sharedProfile  = p.volumeProfile;
 
-        // 6) 環境反映（Skybox/Ambient）
+        // 7) 環境反映（Skybox/Ambient）
         DynamicGI.UpdateEnvironment();
     }
 
