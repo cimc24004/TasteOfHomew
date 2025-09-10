@@ -137,6 +137,12 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
         }
 
         ApplyAndPlay(phase, timelineId, asset);
+        var graph = director.playableGraph;
+        if (graph.IsValid())
+        {
+            var root = graph.GetRootPlayable(0);
+            if (root.IsValid()) root.SetSpeed(1); // ← ここ大事
+        }
         return true;
     }
 
@@ -158,14 +164,26 @@ public class TimelinePlayback : Singleton<TimelinePlayback>
     [Button(ButtonSizes.Small)]
     public void Pause()
     {
-        if (director) director.Pause();
+        if (!director) return;
+        var graph = director.playableGraph;
+        if (graph.IsValid())
+        {
+            var root = graph.GetRootPlayable(0);
+            if (root.IsValid()) root.SetSpeed(0);
+        }
     }
 
     /// <summary> 再開 </summary>
     [Button(ButtonSizes.Small)]
     public void Resume()
     {
-        if (director) director.Resume();
+        if (!director) return;
+        var graph = director.playableGraph;
+        if (graph.IsValid())
+        {
+            var root = graph.GetRootPlayable(0);
+            if (root.IsValid()) root.SetSpeed(1);
+        }
     }
 
     // ===== 内部 =====
