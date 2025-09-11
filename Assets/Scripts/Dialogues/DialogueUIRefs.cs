@@ -1,0 +1,30 @@
+// DialogueUIRefs.cs
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+[System.Serializable]
+public class DialogueUIRefs
+{
+    [Tooltip("スピーカー名を包むボックス")]
+    public GameObject speakerBox;
+    public TextMeshProUGUI speakerText;
+
+    [Tooltip("本文を包むボックス")]
+    public GameObject dialogueBox;
+    public TextMeshProUGUI bodyText;
+    
+    [Tooltip("選択肢の親Transform")]
+    public Transform choicesRoot;
+    [Tooltip("選択肢ボタンのPrefab")]
+    public Button choiceButtonPrefab;
+
+    /// <summary>
+    /// 必須コンポーネントが設定されているかチェック
+    /// </summary>
+    public bool IsValid()
+    {
+        // 最低限の必須項目をチェック
+        return bodyText != null && choicesRoot != null && choiceButtonPrefab != null;
+    }
+}

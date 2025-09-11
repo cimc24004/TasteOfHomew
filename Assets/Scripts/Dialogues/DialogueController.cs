@@ -1,3 +1,4 @@
+// DialogueController.cs
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -17,29 +18,23 @@ public class DialogueController : Singleton<DialogueController>
     [Title("Sequence Group Assets (ScriptableObject)")]
     [OdinSerialize] public List<DialogueSequenceGroupAsset> sequenceGroupAssets = new();
 
-    // groupKey -> (seqId -> SequenceAsset)
     private Dictionary<string, Dictionary<string, DialogueSequenceAsset>> _lookup;
 
-    [Title("UI")]
-    [Tooltip("スピーカー名を包むボックス（スピーカーが空なら非表示）")]
-    public GameObject speakerBox;
-    public TextMeshProUGUI speakerText;
+    [Title("UI (Default)")]
+    [Tooltip("デフォルトのUI参照。オーバーライドされなかった場合に使われる。")]
+    [SerializeField] public DialogueUIRefs defaultUIRefs;
 
-    [Tooltip("本文を包むボックス（本文が空なら非表示）")]
-    public GameObject dialogueBox;
-    public TextMeshProUGUI bodyText;
-
-    public Transform choicesRoot;
-    public Button choiceButtonPrefab;
+    // 実行時に使用するUI参照を動的に保持する
+    private DialogueUIRefs _currentUIRefs;
 
     [Title("Typewriter")]
     public float charsPerSecond = 35f;
     public bool useUnscaledTime = true;
 
     [Title("Input Actions (名前)")]
-    public string advanceActionName = "Submit"; // Press Only 推奨
-    public string skipActionName    = "Skip";
-    public string cancelActionName  = "Cancel";
+    public string advanceActionName = "Submit";
+    public string skipActionName = "Skip";
+    public string cancelActionName = "Cancel";
 
     [Title("Double Click")]
     public float doubleClickSeconds = 0.30f;
@@ -56,14 +51,11 @@ public class DialogueController : Singleton<DialogueController>
     [SerializeField] private UISwitcher uiSwitcher;
     [SerializeField] private bool switchUIOnStartAndEnd = true;
 
-    // ==== 入力ポーズ / レイキャスト停止 ====
     [Title("Input Lock")]
     [SerializeField] private bool _pauseAdvanceInput = false;
-
     [Tooltip("このCanvas(または親Canvas)のGraphicRaycaster。Pause中にOFFにしてクリックを通す")]
     [SerializeField] private GraphicRaycaster dialogueRaycaster;
 
-    /// <summary>クリック/スキップによる進行を一時停止/再開し、レイキャストも切り替える。</summary>
     public void PauseAdvance(bool pause = true)
     {
         _pauseAdvanceInput = pause;
@@ -71,20 +63,15 @@ public class DialogueController : Singleton<DialogueController>
     }
     public bool IsAdvancePaused => _pauseAdvanceInput;
 
-    // ==== 内部 ====
     private PlayerInput playerInput;
     private InputAction advanceAction, skipAction, cancelAction;
     private CancellationTokenSource _runCts;
     private GameStateController gameStateController;
-
     private float lastClickTime = -999f;
     private float Now => useUnscaledTime ? Time.unscaledTime : Time.time;
-
-    // 並走バグ対策 runId
     private int _runId = 0;
     private int _nextRunId = 1;
-
-    private const int MaxGotoHops = 64; // ループ保護
+    private const int MaxGotoHops = 64;
     private const char _stepSep = '#';
 
     void OnValidate() { RebuildLookup(); }
@@ -92,15 +79,10 @@ public class DialogueController : Singleton<DialogueController>
     void Start()
     {
         RebuildLookup();
-
-        if (speakerText) speakerText.text = "";
-        if (bodyText) bodyText.text = "";
-        if (speakerBox) speakerBox.SetActive(false);
-        if (dialogueBox) dialogueBox.SetActive(false);
-
+        _currentUIRefs = defaultUIRefs;
+        CleanupUI();
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
-
         playerInput = GetComponent<PlayerInput>();
         if (!playerInput && PlayerStatus.instance) playerInput = PlayerStatus.instance.playerInput;
 
@@ -108,8 +90,8 @@ public class DialogueController : Singleton<DialogueController>
         {
             var map = playerInput.actions;
             advanceAction = map.FindAction(advanceActionName);
-            skipAction    = map.FindAction(skipActionName);
-            cancelAction  = map.FindAction(cancelActionName);
+            skipAction = map.FindAction(skipActionName);
+            cancelAction = map.FindAction(cancelActionName);
         }
         else
         {
@@ -131,32 +113,28 @@ public class DialogueController : Singleton<DialogueController>
     {
         _lookup = new Dictionary<string, Dictionary<string, DialogueSequenceAsset>>(StringComparer.Ordinal);
         if (sequenceGroupAssets == null) return;
-
         foreach (var group in sequenceGroupAssets)
         {
             if (!group || string.IsNullOrWhiteSpace(group.groupKey)) continue;
-
             if (!_lookup.TryGetValue(group.groupKey, out var map))
             {
                 map = new Dictionary<string, DialogueSequenceAsset>(StringComparer.Ordinal);
                 _lookup[group.groupKey] = map;
             }
-
             if (group.sequences != null)
             {
                 foreach (var seq in group.sequences)
                 {
                     if (!seq || string.IsNullOrWhiteSpace(seq.id)) continue;
-                    map[seq.id] = seq; // 後勝ち
+                    map[seq.id] = seq;
                 }
             }
         }
     }
 
     // ===== Public API =====
-
     public void StartDialogue(string groupKey, string sequenceId, int startStepId = 1)
-        => StartDialogueAsync(groupKey, sequenceId, default, startStepId).Forget();
+        => StartDialogueAsync(groupKey, sequenceId, null, default, startStepId).Forget();
 
     public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, int startStepId = 1)
     {
@@ -164,17 +142,34 @@ public class DialogueController : Singleton<DialogueController>
         StartDialogue(groupAsset.groupKey, sequenceId, startStepId);
     }
 
-    public async UniTask StartDialogueAsync(string groupKey, string sequenceId, CancellationToken externalToken = default, int startStepId = 1)
+    public void StartDialogue(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1)
+        => StartDialogueAsync(groupKey, sequenceId, overrideUIRefs, default, startStepId).Forget();
+    
+    public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1)
     {
-        StopCurrent(); // 旧ラン停止
+        if (!groupAsset) { Debug.LogWarning("GroupAsset is null"); return; }
+        StartDialogue(groupAsset.groupKey, sequenceId, overrideUIRefs, startStepId);
+    }
+    
+    public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1)
+    {
+        StopCurrent();
         int runId = _nextRunId++; _runId = runId;
+
+        _currentUIRefs = (overrideUIRefs != null && overrideUIRefs.IsValid()) ? overrideUIRefs : defaultUIRefs;
+
+        if (_currentUIRefs == null || !_currentUIRefs.IsValid())
+        {
+            Debug.LogError("[DialogueController] UI references are not set correctly!");
+            return;
+        }
 
         if (!TryGetSequence(groupKey, sequenceId, out var seq))
         {
             Debug.LogWarning($"[DialogueController] '{groupKey}:{sequenceId}' が見つかりません。");
             return;
         }
-
+        
         int startIndex = Mathf.Max(0, (startStepId <= 0 ? 1 : startStepId) - 1);
         startIndex = (seq.steps != null && seq.steps.Count > 0) ? Mathf.Min(startIndex, seq.steps.Count - 1) : 0;
 
@@ -184,11 +179,9 @@ public class DialogueController : Singleton<DialogueController>
         try
         {
             ThrowIfStale(runId);
-
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
             if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
-
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
         catch (OperationCanceledException) { }
@@ -202,6 +195,7 @@ public class DialogueController : Singleton<DialogueController>
                 if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
             }
             _runCts?.Dispose(); _runCts = null;
+            _currentUIRefs = defaultUIRefs;
         }
     }
 
@@ -212,12 +206,10 @@ public class DialogueController : Singleton<DialogueController>
         CleanupUI();
     }
 
-    // ===== Flags =====
     public bool GetFlag(string key, bool def = false) => flags.TryGetValue(key, out var v) ? v : def;
     public void SetFlag(string key, bool val) => flags[key] = val;
 
     // ===== Core =====
-
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
@@ -225,19 +217,13 @@ public class DialogueController : Singleton<DialogueController>
             Debug.LogWarning($"[DialogueController] '{groupKey}:{seqId}' が見つからない/空です。");
             return;
         }
-
         int start = Mathf.Clamp(startStepIndex, 0, seq.steps.Count - 1);
-
         for (int i = start; i < seq.steps.Count; i++)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
-
             var step = seq.steps[i];
-
             if (!CheckConditions(step.conditions)) continue;
-
-            // 即時goto
             if (hop < MaxGotoHops && step.useStepGoto && !string.IsNullOrWhiteSpace(step.stepGotoId))
             {
                 if (!TryParseTarget(step.stepGotoId.Trim(), groupKey, out string ng, out string ns, out int nStep))
@@ -253,46 +239,37 @@ public class DialogueController : Singleton<DialogueController>
                 await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
                 return;
             }
-
-            // 入場フラグ
             if (step.flagEditsOnEnter != null)
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
-
-            // Speaker 表示切替
-            if (speakerText)
+            
+            if (_currentUIRefs.speakerText)
             {
                 ThrowIfStale(runId);
                 bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
-                if (speakerBox) speakerBox.SetActive(hasSpeaker);
-
+                if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(hasSpeaker);
                 if (hasSpeaker)
                 {
-                    speakerText.text = step.speaker;
-                    speakerText.enabled = true;
+                    _currentUIRefs.speakerText.text = step.speaker;
+                    _currentUIRefs.speakerText.enabled = true;
                 }
                 else
                 {
-                    speakerText.text = "";
-                    speakerText.enabled = false;
+                    _currentUIRefs.speakerText.text = "";
+                    _currentUIRefs.speakerText.enabled = false;
                 }
             }
-
-            // 本文（空ならボックスを隠す）
             bool hasBody = !string.IsNullOrWhiteSpace(step.text);
-            if (dialogueBox) dialogueBox.SetActive(hasBody);
+            if (_currentUIRefs.dialogueBox) _currentUIRefs.dialogueBox.SetActive(hasBody);
 
-            // 本文タイプ
             await TypeTextAsync(runId, step.text, token);
             ThrowIfStale(runId);
-
-            // 選択肢
+            
             if (step.choices != null && step.choices.Count > 0)
             {
                 string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
                 ThrowIfStale(runId);
                 if (gotoRaw == null) return;
-
                 if (!TryParseTarget(gotoRaw.Trim(), groupKey, out string ng, out string ns, out int nStep))
                 {
                     Debug.LogWarning($"[DialogueController] choice goto 解析失敗 '{gotoRaw}'");
@@ -303,19 +280,19 @@ public class DialogueController : Singleton<DialogueController>
                     Debug.LogWarning($"[DialogueController] goto '{gotoRaw}' が見つかりません。");
                     return;
                 }
-
                 await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
                 return;
             }
             else
             {
                 if (step.autoNext) await DelaySmartAsync(step.autoNextDelay, token);
-                else               await WaitAdvanceAsync(runId, token);
+                else await WaitAdvanceAsync(runId, token);
                 ThrowIfStale(runId);
             }
         }
     }
 
+    // ▼▼▼【重要】前回記載が漏れていたメソッド群 ▼▼▼
     private bool CheckConditions(List<FlagCondition> conds)
     {
         if (conds == null || conds.Count == 0) return true;
@@ -324,7 +301,6 @@ public class DialogueController : Singleton<DialogueController>
         return true;
     }
 
-    // ===== Target 解析 =====
     private bool TryParseTarget(string raw, string currentGroup, out string group, out string seq, out int stepId)
     {
         group = currentGroup;
@@ -360,17 +336,13 @@ public class DialogueController : Singleton<DialogueController>
         {
             group = tokens[0];
             seq = tokens[1];
-
             if (int.TryParse(tokens[^1], out var n) && n >= 1)
                 stepId = n;
-
             return !string.IsNullOrWhiteSpace(group) && !string.IsNullOrWhiteSpace(seq);
         }
-
         return false;
     }
 
-    // ===== Lookup =====
     private bool TryGetSequence(string groupKey, string seqId, out DialogueSequenceAsset asset)
     {
         asset = null;
@@ -379,99 +351,81 @@ public class DialogueController : Singleton<DialogueController>
         if (!_lookup.TryGetValue(groupKey, out var map) || map == null) return false;
         return map.TryGetValue(seqId, out asset);
     }
+    // ▲▲▲ ここまでが記載漏れのメソッド群です ▲▲▲
 
     // ===== Typewriter =====
     private async UniTask TypeTextAsync(int runId, string content, CancellationToken token)
     {
         string full = content ?? "";
         bool hasBody = !string.IsNullOrWhiteSpace(full);
-
-        // 本文ボックスの表示/非表示を最初に確定
-        if (dialogueBox) dialogueBox.SetActive(hasBody);
-
-        if (bodyText) bodyText.text = "";
-
-        // テキストが空なら即終了
-        if (!hasBody)
-        {
-            return;
-        }
-
+        
+        if (_currentUIRefs.dialogueBox) _currentUIRefs.dialogueBox.SetActive(hasBody);
+        if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = "";
+        if (!hasBody) return;
+        
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
-
         int len = full.Length;
         int idx = 0;
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
-
-        // 最初の1文字（任意）
         if (len > 0)
         {
             idx = 1;
-            if (bodyText) bodyText.text = full.Substring(0, 1);
+            if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full.Substring(0, 1);
         }
-
         while (idx < len)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
-
             if (!_pauseAdvanceInput)
             {
                 if (skipAction != null && skipAction.IsPressed())
                 {
-                    if (bodyText) bodyText.text = full;
+                    if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full;
                     break;
                 }
-
                 if (advanceAction != null && advanceAction.triggered)
                 {
                     float now = Now;
                     if (now - lastClickTime <= doubleClickSeconds)
                     {
-                        if (bodyText) bodyText.text = full;
+                        if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full;
                         lastClickTime = now;
                         break;
                     }
                     lastClickTime = now;
                 }
             }
-
             float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             acc += dt;
             while (acc >= secPerChar && idx < len)
             {
                 acc -= secPerChar;
                 idx++;
-                if (bodyText) bodyText.text = full.Substring(0, idx);
+                if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full.Substring(0, idx);
             }
-
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
     }
-
+    
     // ===== Wait / Delay =====
     private async UniTask WaitAdvanceAsync(int runId, CancellationToken token)
     {
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
-
         while (true)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
-
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
-
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.triggered)
             {
                 lastClickTime = Now;
                 return;
             }
-
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
@@ -488,20 +442,17 @@ public class DialogueController : Singleton<DialogueController>
     {
         ClearChoices();
         ThrowIfStale(runId);
-
         var usable = new List<(DialogueChoice, Button)>();
         foreach (var ch in choices)
         {
             if (!CheckConditions(ch.conditions)) continue;
-            var btn = UnityEngine.Object.Instantiate(choiceButtonPrefab, choicesRoot);
+            var btn = UnityEngine.Object.Instantiate(_currentUIRefs.choiceButtonPrefab, _currentUIRefs.choicesRoot);
             var label = btn.GetComponentInChildren<TextMeshProUGUI>();
             if (label) label.text = ch.text;
             btn.gameObject.SetActive(true);
             usable.Add((ch, btn));
         }
-
         if (usable.Count == 0) return null;
-
         string result = null; bool clicked = false;
         foreach (var (ch, btn) in usable)
         {
@@ -513,29 +464,25 @@ public class DialogueController : Singleton<DialogueController>
                 clicked = true;
             });
         }
-
         while (!clicked)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
-
             if (cancelAction != null && cancelAction.triggered)
             { ClearChoices(); return null; }
-
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
-
         ClearChoices();
         return result;
     }
 
     private void ClearChoices()
     {
-        if (!choicesRoot) return;
-        for (int i = choicesRoot.childCount - 1; i >= 0; i--)
+        if (_currentUIRefs == null || !_currentUIRefs.choicesRoot) return;
+        for (int i = _currentUIRefs.choicesRoot.childCount - 1; i >= 0; i--)
         {
-            var go = choicesRoot.GetChild(i).gameObject;
+            var go = _currentUIRefs.choicesRoot.GetChild(i).gameObject;
             if (Application.isPlaying) Destroy(go);
             else DestroyImmediate(go);
         }
@@ -543,16 +490,13 @@ public class DialogueController : Singleton<DialogueController>
 
     private void CleanupUI()
     {
+        if (_currentUIRefs == null) return;
         ClearChoices();
-
-        if (speakerText) { speakerText.text = ""; speakerText.enabled = false; }
-        if (bodyText) { bodyText.text = ""; }
-
-        if (speakerBox) speakerBox.SetActive(false);
-        if (dialogueBox) dialogueBox.SetActive(false);
-
+        if (_currentUIRefs.speakerText) { _currentUIRefs.speakerText.text = ""; _currentUIRefs.speakerText.enabled = false; }
+        if (_currentUIRefs.bodyText) { _currentUIRefs.bodyText.text = ""; }
+        if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
+        if (_currentUIRefs.dialogueBox) _currentUIRefs.dialogueBox.SetActive(false);
         lastClickTime = -999f;
-
         if (dialogueRaycaster && !dialogueRaycaster.enabled)
             dialogueRaycaster.enabled = true;
     }
