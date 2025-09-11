@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Animations.Rigging;
 
 public class CPUStatus : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class CPUStatus : MonoBehaviour
     [SerializeField] private NavMeshAgent navMeshAgent;
     [SerializeField] public Animator CPUAnimator;
     [SerializeField] private FootStepController footStepController;
+    [SerializeField] public MultiAimConstraint multiAimConstraint;
 
     // 状態の閾値。この速度より大きければ「歩いている」と判断する
     [Header("設定")]

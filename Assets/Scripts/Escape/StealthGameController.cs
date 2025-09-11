@@ -214,6 +214,7 @@ public class StealthGameController : SerializedMonoBehaviour
             if (!g.active || g.agent == null) continue;
             if (IsPlayerVisible(g))
             {
+                g.cpuStatus.multiAimConstraint.weight = 1;
                 myHouseEscapeGameController?.NotifyPlayerDetected();
                 if (stopAllOnDetect) { StopAllGuards(); StopTimer(); }
                 else g.active = false;
