@@ -5940,6 +5940,11 @@ MonoBehaviour:
   timerBox: {fileID: 1752285683}
   hideTimerWhenIdle: 1
   timerRemain: 0
+  enableRandomDialogue: 1
+  randomDialogueGroup: {fileID: 11400000, guid: 6e5bdb246acc5724e850c82036d8d2c3, type: 2}
+  randomDialogueSequenceId: LookingForPlayerByMother
+  randomDialogueInterval: {x: 5, y: 10}
+  dialogueDisplayDuration: 4
   guards:
   - name: Mother
     agent: {fileID: 67438308}
@@ -11837,6 +11842,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2462221836142030846, guid: b8d82a1ff002408468f1724553e6d963, type: 3}
   m_PrefabInstance: {fileID: 6429310615695282067}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1462651270 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7614507389369501806, guid: eccaf67bf832625499fadebb0125df6e, type: 3}
+  m_PrefabInstance: {fileID: 3523486163518503315}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1468170249
 GameObject:
   m_ObjectHideFlags: 0
@@ -13373,7 +13383,7 @@ MonoBehaviour:
           m_StringArgument: Knife
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1462651270}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
@@ -17151,7 +17161,7 @@ PrefabInstance:
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.Prefab
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModifications.Array.size
       value: 1
@@ -17159,7 +17169,7 @@ PrefabInstance:
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: 'serializationData.PrefabModifications.Array.data[0]'
       value: '"path":"FlagEventRunnerDictionary.{\"EscapeMyHouseStart\"}","value":{"$id":0,"$type":"System.Boolean,
-        mscorlib",false}'
+        mscorlib",true}'
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModificationsReferencedUnityObjects.Array.size
@@ -17347,6 +17357,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 1506788816315427346, guid: eccaf67bf832625499fadebb0125df6e, type: 3}
+    - target: {fileID: 2051808070512972742, guid: eccaf67bf832625499fadebb0125df6e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3360348779508273009, guid: eccaf67bf832625499fadebb0125df6e, type: 3}
       propertyPath: m_Weight
       value: 1

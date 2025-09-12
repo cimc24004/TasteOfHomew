@@ -18,13 +18,4 @@ public class DialogueUIRefs
     public Transform choicesRoot;
     [Tooltip("選択肢ボタンのPrefab")]
     public Button choiceButtonPrefab;
-
-    /// <summary>
-    /// 必須コンポーネントが設定されているかチェック
-    /// </summary>
-    public bool IsValid()
-    {
-        // 最低限の必須項目をチェック
-        return bodyText != null && choicesRoot != null && choiceButtonPrefab != null;
-    }
 }

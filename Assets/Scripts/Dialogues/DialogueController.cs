@@ -1,5 +1,6 @@
 // DialogueController.cs
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -54,6 +55,7 @@ public class DialogueController : Singleton<DialogueController>
     [Title("Input Lock")]
     [SerializeField] private bool _pauseAdvanceInput = false;
     [Tooltip("このCanvas(または親Canvas)のGraphicRaycaster。Pause中にOFFにしてクリックを通す")]
+    private Coroutine _briefMessageCoroutine;
     [SerializeField] private GraphicRaycaster dialogueRaycaster;
 
     public void PauseAdvance(bool pause = true)
@@ -156,9 +158,9 @@ public class DialogueController : Singleton<DialogueController>
         StopCurrent();
         int runId = _nextRunId++; _runId = runId;
 
-        _currentUIRefs = (overrideUIRefs != null && overrideUIRefs.IsValid()) ? overrideUIRefs : defaultUIRefs;
+        _currentUIRefs = (overrideUIRefs != null) ? overrideUIRefs : defaultUIRefs;
 
-        if (_currentUIRefs == null || !_currentUIRefs.IsValid())
+        if (_currentUIRefs == null)
         {
             Debug.LogError("[DialogueController] UI references are not set correctly!");
             return;
@@ -500,7 +502,63 @@ public class DialogueController : Singleton<DialogueController>
         if (dialogueRaycaster && !dialogueRaycaster.enabled)
             dialogueRaycaster.enabled = true;
     }
+    /// <summary>
+    /// 一つのメッセージを指定されたUIで、指定された時間だけ表示し、自動で消去します。
+    /// </summary>
+    /// <param name="uiRefs">使用するUIの参照。nullの場合はデフォルトUIが使用されます。</param>
+    /// <param name="speaker">話者名</param>
+    /// <param name="body">本文</param>
+    /// <param name="duration">表示時間（秒）</param>
+    public void ShowBriefMessage(DialogueUIRefs uiRefs, string speaker, string body, float duration)
+    {
+        Debug.Log("_randomDialogueCo-----------2--------------------");
+        // 以前のコルーチンが動いていたら、まず停止させる
+        if (_briefMessageCoroutine != null)
+        {
+            StopCoroutine(_briefMessageCoroutine);
+        }
+        _briefMessageCoroutine = StartCoroutine(BriefMessageRoutine(uiRefs, speaker, body, duration));
+    }
 
+    private IEnumerator BriefMessageRoutine(DialogueUIRefs customUiRef, string speaker, string body, float duration)
+    {
+        // 使用するUIを決定する (指定がなければデフォルトUIにフォールバック)
+        DialogueUIRefs uiToUse = customUiRef ?? defaultUIRefs;
+
+        // --- 1. UIの存在チェック ---
+        if (uiToUse == null)
+        {
+            Debug.LogError("[DialogueController] CRITICAL ERROR: 表示に使用できるUIがありません。'Default UI Refs'が設定されているか確認してください。");
+            _briefMessageCoroutine = null;
+            yield break; // UIがないので処理を中断
+        }
+        // --- 2. 表示処理 ---
+        bool hasBody = !string.IsNullOrWhiteSpace(body);
+        uiToUse.bodyText.text = body;
+        uiToUse.dialogueBox.SetActive(hasBody);
+
+        bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
+        if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(hasSpeaker);
+        if(uiToUse.speakerText) uiToUse.speakerText.text = speaker;
+        Debug.Log($"-----------3----------body: {body}----------");
+        Debug.Log($"-----------5----------uitoUse.bodytext: {uiToUse.bodyText}----------");
+        // --- 3. 待機処理 ---
+        if (duration > 0)
+        {
+            yield return new WaitForSeconds(duration);
+        }
+        else
+        {
+            // durationが0以下の場合は、一瞬だけ表示して消す
+            yield return null;
+        }
+
+        // --- 4. 非表示処理 ---
+        uiToUse.dialogueBox.SetActive(false);
+        if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(false);
+        
+        _briefMessageCoroutine = null;
+    }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfStale(int runId)
     {

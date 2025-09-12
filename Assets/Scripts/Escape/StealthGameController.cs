@@ -1,7 +1,5 @@
-// StealthGameController.cs
-// Manager版 + Odin対応 + 一定待機時間 + 往復(Ping-Pong) + 到着判定強化 + Gizmos強化
-// ＋ 残り時間カウントダウン（mm:ss表示 / 満了でPolice arrive）
-// ＋ Animator連携
+// StealthGameController.cs (修正後 全文)
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,7 +16,6 @@ public class StealthGameController : SerializedMonoBehaviour
 {
     // ======= References =======
     [TitleGroup("References"), PropertyOrder(-100)]
-    [Tooltip("進行管理の核。検知時に NotifyPlayerDetected() / 満了時に NotifyPoliceArrived() を呼ぶ")]
     [Required] public MyHouseEscapeGameController myHouseEscapeGameController;
 
     [TitleGroup("References")]
@@ -62,6 +59,31 @@ public class StealthGameController : SerializedMonoBehaviour
 
     [Tooltip("現在のタイマー値")]
     [SerializeField] private float timerRemain;
+    
+    // ======= Random Dialogue =======
+    [TitleGroup("Random Dialogue"), PropertySpace]
+    [LabelText("Enable Random Dialogue")]
+    [Tooltip("ステルスゲーム中にランダムなセリフを表示し続けるか")]
+    public bool enableRandomDialogue = true;
+
+    [TitleGroup("Random Dialogue"), ShowIf("enableRandomDialogue")]
+    [Required, Tooltip("セリフが含まれるDialogue Sequence Group")]
+    public DialogueSequenceGroupAsset randomDialogueGroup;
+
+    [TitleGroup("Random Dialogue"), ShowIf("enableRandomDialogue")]
+    [Tooltip("使用するSequenceのID")]
+    public string randomDialogueSequenceId = "StealthTalk";
+
+    [TitleGroup("Random Dialogue"), ShowIf("enableRandomDialogue")]
+    [MinMaxSlider(0.1f, 30f, true), Tooltip("次のセリフを表示するまでのランダムな待機時間（秒）")]
+    public Vector2 randomDialogueInterval = new Vector2(5f, 10f);
+
+    [TitleGroup("Random Dialogue"), ShowIf("enableRandomDialogue")]
+    [Range(1f, 10f), Tooltip("一回のセリフの表示時間（秒）")]
+    public float dialogueDisplayDuration = 3.5f;
+
+    private Coroutine _randomDialogueCo;
+    private DialogueSequenceAsset _targetSequence;
 
     // ======= Guard 設定 =======
     [System.Serializable]
@@ -79,17 +101,6 @@ public class StealthGameController : SerializedMonoBehaviour
         
         [BoxGroup("H/Agent", false)]
         [LabelText("CPU Status(任意)")] public CPUStatus cpuStatus;
-
-        // ▼▼ 変更/追加 ▼▼
-        [FoldoutGroup("Dialogue", false)]
-        [LabelText("Dialogue Group Asset")]
-        public DialogueSequenceGroupAsset dialogueGroup;
-
-        [FoldoutGroup("Dialogue")]
-        [LabelText("Sequence ID (On Detect)")]
-        [Tooltip("プレイヤー発見時に再生するシーケンスID")]
-        public string dialogueSequenceId = "FoundPlayer";
-        // ▲▲ 変更/追加 ▲▲
 
         [FoldoutGroup("Patrol", true)]
         [ListDrawerSettings(Expanded = true, DraggableItems = true)]
@@ -118,10 +129,6 @@ public class StealthGameController : SerializedMonoBehaviour
         [HideInInspector] public int currentIndex;
         [HideInInspector] public Coroutine patrolCo;
         [HideInInspector] public int direction = 1;
-        
-        // ▼▼ 変更/追加 ▼▼
-        [HideInInspector] public bool isDialogueActive; // ダイアログ再生中フラグ
-        // ▲▲ 変更/追加 ▲▲
     }
 
     [TitleGroup("Guards"), PropertySpace]
@@ -140,6 +147,9 @@ public class StealthGameController : SerializedMonoBehaviour
         }
         myHouseEscapeGameController.OnStealthGameStart();
         if (enableTimer) StartTimer();
+        
+        StartRandomDialogue();
+        
         foreach (var g in guards) StartGuard(g);
     }
 
@@ -149,6 +159,7 @@ public class StealthGameController : SerializedMonoBehaviour
     {
         foreach (var g in guards) StopGuard(g);
         StopTimer();
+        StopRandomDialogue();
     }
 
     [ButtonGroup("Controls/Row2"), GUIColor(0.35f, 0.6f, 1f)]
@@ -199,8 +210,6 @@ public class StealthGameController : SerializedMonoBehaviour
     private void OnDisable()
     {
         StopAllGuards();
-        StopTimer();
-        if (hideTimerWhenIdle) UpdateTimerText(null);
     }
 
     private void Update()
@@ -212,84 +221,44 @@ public class StealthGameController : SerializedMonoBehaviour
                 s == MyHouseEscapeGameController.State.Failed)
             {
                 StopAllGuards();
-                StopTimer();
                 if (hideTimerWhenIdle) UpdateTimerText(null);
                 return;
             }
         }
 
         if (player == null) return;
-        
-        // ▼▼ 変更/追加 ▼▼
+
         foreach (var g in guards)
         {
-            // アクティブ、かつダイアログ再生中でない、かつプレイヤーが見えるか
-            if (g.active && g.agent != null && !g.isDialogueActive && IsPlayerVisible(g))
+            if (!g.active || g.agent == null) continue;
+            if (IsPlayerVisible(g))
             {
-                HandlePlayerDetected(g);
-                
-                if (stopAllOnDetect)
+                if (g.cpuStatus != null && g.cpuStatus.multiAimConstraint != null)
                 {
-                    break;
+                    g.cpuStatus.multiAimConstraint.weight = 1;
                 }
+                myHouseEscapeGameController?.NotifyPlayerDetected();
+                if (stopAllOnDetect) { StopAllGuards(); }
+                else { StopGuard(g); }
+                break;
             }
         }
-        // ▲▲ 変更/追加 ▲▲
     }
-
-    // ▼▼ 変更/追加 ▼▼
-    private void HandlePlayerDetected(GuardEntry g)
-    {
-        g.isDialogueActive = true; // 再トリガーを防止
-
-        // 索敵を停止
-        if (stopAllOnDetect)
-        {
-            StopTimer();
-            StopAllGuards();
-        }
-        else
-        {
-            StopGuard(g); // このガードだけ停止
-        }
-        
-        // プレイヤーの方を向く
-        if (g.cpuStatus != null && g.cpuStatus.multiAimConstraint != null)
-        {
-            g.cpuStatus.multiAimConstraint.weight = 1;
-        }
-
-        // --- ダイアログ再生処理 ---
-        var dialogueController = DialogueController.instance;
-        if (dialogueController != null && g.dialogueGroup != null && !string.IsNullOrEmpty(g.dialogueSequenceId) && g.cpuStatus != null && g.cpuStatus.dialogueUIRefs.IsValid())
-        {
-            // このガード専用のUIを使ってダイアログを開始
-            dialogueController.StartDialogue(
-                g.dialogueGroup.groupKey, 
-                g.dialogueSequenceId, 
-                g.cpuStatus.dialogueUIRefs
-            );
-        }
-        else
-        {
-            // ダイアログ設定が不十分な場合のフォールバック
-            Debug.LogWarning($"[{g.name}] がプレイヤーを発見しましたが、ダイアログ設定が不十分です。");
-            myHouseEscapeGameController?.NotifyPlayerDetected();
-        }
-    }
-    // ▲▲ 変更/追加 ▲▲
 
     // ======= Timer =======
     private void StartTimer()
     {
         if (timerCo != null) StopCoroutine(timerCo);
+
         timerRemain = Mathf.Max(0f, myHouseEscapeGameController.policeArrivalSeconds);
         if (timerBox != null) timerBox.SetActive(true);
+
         if (myHouseEscapeGameController != null)
         {
             float p = (myHouseEscapeGameController.policeArrivalSeconds <= 0f) ? 1f : Mathf.Clamp01(1f - (timerRemain / myHouseEscapeGameController.policeArrivalSeconds));
             myHouseEscapeGameController.onStealthTick?.Invoke(p);
         }
+
         UpdateTimerText(timerRemain);
         timerCo = StartCoroutine(TimerLoop());
     }
@@ -307,18 +276,23 @@ public class StealthGameController : SerializedMonoBehaviour
             TriggerPoliceArrive();
             yield break;
         }
+
         while (timerRemain > 0f)
         {
             timerRemain -= Time.deltaTime;
             if (timerRemain < 0f) timerRemain = 0f;
+
             UpdateTimerText(timerRemain);
+
             if (myHouseEscapeGameController != null && myHouseEscapeGameController.policeArrivalSeconds > 0f)
             {
                 float p = Mathf.Clamp01(1f - (timerRemain / myHouseEscapeGameController.policeArrivalSeconds));
                 myHouseEscapeGameController.onStealthTick?.Invoke(p);
             }
+
             yield return null;
         }
+
         TriggerPoliceArrive();
     }
 
@@ -332,15 +306,109 @@ public class StealthGameController : SerializedMonoBehaviour
     private void UpdateTimerText(float? remainNullable)
     {
         if (timerText == null) return;
+
         if (!remainNullable.HasValue)
         {
             timerText.SetText("");
             return;
         }
+
         int t = Mathf.Max(0, Mathf.FloorToInt(remainNullable.Value));
         int m = t / 60;
         int s = t % 60;
         timerText.SetText("{0}:{1:00}", m, s);
+    }
+
+    // ======= Random Dialogue Control =======
+    private void StartRandomDialogue()
+    {
+        Debug.Log("oi 1");
+        if (!enableRandomDialogue)
+        {
+            return;
+        }
+        Debug.Log("oi 2");
+
+        // 指定されたIDのSequenceを探す
+        _targetSequence = randomDialogueGroup.sequences.Find(seq => seq.id == randomDialogueSequenceId);
+
+        if (_targetSequence == null || _targetSequence.steps.Count == 0)
+        {
+            Debug.LogWarning($"[StealthGameController] Sequence '{randomDialogueSequenceId}' not found or is empty.");
+            return;
+        }
+
+        if (_randomDialogueCo != null)
+        {
+            Debug.Log("_randomDialogueCo-----------1--------------------");
+            StopCoroutine(_randomDialogueCo);
+        }
+        Debug.Log("oi 3");
+
+        _randomDialogueCo = StartCoroutine(RandomDialogueLoop());
+    }
+
+    private void StopRandomDialogue()
+    {
+        if (_randomDialogueCo != null)
+        {
+            StopCoroutine(_randomDialogueCo);
+            _randomDialogueCo = null;
+        }
+        
+        // 念のため、全ガードのUIを非表示にする
+        if (DialogueController.instance != null)
+        {
+            foreach (var guard in guards)
+            {
+                if (guard.cpuStatus != null)
+                {
+                    DialogueController.instance.ShowBriefMessage(guard.cpuStatus.dialogueUIRefs, "", "", 0);
+                }
+            }
+        }
+    }
+
+    private IEnumerator RandomDialogueLoop()
+    {
+        // 最初のセリフ表示まで少し待つ
+        yield return new WaitForSeconds(randomDialogueInterval.x);
+
+        while (true)
+        {
+            // --- 話者となるガードを決定 ---
+            // 1. 現在アクティブで、かつ有効なUIを持つガードのリストを作成
+            var validGuards = guards.FindAll(g => g.active && g.cpuStatus != null);
+
+            // 2. 有効なガードが一人もいなければ、次のループまで待機
+            if (validGuards.Count == 0)
+            {
+                yield return new WaitForSeconds(1f); // 1秒待って再試行
+                continue;
+            }
+
+            // 3. リストからランダムに一人を選ぶ
+            var randomGuard = validGuards[Random.Range(0, validGuards.Count)];
+            
+            // --- 表示するセリフを決定 ---
+            int randomIndex = Random.Range(0, _targetSequence.steps.Count);
+            DialogueStep randomStep = _targetSequence.steps[randomIndex];
+
+            if (randomStep != null && DialogueController.instance != null)
+            {
+                // 選んだガードのUI（dialogueUIRefs）とセリフ情報を渡して表示を依頼
+                DialogueController.instance.ShowBriefMessage(
+                    randomGuard.cpuStatus.dialogueUIRefs, 
+                    randomStep.speaker, 
+                    randomStep.text, 
+                    dialogueDisplayDuration
+                );
+            }
+            
+            // 次の表示までランダムに待機
+            float waitTime = Random.Range(randomDialogueInterval.x, randomDialogueInterval.y);
+            yield return new WaitForSeconds(waitTime);
+        }
     }
 
     // ======= Guard 制御 =======
@@ -349,16 +417,15 @@ public class StealthGameController : SerializedMonoBehaviour
         if (g == null || g.agent == null) return;
         g.agent.enabled = true;
         g.active = true;
-        // ▼▼ 変更/追加 ▼▼
-        g.isDialogueActive = false; // 開始時にダイアログフラグをリセット
-        // ▲▲ 変更/追加 ▲▲
         g.direction = 1;
         g.currentIndex = 0;
         g.agent.autoBraking = g.useAutoBraking;
         if (g.arriveThreshold > 0f)
             g.agent.stoppingDistance = Mathf.Max(g.agent.stoppingDistance, g.arriveThreshold);
+
         if (g.startFromClosestPoint && g.patrolPoints != null && g.patrolPoints.Count > 1)
             g.currentIndex = FindClosestPointIndex(g);
+
         if (g.patrolCo != null) StopCoroutine(g.patrolCo);
         g.patrolCo = StartCoroutine(PatrolLoop(g));
     }
@@ -369,6 +436,7 @@ public class StealthGameController : SerializedMonoBehaviour
         {
             g.cpuStatus.CPUAnimator.SetBool("Walk", false);
         }
+
         g.active = false;
         if (g.patrolCo != null) { StopCoroutine(g.patrolCo); g.patrolCo = null; }
         if (g.agent != null && g.agent.isOnNavMesh) g.agent.ResetPath();
@@ -381,56 +449,70 @@ public class StealthGameController : SerializedMonoBehaviour
             Transform target = null;
             if (g.patrolPoints != null && g.patrolPoints.Count > 0)
                 target = g.patrolPoints[Mathf.Clamp(g.currentIndex, 0, g.patrolPoints.Count - 1)];
+
             if (target != null && g.agent.isOnNavMesh)
             {
                 Vector3 targetPos = target.position;
                 g.agent.SetDestination(targetPos);
+                
                 if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
                 {
                     g.cpuStatus.CPUAnimator.SetBool("Walk", true);
                 }
+                
                 float sinceSet = 0f;
                 while (g.active)
                 {
                     if (!g.agent.pathPending)
                     {
                         float stopThresh = Mathf.Max(g.agent.stoppingDistance, g.arriveThreshold);
-                        if (g.agent.remainingDistance <= stopThresh && (!g.agent.hasPath || g.agent.velocity.sqrMagnitude < 0.01f))
+
+                        if (g.agent.remainingDistance <= stopThresh &&
+                            (!g.agent.hasPath || g.agent.velocity.sqrMagnitude < 0.01f))
                             break;
+
                         if (g.usePlanarDistance)
                         {
                             float planar = PlanarDistance(g.agent.transform.position, targetPos);
                             if (planar <= Mathf.Max(g.closeEnoughDistance, 0.001f))
                                 break;
                         }
-                        if (g.agent.pathStatus == NavMeshPathStatus.PathInvalid || g.agent.pathStatus == NavMeshPathStatus.PathPartial)
+
+                        if (g.agent.pathStatus == NavMeshPathStatus.PathInvalid ||
+                            g.agent.pathStatus == NavMeshPathStatus.PathPartial)
                         {
                             Debug.LogWarning($"[Stealth] {g.name}: pathStatus={g.agent.pathStatus} → 次へスキップ");
                             break;
                         }
                     }
+
                     sinceSet += Time.deltaTime;
                     if (g.arrivalTimeoutSeconds > 0f && sinceSet >= g.arrivalTimeoutSeconds)
                     {
                         Debug.LogWarning($"[Stealth] {g.name}: ArrivalTimeout({g.arrivalTimeoutSeconds}s) 到達 → 次へ進む");
                         break;
                     }
+
                     yield return null;
                 }
+                
                 while (g.active && g.agent.velocity.sqrMagnitude > 0.01f)
                 {
                     yield return null;
                 }
+                
                 if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
                 {
                     g.cpuStatus.CPUAnimator.SetBool("Walk", false);
                 }
+                
                 float waitSec = Mathf.Max(0f, g.waitAtPointSeconds * Mathf.Max(0f, waitTimeScale));
                 if (waitSec > 0f)
                 {
                     float t = 0f;
                     while (g.active && t < waitSec) { t += Time.deltaTime; yield return null; }
                 }
+                
                 g.currentIndex = GetNextIndex(g);
             }
             else
@@ -446,6 +528,7 @@ public class StealthGameController : SerializedMonoBehaviour
     private int GetNextIndex(GuardEntry g)
     {
         if (g.patrolPoints == null || g.patrolPoints.Count <= 1) return 0;
+
         if (g.randomPatrol)
         {
             int next;
@@ -453,9 +536,11 @@ public class StealthGameController : SerializedMonoBehaviour
             g.direction = 1;
             return next;
         }
+
         if (g.pingPong)
         {
             int next = g.currentIndex + g.direction;
+
             if (next >= g.patrolPoints.Count)
             {
                 g.direction = -1;
@@ -468,6 +553,7 @@ public class StealthGameController : SerializedMonoBehaviour
             }
             return Mathf.Clamp(next, 0, g.patrolPoints.Count - 1);
         }
+
         int idx = g.currentIndex + 1;
         if (idx >= g.patrolPoints.Count) idx = 0;
         g.direction = 1;
@@ -491,6 +577,7 @@ public class StealthGameController : SerializedMonoBehaviour
     private bool IsPlayerVisible(GuardEntry g)
     {
         if (player == null) return false;
+
         Vector3 eyePos;
         Vector3 forward;
         if (g.eye != null) { eyePos = g.eye.position; forward = g.eye.forward; }
@@ -500,12 +587,15 @@ public class StealthGameController : SerializedMonoBehaviour
             eyePos = baseT.position + Vector3.up * g.eyeHeight;
             forward = baseT.forward;
         }
+
         Vector3 target = player.position + Vector3.up * g.playerHeight;
         Vector3 toPlayer = target - eyePos;
         float dist = toPlayer.magnitude;
         if (dist > g.viewDistance) return false;
+
         float ang = Vector3.Angle(forward, toPlayer.normalized);
         if (ang > g.viewAngle * 0.5f) return false;
+
         int mask = g.playerLayer | g.obstructionLayers;
         if (Physics.Raycast(eyePos, toPlayer.normalized, out var hit, dist, mask, QueryTriggerInteraction.Ignore))
         {
@@ -519,6 +609,7 @@ public class StealthGameController : SerializedMonoBehaviour
         a.y = 0f; b.y = 0f;
         return Vector3.Distance(a, b);
     }
+
     // ======= Gizmos（各ガードの目から描画） =======
     [FoldoutGroup("Gizmos", expanded: true), PropertySpace] public bool gizmoAlways = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawFOV = true;
