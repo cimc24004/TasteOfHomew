@@ -1,5 +1,233 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2372292420654518430
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 387728016379933899}
+  - component: {fileID: 4464799389915304007}
+  - component: {fileID: 1667995995064907093}
+  m_Layer: 0
+  m_Name: GhostDisapperanceTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &387728016379933899
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2372292420654518430}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7424931394466590219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4464799389915304007
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2372292420654518430}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 5, y: 5, z: 5}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1667995995064907093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2372292420654518430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: Player
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
+--- !u!1 &3300501063547101026
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3412030751547808113}
+  - component: {fileID: 5502009756469394270}
+  - component: {fileID: 201582294487687721}
+  m_Layer: 0
+  m_Name: GhostDisapperanceTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3412030751547808113
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3300501063547101026}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8282622517448951410}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5502009756469394270
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3300501063547101026}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.0379124, y: 5, z: 7.320389}
+  m_Center: {x: 0.14206982, y: 0, z: -2.9318542}
+--- !u!114 &201582294487687721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3300501063547101026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: Player
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
+--- !u!1 &4220345765951995092
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5969011875615791537}
+  - component: {fileID: 5619473842771437080}
+  - component: {fileID: 3683881897768679610}
+  m_Layer: 0
+  m_Name: GhostDisapperanceTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5969011875615791537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4220345765951995092}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -20.14, y: 0.38400006, z: 9.009999}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8201371669156720345}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5619473842771437080
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4220345765951995092}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.0379124, y: 5, z: 7.320389}
+  m_Center: {x: 0.14206982, y: 0, z: -2.9318542}
+--- !u!114 &3683881897768679610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4220345765951995092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: Player
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
 --- !u!1 &4736201441929614452
 GameObject:
   m_ObjectHideFlags: 0
@@ -226,6 +454,7 @@ GameObject:
   - component: {fileID: 1408042966665924314}
   - component: {fileID: 4690341248881165556}
   - component: {fileID: 4997410130576363747}
+  - component: {fileID: 6907063233013829962}
   m_Layer: 0
   m_Name: Node_BleachBundle
   m_TagString: Untagged
@@ -247,6 +476,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 778345066243390191}
+  - {fileID: 387728016379933899}
   m_Father: {fileID: 8968128433181394036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1408042966665924314
@@ -261,12 +491,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f2cc90dd96fb547bf4ebade633e5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HomeSearchNode
-  filterByTag: 1
-  playerTag: Player
+  GhostDisapperanceTrigger: {fileID: 1667995995064907093}
   pingClip: {fileID: 8300000, guid: 80202e63a9ba745bc8f13eceb60de73f, type: 3}
   volume: 1
   pingIntervalMin: 1.2
   pingIntervalMax: 2.2
+  timeline: {fileID: 11400000, guid: af3cbb7a3492f9d438e942241de31bfd, type: 2}
   onActivate:
     m_PersistentCalls:
       m_Calls: []
@@ -409,6 +639,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 5.060236, y: 1.3721712, z: 8.198217}
   m_Center: {x: 2.030118, y: 0.18608564, z: 3.5991087}
+--- !u!114 &6907063233013829962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6337947910378571837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: 
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
 --- !u!1 &6629003430113349112
 GameObject:
   m_ObjectHideFlags: 0
@@ -421,6 +673,7 @@ GameObject:
   - component: {fileID: 465777413345414597}
   - component: {fileID: 5012589339009297868}
   - component: {fileID: 2952515365584476902}
+  - component: {fileID: 4717484699904884363}
   m_Layer: 0
   m_Name: MeatHumanBook
   m_TagString: Untagged
@@ -440,7 +693,8 @@ Transform:
   m_LocalPosition: {x: 1.59, y: 0, z: 0.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3412030751547808113}
   m_Father: {fileID: 8968128433181394036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &465777413345414597
@@ -455,12 +709,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f2cc90dd96fb547bf4ebade633e5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HomeSearchNode
-  filterByTag: 1
-  playerTag: Player
+  GhostDisapperanceTrigger: {fileID: 201582294487687721}
   pingClip: {fileID: 8300000, guid: 71b00d3949dc74c769533a61df419f4c, type: 3}
   volume: 1
   pingIntervalMin: 1.2
   pingIntervalMax: 2.2
+  timeline: {fileID: 11400000, guid: 9f85584bab52fe342af5d78d76b99f3e, type: 2}
   onActivate:
     m_PersistentCalls:
       m_Calls: []
@@ -603,6 +857,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4717484699904884363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6629003430113349112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: 
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
 --- !u!1 &7266190960093635352
 GameObject:
   m_ObjectHideFlags: 0
@@ -615,6 +891,7 @@ GameObject:
   - component: {fileID: 2115035633545758027}
   - component: {fileID: 6748567068482993169}
   - component: {fileID: 3342789779762977304}
+  - component: {fileID: 4526628047063368341}
   m_Layer: 0
   m_Name: Node_CityHallDocs
   m_TagString: Untagged
@@ -635,6 +912,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6244142298011706033}
   - {fileID: 521906517200211436}
   m_Father: {fileID: 8968128433181394036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -650,12 +928,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f2cc90dd96fb547bf4ebade633e5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HomeSearchNode
-  filterByTag: 1
-  playerTag: Player
+  GhostDisapperanceTrigger: {fileID: 5143603164729998908}
   pingClip: {fileID: 8300000, guid: 10c66983420b24233b4c8dd779e3eaf4, type: 3}
   volume: 1
   pingIntervalMin: 1.2
   pingIntervalMax: 2.2
+  timeline: {fileID: 11400000, guid: a5992b7012f99324db5b9bd336f68b0c, type: 2}
   onActivate:
     m_PersistentCalls:
       m_Calls:
@@ -810,6 +1088,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4526628047063368341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7266190960093635352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: 
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
 --- !u!1 &8006390719134487567
 GameObject:
   m_ObjectHideFlags: 0
@@ -822,6 +1122,7 @@ GameObject:
   - component: {fileID: 2294098719962085368}
   - component: {fileID: 7723097271466631318}
   - component: {fileID: 1927570914343244895}
+  - component: {fileID: 8581112732317711883}
   m_Layer: 0
   m_Name: Node_Diary
   m_TagString: Untagged
@@ -843,6 +1144,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4821845975977856245}
+  - {fileID: 5969011875615791537}
   m_Father: {fileID: 8968128433181394036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2294098719962085368
@@ -857,12 +1159,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f2cc90dd96fb547bf4ebade633e5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HomeSearchNode
-  filterByTag: 1
-  playerTag: Player
+  GhostDisapperanceTrigger: {fileID: 3683881897768679610}
   pingClip: {fileID: 8300000, guid: 10c66983420b24233b4c8dd779e3eaf4, type: 3}
   volume: 1
   pingIntervalMin: 1.2
   pingIntervalMax: 2.2
+  timeline: {fileID: 11400000, guid: 037ae135cc3885a459be7ea86482cca3, type: 2}
   onActivate:
     m_PersistentCalls:
       m_Calls: []
@@ -1005,6 +1307,104 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 5.4313793, y: 2.4568226, z: 5.259575}
   m_Center: {x: 1.3337936, y: 0, z: 1.2772074}
+--- !u!114 &8581112732317711883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8006390719134487567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: 
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
+--- !u!1 &8691749500708246046
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6244142298011706033}
+  - component: {fileID: 5586689964460943200}
+  - component: {fileID: 5143603164729998908}
+  m_Layer: 0
+  m_Name: GhostDisapperanceTrigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6244142298011706033
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8691749500708246046}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -13.41, y: -0.8169999, z: 14.009999}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1688056101037243009}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5586689964460943200
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8691749500708246046}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.0379124, y: 5, z: 7.320389}
+  m_Center: {x: 0.14206982, y: 0, z: -2.9318542}
+--- !u!114 &5143603164729998908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8691749500708246046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f012e741d57c6c4f960619178777c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CollisionOrTriggerEvent
+  targetTag: Player
+  onEnter:
+    m_PersistentCalls:
+      m_Calls: []
+  onExit:
+    m_PersistentCalls:
+      m_Calls: []
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 8191
 --- !u!1001 &2534663142303485800
 PrefabInstance:
   m_ObjectHideFlags: 0

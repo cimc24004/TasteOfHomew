@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
 
-public class HomeSearchGameController : SerializedMonoBehaviour
+public class HomeSearchGameController : Singleton<HomeSearchGameController>
 {
     [Header("Player")]
     [SerializeField] private Transform player; // 未指定なら MainCamera を拾う
@@ -15,9 +15,9 @@ public class HomeSearchGameController : SerializedMonoBehaviour
 
     [Header("Flow")]
     [SerializeField] private bool autoStartOnEnable = true;
-    [SerializeField] private UnityEvent2 onGameStart;
-    [SerializeField] private UnityEvent2 onNodeActivated;
-    [SerializeField] private UnityEvent2 onAllCompleted;
+    [SerializeField] public UnityEvent2 onGameStart;
+    [SerializeField] public UnityEvent2 onNodeActivated;
+    [SerializeField] public UnityEvent2 onAllCompleted;
 
     private int currentIndex = -1;
     private HomeSearchNode Current =>

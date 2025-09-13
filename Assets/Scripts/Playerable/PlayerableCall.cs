@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
+using UnityEngine.Playables;
 
 [DisallowMultipleComponent]
 public class PlayerableCall : MonoBehaviour, IInteractable
@@ -48,7 +49,7 @@ public class PlayerableCall : MonoBehaviour, IInteractable
     void Reset()
     {
         if (!flow) flow = GameFlowController.instance;
-        if (!playback) playback = TimelinePlayback.instance;
+        if (!playback) playback = GameObject.FindWithTag("MainPlayableDirector").GetComponent<TimelinePlayback>();
     }
 
     // ===== IInteractable =====
@@ -56,13 +57,12 @@ public class PlayerableCall : MonoBehaviour, IInteractable
     {
         if (!flow) flow = GameFlowController.instance;
         Debug.Log("flow: " + flow);
-        if (!playback) playback = TimelinePlayback.instance;
-
+        if (!playback) playback = GameObject.FindWithTag("MainPlayableDirector").GetComponent<TimelinePlayback>();
     }
     public void Interact()
     {
         if (!flow) flow = GameFlowController.instance;
-        if (!playback) playback = TimelinePlayback.instance;
+        if (!playback) playback = GameObject.FindWithTag("MainPlayableDirector").GetComponent<TimelinePlayback>();
         Debug.Log("flow: " + flow + "playback: " + playback + "once: " + once + "HasExecuted: " + HasExecuted);
         if (once && HasExecuted) return;
         if (!ValidateBasics())   return;

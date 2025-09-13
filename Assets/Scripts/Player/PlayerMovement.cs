@@ -60,15 +60,22 @@ public class PlayerMovement : SerializedMonoBehaviour
     private Vector3 defaultCenter;
     private float headStandLocalY;
     private float headCrouchLocalY;
+    private PlayerStatus playerStatus;
     void OnDisable()
     {
         playerFootStepController.CurrentState = MovementState.Idle;
+        playerStatus.crossHairController.enabled = false;
     }
-    // void OnEnable()
-    // {
-    // }
+    void OnEnable()
+    {
+        if (playerStatus != null)
+        {
+            playerStatus.crossHairController.enabled = true;
+        }
+    }
     void Start()
     {
+        playerStatus = PlayerStatus.instance;
         controller = GetComponent<CharacterController>();
         mainCamera = Camera.main;
 

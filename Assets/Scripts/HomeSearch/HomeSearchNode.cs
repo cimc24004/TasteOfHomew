@@ -1,16 +1,21 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Playables;
+using UnityEngine.Timeline; // ----- 追加: PlayableDirectorを使用するために必要
 
+// ----- 変更: CollisionOrTriggerEventを必須コンポーネントに追加
+[RequireComponent(typeof(BoxCollider))]
+[RequireComponent(typeof(CollisionOrTriggerEvent))] 
 [DisallowMultipleComponent]
-[RequireComponent(typeof(BoxCollider))] // isTrigger = true 推奨
 public class HomeSearchNode : MonoBehaviour
 {
     // ===== Arrival (Trigger) =====
     [Header("Arrival (Trigger)")]
-    [SerializeField] private bool filterByTag = true;
-    [SerializeField] private string playerTag = "Player";
-
+    // ----- 削除: 以下の2行はCollisionOrTriggerEventに任せるため不要になります
+    // [SerializeField] private bool filterByTag = true;
+    // [SerializeField] private string playerTag = "Player";
+    [SerializeField] private CollisionOrTriggerEvent GhostDisapperanceTrigger;
     // ===== Ping Sound =====
     [Header("Ping Sound")]
     [Tooltip("未指定なら AudioSource.clip を鳴らす")]
@@ -18,6 +23,13 @@ public class HomeSearchNode : MonoBehaviour
     [SerializeField, Min(0f)] private float volume = 1f;
     [SerializeField, Min(0.1f)] private float pingIntervalMin = 1.2f;
     [SerializeField, Min(0.1f)] private float pingIntervalMax = 2.2f;
+    
+    // ----- 追加ここから -----
+    [Header("Timeline")]
+    [Tooltip("プレイヤーが到達した時に再生するTimeline")]
+    private Ghost ghost;
+    [SerializeField] private TimelineAsset timeline;
+    // ----- 追加ここまで -----
 
     // ===== Events =====
     [Header("Events")]
@@ -41,19 +53,49 @@ public class HomeSearchNode : MonoBehaviour
     [SerializeField] private bool handlesZTestAlways = false;
 
     // ===== Runtime =====
-    private Transform player;       // 互換用（必須ではない）
+    private Transform player;
     private bool isActive;
     private bool hasArrived;
-    private AudioSource audioSource; // ノードに付いてるやつ（自動追加しない）
+    private AudioSource audioSource;
     private Coroutine pingRoutine;
     private BoxCollider box;
+    
+    // ----- 追加ここから -----
+    private CollisionOrTriggerEvent collisionOrTriggerEvent;
+    // ----- 追加ここまで -----
 
     private void Awake()
     {
-        audioSource = GetComponent<AudioSource>(); // 付いてるやつだけ使う
+        audioSource = GetComponent<AudioSource>();
         box = GetComponent<BoxCollider>();
+        
+        // ----- 追加ここから -----
+        // 同じGameObjectにアタッチされたCollisionOrTriggerEventを取得
+        collisionOrTriggerEvent = GetComponent<CollisionOrTriggerEvent>();
+        GhostDisapperanceTrigger.onEnter.AddListener(() =>
+        {
+            // ★ 指定されたTimelineを再生
+            if (ghost.GhostTimelinePlayback != null)
+            {
+                ghost.GhostTimelinePlayback.Resume();
+            }
+        });
+        // onEnterイベントに、実行したい処理（HandleOnArriveメソッド）をリスナーとして登録
+        if (collisionOrTriggerEvent != null)
+        {
+            collisionOrTriggerEvent.onEnter.AddListener(HandleOnArrive);
+        }
+        else
+        {
+            Debug.LogError($"[HomeSearchNode] {name} に CollisionOrTriggerEvent がアタッチされていません。");
+        }
+        // ----- 追加ここまで -----
     }
-
+    void Start()
+    {
+        ghost = Ghost.instance;
+    }
+    // ----- OnValidate は変更なし -----
     private void OnValidate()
     {
         if (pingIntervalMax < pingIntervalMin) pingIntervalMax = pingIntervalMin;
@@ -61,9 +103,6 @@ public class HomeSearchNode : MonoBehaviour
         var c = GetComponent<BoxCollider>();
         if (c && !c.isTrigger)
             Debug.LogWarning($"[HomeSearchNode] {name} の BoxCollider は isTrigger=true にしてね。");
-
-        // Trigger検知にはどちらか片方（プレイヤーorノード）に Rigidbody が必要
-        // 自動追加はしないので必要に応じてノード側に kinematic を付けてね
     }
 
     /// <summary>コントローラから有効化。player は未使用でもOK。</summary>
@@ -72,7 +111,11 @@ public class HomeSearchNode : MonoBehaviour
         player = playerTransform;
         isActive = true;
         hasArrived = false;
-
+        // ★ 指定されたTimelineを再生
+        if (ghost.GhostTimelinePlayback != null)
+        {
+            ghost.GhostTimelinePlayback.Play(timeline);
+        }
         onActivate?.Invoke();
 
         if (audioSource == null)
@@ -81,9 +124,11 @@ public class HomeSearchNode : MonoBehaviour
         if (audioSource != null && (pingClip != null || audioSource.clip != null) && pingRoutine == null)
             pingRoutine = StartCoroutine(PingLoop());
     }
-
+    
+    // ----- Deactivate は変更なし -----
     public void Deactivate()
     {
+
         isActive = false;
         if (pingRoutine != null)
         {
@@ -92,17 +137,35 @@ public class HomeSearchNode : MonoBehaviour
         }
     }
 
+    // ----- 削除: OnTriggerEnterはCollisionOrTriggerEventが担当するため不要に -----
+    /*
     private void OnTriggerEnter(Collider other)
     {
         if (!isActive || hasArrived) return;
         if (filterByTag && !other.CompareTag(playerTag)) return;
 
-        // ★ 到達（ここでは“次へ”に進めない）
         hasArrived = true;
         onArrive?.Invoke();
-        // 進行は UnityEvent から HomeSearchGameController.AdvanceToNextNode() を呼んでね
-        // 必要なら onArrive に HomeSearchNode.Deactivate() でピン音停止
     }
+    */
+
+    // ----- 追加ここから -----
+    /// <summary>
+    /// CollisionOrTriggerEventのonEnterから呼び出されるメソッド
+    /// </summary>
+    private void HandleOnArrive()
+    {
+        if (!isActive || hasArrived) return;
+
+        // ★ 到達
+        hasArrived = true;
+        onArrive?.Invoke(); // 既存のonArriveイベントも実行
+
+
+        // 進行は従来通り、UnityEventから HomeSearchGameController.AdvanceToNextNode() を呼んでください
+        // 必要なら onArrive に HomeSearchNode.Deactivate() を設定してピン音を停止してください
+    }
+    // ----- 追加ここまで -----
 
     private IEnumerator PingLoop()
     {
@@ -113,6 +176,7 @@ public class HomeSearchNode : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(pingIntervalMin, pingIntervalMax));
         }
     }
+    
 
     // ===== Gizmos / Handles =====
     private void OnDrawGizmos()
@@ -132,7 +196,6 @@ public class HomeSearchNode : MonoBehaviour
         if (box == null) box = GetComponent<BoxCollider>();
         if (box == null) return;
 
-        // まずアウトラインは従来通り（見やすい）
         var prevMatrix = Gizmos.matrix;
         var prevColor  = Gizmos.color;
         Gizmos.matrix = transform.localToWorldMatrix * Matrix4x4.TRS(box.center, Quaternion.identity, box.size);
@@ -141,7 +204,6 @@ public class HomeSearchNode : MonoBehaviour
         Gizmos.color  = prevColor;
         Gizmos.matrix = prevMatrix;
 
-        // 塗りは Editor Handles で両面＆ZTest制御（Editorのみ）
         #if UNITY_EDITOR
         if (useEditorHandlesFill)
         {
@@ -157,12 +219,10 @@ public class HomeSearchNode : MonoBehaviour
         }
         else
         {
-            // 予備：Gizmos での塗り（片面/深度ありで見えづらい場合がある）
             var prevM = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix * Matrix4x4.TRS(box.center, Quaternion.identity, box.size);
             var prevC = Gizmos.color;
             Gizmos.color = gizmoFillColor;
-            // 単純に6面を DrawCube で代用（薄いけど環境によっては見えにくい）
             Gizmos.DrawCube(Vector3.zero, Vector3.one);
             Gizmos.color = prevC;
             Gizmos.matrix = prevM;
@@ -171,7 +231,6 @@ public class HomeSearchNode : MonoBehaviour
     }
 
     #if UNITY_EDITOR
-    // 6面を両面扱いでソリッド描画（Editor Handlesを使用）
     private static void DrawSolidBoxWithHandles(Transform t, Vector3 centerLocal, Vector3 sizeLocal)
     {
         var e = sizeLocal * 0.5f;
@@ -182,23 +241,16 @@ public class HomeSearchNode : MonoBehaviour
             return t.TransformPoint(p);
         }
 
-        // 各面の4点（時計回り）を描く。Handles.DrawAAConvexPolygon は面の片側だけでOK（ZTestで内外が見える）
         void Face(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
         {
             UnityEditor.Handles.DrawAAConvexPolygon(a, b, c, d);
         }
 
-        // +X
         Face(W(+1,-1,-1), W(+1,-1,+1), W(+1,+1,+1), W(+1,+1,-1));
-        // -X
         Face(W(-1,-1,+1), W(-1,-1,-1), W(-1,+1,-1), W(-1,+1,+1));
-        // +Y
         Face(W(-1,+1,-1), W(+1,+1,-1), W(+1,+1,+1), W(-1,+1,+1));
-        // -Y
         Face(W(-1,-1,+1), W(+1,-1,+1), W(+1,-1,-1), W(-1,-1,-1));
-        // +Z
         Face(W(-1,-1,+1), W(-1,+1,+1), W(+1,+1,+1), W(+1,-1,+1));
-        // -Z
         Face(W(+1,-1,-1), W(+1,+1,-1), W(-1,+1,-1), W(-1,-1,-1));
     }
     #endif
