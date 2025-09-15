@@ -76,7 +76,8 @@ public class FootStepController : SerializedMonoBehaviour
     }
 
     /// <summary>
-    /// GroundCheckの結果を参照して、地面に応じたサウンドを再生する
+    /// GroundCheckの結果を参照して、地面に応じたサウンドを再生する。
+    /// 接地しているオブジェクトのタグが "Ground" の場合、Terrainとみなし、TerrainLayer名で再生音を判断する。
     /// </summary>
     private void PlaySoundBasedOnGround()
     {
@@ -88,23 +89,143 @@ public class FootStepController : SerializedMonoBehaviour
         
         // 接地している地面のタグを取得
         string groundTag = groundCheck.GroundCollider.tag;
-        Debug.Log($"[Footstep] Ground detected by GroundCheck. Tag: '{groundTag}'");
+        Debug.Log($"[Footstep] Ground detected. Tag: '{groundTag}'");
 
-        // 辞書にタグが存在するかどうかをチェック
-        if (footstepSounds.TryGetValue(groundTag, out List<AudioClip> clips) && clips != null && clips.Count > 0)
+        // タグが "Ground" の場合、Terrainとして特別処理を試みる
+        if (groundTag == "Ground")
         {
-            Debug.Log($"[Footstep] Found tag '{groundTag}' in dictionary. Playing sound.");
-            // リストからランダムにクリップを選択
-            AudioClip clipToPlay = clips[Random.Range(0, clips.Count)];
-            if (clipToPlay != null)
+            Terrain terrain = groundCheck.GroundCollider.GetComponent<Terrain>();
+            if (terrain != null)
             {
-                audioSource.PlayOneShot(clipToPlay);
+                // Terrainからレイヤー名を取得し、名前に基づいてサウンドを再生
+                PlayTerrainSound(terrain);
+                return; // Terrainの処理が完了したのでここで終了
             }
+            else
+            {
+                // "Ground"タグが付いているがTerrainコンポーネントがない場合
+                Debug.LogWarning($"[Footstep] Object with 'Ground' tag does not have a Terrain component. Falling back to tag-based sound.");
+            }
+        }
+
+        // 通常のタグベースでのサウンド再生（"Ground"タグでTerrainコンポーネントがなかった場合もこちらが実行される）
+        PlayTagBasedSound(groundTag);
+    }
+
+    /// <summary>
+    /// Terrainのテクスチャレイヤーに基づいて足音を再生する。
+    /// </summary>
+    /// <param name="terrain">接地しているTerrainオブジェクト</param>
+    private void PlayTerrainSound(Terrain terrain)
+    {
+        // 現在位置のTerrainLayer名を取得
+        string layerName = GetDominantTerrainLayerName(terrain, transform.position);
+
+        if (string.IsNullOrEmpty(layerName))
+        {
+            Debug.LogWarning("[Footstep] Could not determine TerrainLayer name at the current position.");
+            return;
+        }
+        
+        Debug.Log($"[Footstep] On Terrain. Detected TerrainLayer: '{layerName}'");
+
+        // footstepSoundsのキーを走査し、レイヤー名にキーが含まれているかチェック
+        foreach (var pair in footstepSounds)
+        {
+            // キーがnullまたは空でないことを確認
+            if (string.IsNullOrEmpty(pair.Key)) continue;
+
+            // TerrainLayerの名前に、辞書のキーが含まれていたらそのサウンドを再生
+            if (layerName.Contains(pair.Key))
+            {
+                List<AudioClip> clips = pair.Value;
+                if (clips != null && clips.Count > 0)
+                {
+                    Debug.Log($"[Footstep] Found matching key '{pair.Key}' for TerrainLayer '{layerName}'. Playing sound.");
+                    PlayRandomClip(clips);
+                    return; // 最初に見つかったもので再生して終了
+                }
+            }
+        }
+
+        Debug.LogWarning($"[Footstep] No matching footstep sound key found for TerrainLayer '{layerName}'.");
+    }
+
+    /// <summary>
+    /// オブジェクトのタグに基づいて足音を再生する。
+    /// </summary>
+    /// <param name="tag">接地しているオブジェクトのタグ</param>
+    private void PlayTagBasedSound(string tag)
+    {
+        if (footstepSounds.TryGetValue(tag, out List<AudioClip> clips) && clips != null && clips.Count > 0)
+        {
+            Debug.Log($"[Footstep] Found tag '{tag}' in dictionary. Playing sound.");
+            PlayRandomClip(clips);
         }
         else
         {
-            // 辞書に見つからなかった場合の警告
-            Debug.LogWarning($"[Footstep] Tag '{groundTag}' not found in footstepSounds dictionary, or the clip list is empty.");
+            Debug.LogWarning($"[Footstep] Tag '{tag}' not found in footstepSounds dictionary, or the clip list is empty.");
         }
+    }
+
+    /// <summary>
+    /// 指定されたAudioClipのリストからランダムに1つ選んで再生する。
+    /// </summary>
+    /// <param name="clips">再生候補のAudioClipリスト</param>
+    private void PlayRandomClip(List<AudioClip> clips)
+    {
+        AudioClip clipToPlay = clips[Random.Range(0, clips.Count)];
+        if (clipToPlay != null)
+        {
+            audioSource.PlayOneShot(clipToPlay);
+        }
+    }
+
+    /// <summary>
+    /// 指定したワールド座標で最もウェイトの高いTerrainLayerの名前を取得する。
+    /// </summary>
+    /// <param name="terrain">対象のTerrain</param>
+    /// <param name="worldPos">ワールド座標</param>
+    /// <returns>最もウェイトの高いTerrainLayerの名前</returns>
+    private string GetDominantTerrainLayerName(Terrain terrain, Vector3 worldPos)
+    {
+        TerrainData terrainData = terrain.terrainData;
+        Vector3 terrainLocalPos = worldPos - terrain.transform.position;
+
+        // ワールド座標をアルファマップの座標に変換
+        int mapX = (int)((terrainLocalPos.x / terrainData.size.x) * terrainData.alphamapWidth);
+        int mapZ = (int)((terrainLocalPos.z / terrainData.size.z) * terrainData.alphamapHeight);
+
+        // 座標が範囲外なら処理を中断
+        if (mapX < 0 || mapX >= terrainData.alphamapWidth || mapZ < 0 || mapZ >= terrainData.alphamapHeight)
+        {
+            return null;
+        }
+
+        // 1x1の範囲でアルファマップデータを取得
+        float[,,] splatmapData = terrainData.GetAlphamaps(mapX, mapZ, 1, 1);
+        if (splatmapData == null) return null;
+
+        float maxWeight = 0;
+        int dominantLayerIndex = -1;
+
+        // レイヤーのウェイトを比較して最も大きいものを探す
+        int numLayers = splatmapData.GetLength(2);
+        for (int i = 0; i < numLayers; i++)
+        {
+            if (splatmapData[0, 0, i] > maxWeight)
+            {
+                maxWeight = splatmapData[0, 0, i];
+                dominantLayerIndex = i;
+            }
+        }
+
+        // インデックスに対応するTerrainLayerの名前を返す
+        if (dominantLayerIndex != -1 && terrainData.terrainLayers.Length > dominantLayerIndex)
+        {
+            return terrainData.terrainLayers[dominantLayerIndex].name;
+        }
+
+        return null;
     }
 }
