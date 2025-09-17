@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9109361778058416588}
-  - component: {fileID: 3301025494567000984}
   - component: {fileID: 4494143782851190601}
   - component: {fileID: 8697929457686815680}
+  - component: {fileID: 1147307260082576171}
   m_Layer: 6
   m_Name: OutsideTracker
   m_TagString: Untagged
@@ -34,19 +34,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3301025494567000984
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2760699617221873167}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87d07bb08401b784c95b75de0316c2f2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  collisionOrTriggerEvent: {fileID: 4494143782851190601}
 --- !u!114 &4494143782851190601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -90,3 +77,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.6011951, y: 2.0966403, z: 0.8275604}
   m_Center: {x: -0.0878582, y: 0.5483199, z: -0.08621979}
+--- !u!114 &1147307260082576171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2760699617221873167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd4d1b7236917654f9bd8a8a404b5602, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutsideTracker
+  collisionOrTriggerEvent: {fileID: 4494143782851190601}
