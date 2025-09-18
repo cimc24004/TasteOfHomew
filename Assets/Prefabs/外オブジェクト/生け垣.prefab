@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4322679927896423819}
   - component: {fileID: 7329147568658668991}
   - component: {fileID: 760437764597607585}
-  - component: {fileID: 7469201291190336238}
   - component: {fileID: 6004124274563597592}
-  m_Layer: 0
+  - component: {fileID: 3999431902510446252}
+  m_Layer: 6
   m_Name: "\u751F\u3051\u57A3"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -91,27 +91,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &7469201291190336238
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1545691432527052591}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 7.5960007, y: 5.8, z: 0}
 --- !u!114 &6004124274563597592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -352,4 +331,25 @@ MonoBehaviour:
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
-  m_SelectedVertices: 030000000a000000
+  m_SelectedVertices: 
+--- !u!65 &3999431902510446252
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545691432527052591}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.7980003, y: 2.9005003, z: 1}
+  m_Center: {x: 1.8990002, y: 1.4502501, z: 0}
