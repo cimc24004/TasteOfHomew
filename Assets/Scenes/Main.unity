@@ -11938,7 +11938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8725edae6a1fd4408036dedaf0199f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.SceneViewPrefabDrop
-  _projectionSettings: {fileID: 1718024828}
+  _projectionSettings: {fileID: 689440433}
   _dragAndDropGuide: {fileID: 0}
 --- !u!1001 &11151222
 PrefabInstance:
@@ -82991,21 +82991,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5888851662081701901, guid: 4d977dcce7eeaaf4886d3880d4cce160, type: 3}
   m_PrefabInstance: {fileID: 777717887}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &632426679
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectModularSnapSession
-  _snapMode: 0
-  _snapHalfSpace: 0
-  _projectionSettings: {fileID: 0}
 --- !u!1001 &635209491
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -85473,6 +85458,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7751137947654076852, guid: e66744b779a85b345b987e10e9272ac5, type: 3}
   m_PrefabInstance: {fileID: 689033719}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &689440433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectProjectionSettings
+  _halfSpace: 1
+  _alignAxis: 0
+  _alignmentAxis: 1
+  _invertAlignmentAxis: 0
+  _projectAsUnit: 0
+  _embedInSurface: 1
+  _inFrontOffset: 0
+  _behindOffset: 0
 --- !u!1001 &691929443
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -90870,6 +90875,21 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3831493589794454059, guid: 7d086b95b475649468ad6832fb837a1a, type: 3}
   m_PrefabInstance: {fileID: 761546074}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &763509343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectModularSnapSession
+  _snapMode: 0
+  _snapHalfSpace: 0
+  _projectionSettings: {fileID: 0}
 --- !u!1001 &763976708
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -187308,7 +187328,7 @@ MonoBehaviour:
   _extensionPlane:
     _refOBBFace: 4
   _heightPatternDirection: 0
-  _modularSnapSession: {fileID: 632426679}
+  _modularSnapSession: {fileID: 763509343}
   _mirrorGizmo: {fileID: 1752881342}
 --- !u!1 &1190257462
 GameObject:
@@ -377768,26 +377788,6 @@ Transform:
   - {fileID: 1572293627}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1718024828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectProjectionSettings
-  _halfSpace: 1
-  _alignAxis: 0
-  _alignmentAxis: 1
-  _invertAlignmentAxis: 0
-  _projectAsUnit: 0
-  _embedInSurface: 1
-  _inFrontOffset: 0
-  _behindOffset: 0
 --- !u!1001 &1720113339
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -510652,21 +510652,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7d8f92188f3d17343bb219292a1b1e83, type: 3}
---- !u!114 &1892095047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectModularSnapSession
-  _snapMode: 0
-  _snapHalfSpace: 0
-  _projectionSettings: {fileID: 0}
 --- !u!1001 &1894265445
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -523963,6 +523948,12 @@ MonoBehaviour:
     nextCurvePrefab: 0
   - usedCurvePrefabs: []
     nextCurvePrefab: 0
+  - usedCurvePrefabs: []
+    nextCurvePrefab: 0
+  - usedCurvePrefabs: []
+    nextCurvePrefab: 0
+  - usedCurvePrefabs: []
+    nextCurvePrefab: 0
   _spawnedObjects: []
   _prefabInstancePool: {fileID: 488574463}
   _spline:
@@ -528427,7 +528418,7 @@ MonoBehaviour:
   _spawnGuide: {fileID: 485211682}
   _extensionPlane:
     _refOBBFace: 4
-  _modularSnapSession: {fileID: 1892095047}
+  _modularSnapSession: {fileID: 2059287524}
   _mirrorGizmo: {fileID: 882241159}
 --- !u!1 &2002685803
 GameObject:
@@ -543558,6 +543549,21 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7d086b95b475649468ad6832fb837a1a, type: 3}
+--- !u!114 &2059287524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectModularSnapSession
+  _snapMode: 0
+  _snapHalfSpace: 0
+  _projectionSettings: {fileID: 0}
 --- !u!1 &2059989266
 GameObject:
   m_ObjectHideFlags: 0

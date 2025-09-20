@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using System;
 
 /// <summary>
 /// プレイヤーの移動状態に応じて足音の再生を制御するコントローラー。
@@ -136,7 +137,7 @@ public class FootStepController : SerializedMonoBehaviour
             if (string.IsNullOrEmpty(pair.Key)) continue;
 
             // TerrainLayerの名前に、辞書のキーが含まれていたらそのサウンドを再生
-            if (layerName.Contains(pair.Key))
+            if (layerName.IndexOf(pair.Key, StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 List<AudioClip> clips = pair.Value;
                 if (clips != null && clips.Count > 0)
@@ -174,7 +175,7 @@ public class FootStepController : SerializedMonoBehaviour
     /// <param name="clips">再生候補のAudioClipリスト</param>
     private void PlayRandomClip(List<AudioClip> clips)
     {
-        AudioClip clipToPlay = clips[Random.Range(0, clips.Count)];
+        AudioClip clipToPlay = clips[UnityEngine.Random.Range(0, clips.Count)];
         if (clipToPlay != null)
         {
             audioSource.PlayOneShot(clipToPlay);
