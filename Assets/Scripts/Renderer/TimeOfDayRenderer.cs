@@ -8,15 +8,14 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
 {
+    /// <summary>
+    /// 時間帯を定義します。
+    /// </summary>
     public enum TimeOfDay { Morning, Evening, Night }
 
-    [Header("Auto Apply")]
-    public bool applyOnEnable = true;
-    public TimeOfDay initialTime = TimeOfDay.Morning;
-
-    [Header("URP Global Volume (任意)")]
-    public Volume globalVolume; // 任意（切替えたい時だけアサイン）
-    public UnityEvent<TimeOfDay> ApplingEvent;
+    /// <summary>
+    /// レンダリング設定をまとめたプロファイルです。
+    /// </summary>
     [System.Serializable]
     public class Profile
     {
@@ -33,10 +32,9 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [ShowIf(nameof(applyFog))] public Color fogColor = Color.gray;
         [ShowIf(nameof(applyFog))] public FogMode fogMode = FogMode.ExponentialSquared;
         [ShowIf(nameof(applyFog)), Min(0f)] public float fogDensity = 0.02f; // Exp/Exp2用
-        [ShowIf(nameof(applyFog))] public float fogStart = 0f;               // Linear用
-        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;               // Linear用
+        [ShowIf(nameof(applyFog))] public float fogStart = 0f;              // Linear用
+        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;              // Linear用
 
-        // ===== 👇ここから追加 =====
         [Header("Ambient Light (任意)")]
         public bool applyAmbient = false;
         [ShowIf(nameof(applyAmbient))] public AmbientMode ambientMode = AmbientMode.Skybox;
@@ -53,33 +51,85 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         // Color (Flat) モード用の色設定
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Flat")]
         [ColorUsage(false, true)] public Color ambientLight = new(0.21f, 0.23f, 0.26f);
-        // ===== 👆ここまで追加 =====
 
         [Header("URP Volume Profile (任意)")]
         public bool applyVolume = false;
         [ShowIf(nameof(applyVolume))] public VolumeProfile volumeProfile;
     }
 
-    [FoldoutGroup("Profiles"), Title("Morning")]
-    public Profile morning = new();
-    [FoldoutGroup("Profiles"), Title("Evening")]
-    public Profile evening = new();
-    [FoldoutGroup("Profiles"), Title("Night")]
-    public Profile night = new();
+    /// <summary>
+    /// 場所ごとのプロファイルを格納するためのヘルパークラスです。
+    /// </summary>
+    [System.Serializable]
+    public class LocationProfiles
+    {
+        [DictionaryDrawerSettings(KeyLabel = "場所", ValueLabel = "プロファイル")]
+        public Dictionary<PlayerLocation.Location, Profile> ProfilesByLocation = new();
+    }
+
+
+    [Header("Auto Apply")]
+    public bool applyOnEnable = true;
+    public TimeOfDay initialTime = TimeOfDay.Morning;
+
+    [Header("URP Global Volume (任意)")]
+    public Volume globalVolume; // 任意（切替えたい時だけアサイン）
+    public UnityEvent ApplingEvent;
+
+    // ▼▼▼ データ構造をDictionaryに変更 ▼▼▼
+    [Title("Profiles")]
+    [InfoBox("時間帯とプレイヤーの場所（家の中/外）に応じて適用するプロファイルを設定します。")]
+    [DictionaryDrawerSettings(KeyLabel = "時間帯", ValueLabel = "場所ごとのプロファイル設定")]
+    public Dictionary<TimeOfDay, LocationProfiles> profiles = new();
+    // ▲▲▲ ▲▲▲
 
     [ReadOnly, ShowInInspector, LabelText("現在の時間帯")]
     public TimeOfDay Current { get; private set; }
 
     private readonly HashSet<GameObject> allRoots = new();
 
+    // SingletonのAwakeを呼び出すために追記
+    protected override void Awake()
+    {
+        base.Awake();
+    }
+
     void OnEnable()
     {
         BuildCaches();
         if (applyOnEnable) Apply(initialTime);
     }
+    
+    // ▼▼▼ PlayerLocationのイベントを購読する処理を追加 ▼▼▼
+    void Start()
+    {
+        // 実行中のみ、PlayerLocationの場所変更イベントを監視する
+        if (Application.isPlaying)
+        {
+            if (PlayerLocation.instance != null)
+            {
+                PlayerLocation.instance.SetLocationEvent.AddListener(ApplyCurrentStateWithCurrentTime);
+            }
+            else
+            {
+                Debug.LogWarning("[TimeOfDayRenderer] PlayerLocation instance not found. Location changes won't trigger profile updates.");
+            }
+        }
+    }
+
+    void OnDestroy()
+    {
+        // オブジェクト破棄時にイベントの監視を解除する
+        if (Application.isPlaying && PlayerLocation.instance != null)
+        {
+            PlayerLocation.instance.SetLocationEvent.RemoveListener(ApplyCurrentStateWithCurrentTime);
+        }
+    }
+    // ▲▲▲ ▲▲▲
 
     void OnValidate() => BuildCaches();
 
+    // ▼▼▼ 新しいデータ構造に合わせてキャッシュ構築処理を修正 ▼▼▼
     void BuildCaches()
     {
         allRoots.Clear();
@@ -89,20 +139,62 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
             if (p == null || p.activeRoots == null) return;
             foreach (var go in p.activeRoots) if (go) allRoots.Add(go);
         }
-        Collect(morning);
-        Collect(evening);
-        Collect(night);
+        
+        if (profiles == null) return;
+
+        // 全ての時間帯、全ての場所のプロファイルを走査してキャッシュする
+        foreach(var locationProfiles in profiles.Values)
+        {
+            if (locationProfiles?.ProfilesByLocation == null) continue;
+            foreach(var profile in locationProfiles.ProfilesByLocation.Values)
+            {
+                Collect(profile);
+            }
+        }
     }
 
-    Profile GetProfile(TimeOfDay t) =>
-        t == TimeOfDay.Morning ? morning :
-        t == TimeOfDay.Evening ? evening : night;
+    /// <summary>
+    /// 現在の時間帯と場所に基づいて、適用すべきプロファイルを取得します。
+    /// </summary>
+    Profile GetProfile(TimeOfDay t)
+    {
+        // PlayerLocationから現在の場所を取得
+        PlayerLocation.Location currentLocation = PlayerLocation.Location.Outside; // デフォルト値
+        if (Application.isPlaying && PlayerLocation.instance != null)
+        {
+            currentLocation = PlayerLocation.instance.currentLocation;
+        }
 
+        // Dictionaryから該当するプロファイルを検索
+        if (profiles.TryGetValue(t, out LocationProfiles locProfiles) && locProfiles?.ProfilesByLocation != null)
+        {
+            if (locProfiles.ProfilesByLocation.TryGetValue(currentLocation, out Profile profile))
+            {
+                return profile;
+            }
+        }
+
+        Debug.LogWarning($"[TimeOfDayRenderer] Profile for Time: {t}, Location: {currentLocation} is not defined.");
+        return null;
+    }
+
+    /// <summary>
+    /// 指定された時間帯のプロファイルを、現在の場所に応じて適用します。
+    /// </summary>
     public void Apply(TimeOfDay t)
     {
         Current = t;
         var p = GetProfile(t);
-        ApplingEvent.Invoke(t);
+
+        // プロファイルが見つからなかった場合は処理を中断
+        if (p == null)
+        {
+            Debug.LogError($"[TimeOfDayRenderer] Apply failed because no matching profile was found for Time: {t} and the current location.");
+            return;
+        }
+        
+        ApplingEvent.Invoke();
+
         // 1) まず全ルートをOFF
         foreach (var go in allRoots) if (go) go.SetActive(false);
 
@@ -131,7 +223,6 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
             }
         }
         
-        // ===== 👇ここから追加 =====
         // 5) Ambient Light
         if (p.applyAmbient)
         {
@@ -148,21 +239,28 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
                     RenderSettings.ambientLight = p.ambientLight;
                     break;
                 case AmbientMode.Skybox:
-                    // Skyboxモードは強度を更新するだけでよい
                     break;
             }
         }
-        // ===== 👆ここまで追加 =====
 
         // 6) URP Volume
         if (p.applyVolume && globalVolume && p.volumeProfile)
-            globalVolume.sharedProfile  = p.volumeProfile;
+            globalVolume.sharedProfile = p.volumeProfile;
 
         // 7) 環境反映（Skybox/Ambient）
         DynamicGI.UpdateEnvironment();
     }
+    
+    /// <summary>
+    /// 場所が変更されたときに呼び出され、現在の時間帯設定を再適用します。
+    /// </summary>
+    private void ApplyCurrentStateWithCurrentTime()
+    {
+        Debug.Log($"[TimeOfDayRenderer] Location changed. Re-applying profile for current time: {Current}");
+        Apply(Current);
+    }
 
-    // ===== Odin Buttons（エディタ／ランタイムOK） =====
+    // ===== Odin Buttons（エディタ／ランタイムOK）=====
     [HorizontalGroup("TOD", Width = 0.33f)]
     [Button("Morning", ButtonSizes.Large), GUIColor(0.8f, 0.95f, 1f)]
     public void SetMorning() => Apply(TimeOfDay.Morning);

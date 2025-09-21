@@ -16,10 +16,6 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
 
         [ShowIf("isEnabled")]
         public float intensity = 1f;
-
-        [ShowIf("isEnabled")]
-        [ColorUsage(true, true), Tooltip("ライトの色（HDR対応）")]
-        public Color color = Color.white;
     }
 
     [Title("必須コンポーネント")]
@@ -59,10 +55,7 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
     void Start()
     {
         timeOfDayRenderer = TimeOfDayRenderer.instance;
-        timeOfDayRenderer.ApplingEvent.AddListener((TimeOfDayRenderer.TimeOfDay timeofDay) =>
-        {
-                CheckAndUpdateLight();
-        });
+        timeOfDayRenderer.ApplingEvent.AddListener(CheckAndUpdateLight);
         // ゲーム開始時に現在の時間帯に合わせた設定を即時適用
     }
 
@@ -111,7 +104,6 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
         if (profile.isEnabled)
         {
             controlledLight.intensity = profile.intensity;
-            controlledLight.color = profile.color;
         }
     }
 }

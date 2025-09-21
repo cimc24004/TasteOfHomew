@@ -54,6 +54,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
             return; // 処理を中断
         }
         _playerLocation.SetLocationEvent.AddListener(PlayCurrentBGM);
+        timeOfDayRenderer.ApplingEvent.AddListener(PlayCurrentBGM);
         // ゲーム開始時に現在の状態に合わせたBGMを再生（フェードなしで即時再生）
         PlayInitialBGM();
     }

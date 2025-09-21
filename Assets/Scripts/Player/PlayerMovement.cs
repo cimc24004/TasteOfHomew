@@ -60,6 +60,7 @@ public class PlayerMovement : SerializedMonoBehaviour
     private float headStandLocalY;
     private float headCrouchLocalY;
     private PlayerStatus playerStatus;
+
     void OnDisable()
     {
         playerFootStepController.CurrentState = MovementState.Idle;
@@ -114,8 +115,12 @@ public class PlayerMovement : SerializedMonoBehaviour
 
     void Update()
     {
+        // ▼▼▼ 修正点1: 走行条件の変更 ▼▼▼
+        // 「外にいる」かつ「しゃがんでいない」場合のみ走れるようにする
+        bool canRun = PlayerLocation.instance != null && PlayerLocation.instance.currentLocation == PlayerLocation.Location.Outside;
+        isRunning = canRun && !isCrouching && (sprintAction != null && sprintAction.IsPressed());
+        
         // ===== 移動 =====
-        isRunning = sprintAction != null ? sprintAction.IsPressed() : false;
         Vector2 input = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
 
         Vector3 basisRight = mainCamera ? mainCamera.transform.right : transform.right;
@@ -205,15 +210,13 @@ public class PlayerMovement : SerializedMonoBehaviour
     {
         if (crouchAction == null) return;
 
-        if (isCrouching && isRunning)
+        // ▼▼▼ 修正点2: 走行中のしゃがみ禁止 ▼▼▼
+        // 走行中は、しゃがみ入力（トグルON/ホールド）を無視する
+        if (isRunning)
         {
-            if (!applyControllerCrouch || CanStandUp())
-            {
-                SetCrouch(false);
-            }
             return;
         }
-        
+
         if (crouchToggle)
         {
             if (crouchAction.triggered)

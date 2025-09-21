@@ -428,6 +428,7 @@ GameObject:
   - component: {fileID: 4283928938586729049}
   - component: {fileID: 6796081923339586638}
   - component: {fileID: 3376865411823146515}
+  - component: {fileID: 4733161986531438322}
   m_Layer: 0
   m_Name: PlayerLight1
   m_TagString: Untagged
@@ -544,6 +545,40 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &4733161986531438322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2709770079091786880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba49c6baf05c2e4cbd713858417a7c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightManageTimeOfDay
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  timeOfDayRenderer: {fileID: 0}
+  morningSettings:
+    isEnabled: 0
+    intensity: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+  eveningSettings:
+    isEnabled: 0
+    intensity: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+  nightSettings:
+    isEnabled: 1
+    intensity: 2.04
+    color: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &2801259022948923698
 GameObject:
   m_ObjectHideFlags: 0

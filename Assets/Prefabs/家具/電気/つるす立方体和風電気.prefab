@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3741517330045215663}
   - component: {fileID: 3879360440371789720}
   - component: {fileID: 1980036961301464251}
+  - component: {fileID: 6802928119037780979}
   m_Layer: 0
   m_Name: Point Light
   m_TagString: Untagged
@@ -44,7 +45,7 @@ Light:
   serializedVersion: 11
   m_Type: 2
   m_Color: {r: 1, g: 0.7926522, b: 0.39811313, a: 1}
-  m_Intensity: 1
+  m_Intensity: 2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -127,6 +128,40 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &6802928119037780979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8768444446456336161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba49c6baf05c2e4cbd713858417a7c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightManageTimeOfDay
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  timeOfDayRenderer: {fileID: 0}
+  morningSettings:
+    isEnabled: 0
+    intensity: 1
+    color: {r: 1, g: 1, b: 1, a: 1}
+  eveningSettings:
+    isEnabled: 1
+    intensity: 2
+    color: {r: 1, g: 1, b: 1, a: 1}
+  nightSettings:
+    isEnabled: 1
+    intensity: 2
+    color: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &3502510214196718829
 PrefabInstance:
   m_ObjectHideFlags: 0
