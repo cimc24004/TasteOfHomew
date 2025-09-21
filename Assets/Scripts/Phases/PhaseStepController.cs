@@ -388,7 +388,8 @@ public class PhaseStepController : SerializedMonoBehaviour
 
         SetActiveList(newStep.objectsToShow, true, this.gameObject);
         InvokeEvents(newStep.onEnterEvents);
-
+        InvokeEvents(newStep.onEnterEvents2);
+        
         onStepEntered?.Invoke(CurrentStepKey);
         if (!string.IsNullOrEmpty(oldStepKey))
             onStepChanged?.Invoke(oldStepKey, CurrentStepKey);
@@ -420,7 +421,12 @@ public class PhaseStepController : SerializedMonoBehaviour
         foreach (var ev in list)
             ev?.Invoke();
     }
-
+    private static void InvokeEvents(List<UnityEvent2> list)
+    {
+        if (list == null) return;
+        foreach (var ev in list)
+            ev?.Invoke();
+    }
     private int FindPhaseIndex(GameFlowController.Phase phase)
     {
         for (int i = 0; i < phases.Count; i++)
@@ -475,6 +481,7 @@ public class PhaseStepController : SerializedMonoBehaviour
 
         [LabelText("OnEnter イベント（順に実行）"), ListDrawerSettings(Expanded = true)]
         public List<UnityEvent> onEnterEvents = new();
+        public List<UnityEvent2> onEnterEvents2 = new();
     }
 
     // ─────────────────────────────────────────────────────────────────────────────

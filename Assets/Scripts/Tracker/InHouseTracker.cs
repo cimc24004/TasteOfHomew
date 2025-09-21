@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class InHouseTracker : MonoBehaviour
 {
-    private EnvironmentBGMController environmentBGMController;
+    private PlayerLocation playerLocation;
     [SerializeField] private CollisionOrTriggerEvent collisionOrTriggerEvent;
     void Start()
     {
-        environmentBGMController = EnvironmentBGMController.instance;
+        playerLocation = PlayerLocation.instance;
         collisionOrTriggerEvent.onEnter.AddListener(() =>
         {
-            environmentBGMController.SetLocation(PlayerLocation.InHouse);
+            playerLocation.SetLocation(PlayerLocation.Location.InHouse);
         });
     }
 }
