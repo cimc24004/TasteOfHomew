@@ -23,10 +23,10 @@ RenderSettings:
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1.41
+  m_AmbientIntensity: 0
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 54fe2f000ad8f424fb63cc3ea0ae2bb2, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 51b74d7bad397457d883c5940f7664d8, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -32337,6 +32337,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3013962758779936267, guid: 693e6ad753e399144bbc9764bbff293a, type: 3}
+      propertyPath: anisotropy
+      value: -0.74
+      objectReference: {fileID: 0}
     - target: {fileID: 6971302524283671597, guid: 693e6ad753e399144bbc9764bbff293a, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -57169,12 +57173,7 @@ PrefabInstance:
       propertyPath: 'serializationData.PrefabModificationsReferencedUnityObjects.Array.data[0]'
       value: 
       objectReference: {fileID: 405206921}
-    - target: {fileID: 4688582185347975064, guid: c3b82d898efbcf84d956210f77f83004, type: 3}
-      propertyPath: m_Name
-      value: "\u5305\u4E011Equip"
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 8577867297170976521, guid: c3b82d898efbcf84d956210f77f83004, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -57519,7 +57518,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!108 &410087040
 Light:
   m_ObjectHideFlags: 0
@@ -86020,6 +86019,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 35921283}
     m_Modifications:
+    - target: {fileID: 429937980658042990, guid: 693e6ad753e399144bbc9764bbff293a, type: 3}
+      propertyPath: m_Range
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 429937980658042990, guid: 693e6ad753e399144bbc9764bbff293a, type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1201846214569028870, guid: 693e6ad753e399144bbc9764bbff293a, type: 3}
       propertyPath: m_Name
       value: Electric_Post_Big_03
@@ -108538,26 +108545,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4624537825589144649, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
   m_PrefabInstance: {fileID: 6461253560646723169}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &899351047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectProjectionSettings
-  _halfSpace: 1
-  _alignAxis: 0
-  _alignmentAxis: 1
-  _invertAlignmentAxis: 0
-  _projectAsUnit: 0
-  _embedInSurface: 1
-  _inFrontOffset: 0
-  _behindOffset: 0
 --- !u!1 &901744985
 GameObject:
   m_ObjectHideFlags: 0
@@ -114042,6 +114029,9 @@ MonoBehaviour:
   applyOnEnable: 1
   initialTime: 0
   globalVolume: {fileID: 832575518}
+  ApplingEvent:
+    m_PersistentCalls:
+      m_Calls: []
   morning:
     activeRoots:
     - {fileID: 410087039}
@@ -220291,7 +220281,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8725edae6a1fd4408036dedaf0199f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.SceneViewPrefabDrop
-  _projectionSettings: {fileID: 899351047}
+  _projectionSettings: {fileID: 1830568085}
   _dragAndDropGuide: {fileID: 0}
 --- !u!114 &1415303470 stripped
 MonoBehaviour:
@@ -393193,6 +393183,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4882206942870052716, guid: d8982815d9097134192eb0951a9dff87, type: 3}
   m_PrefabInstance: {fileID: 1829956969}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1830568085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ObjectProjectionSettings
+  _halfSpace: 1
+  _alignAxis: 0
+  _alignmentAxis: 1
+  _invertAlignmentAxis: 0
+  _projectAsUnit: 0
+  _embedInSurface: 1
+  _inFrontOffset: 0
+  _behindOffset: 0
 --- !u!1001 &1830688602
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -586916,22 +586926,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6137302922643294611, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
-      propertyPath: far clip plane
-      value: 1000
-      objectReference: {fileID: 0}
-    - target: {fileID: 6137302922643294611, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
-      propertyPath: near clip plane
-      value: 0.01
-      objectReference: {fileID: 0}
-    - target: {fileID: 6137302922643294611, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
-      propertyPath: orthographic size
-      value: 5
-      objectReference: {fileID: 0}
     - target: {fileID: 7570257856460356490, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
       propertyPath: m_Cameras.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7570257856460356490, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
+      propertyPath: 'm_Cameras.Array.data[0]'
+      value: 
+      objectReference: {fileID: 405206920}
     - target: {fileID: 7570257856460356490, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
       propertyPath: 'm_Cameras.Array.data[1]'
       value: 
@@ -586942,7 +586944,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9080382528760271066, guid: decbb65a35ffd184086fa17445f3687e, type: 3}
       propertyPath: m_CameraType
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
