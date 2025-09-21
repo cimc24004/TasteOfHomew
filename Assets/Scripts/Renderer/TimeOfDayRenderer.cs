@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Sirenix.OdinInspector;
+using UnityEngine.Events;
 
 [ExecuteAlways]
 [DisallowMultipleComponent]
-public class TimeOfDayRenderer : SerializedMonoBehaviour
+public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
 {
     public enum TimeOfDay { Morning, Evening, Night }
 
@@ -15,7 +16,7 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
 
     [Header("URP Global Volume (任意)")]
     public Volume globalVolume; // 任意（切替えたい時だけアサイン）
-
+    public UnityEvent<TimeOfDay> ApplingEvent;
     [System.Serializable]
     public class Profile
     {
@@ -101,7 +102,7 @@ public class TimeOfDayRenderer : SerializedMonoBehaviour
     {
         Current = t;
         var p = GetProfile(t);
-
+        ApplingEvent.Invoke(t);
         // 1) まず全ルートをOFF
         foreach (var go in allRoots) if (go) go.SetActive(false);
 
