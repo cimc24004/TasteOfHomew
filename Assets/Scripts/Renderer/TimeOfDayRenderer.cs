@@ -22,6 +22,12 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [Tooltip("この時間帯で SetActive(true) にするルート（ライトは Light を持つGameObjectをここへ）")]
         public List<GameObject> activeRoots = new();
 
+        // ▼▼▼ 変更: 追加ボリュームを管理するためのリストを追加 ▼▼▼
+        [Header("Additional Volumes (任意)")]
+        [Tooltip("このプロファイル適用時に有効化する追加Volumeを持つGameObject")]
+        public List<GameObject> addVolumes = new();
+        // ▲▲▲ 変更
+
         [Header("Skybox (任意)")]
         public bool applySkybox = false;
         [ShowIf(nameof(applySkybox))] public Material skybox;
@@ -32,8 +38,8 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [ShowIf(nameof(applyFog))] public Color fogColor = Color.gray;
         [ShowIf(nameof(applyFog))] public FogMode fogMode = FogMode.ExponentialSquared;
         [ShowIf(nameof(applyFog)), Min(0f)] public float fogDensity = 0.02f; // Exp/Exp2用
-        [ShowIf(nameof(applyFog))] public float fogStart = 0f;              // Linear用
-        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;              // Linear用
+        [ShowIf(nameof(applyFog))] public float fogStart = 0f;                   // Linear用
+        [ShowIf(nameof(applyFog))] public float fogEnd = 100f;                   // Linear用
 
         [Header("Ambient Light (任意)")]
         public bool applyAmbient = false;
@@ -52,9 +58,11 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Flat")]
         [ColorUsage(false, true)] public Color ambientLight = new(0.21f, 0.23f, 0.26f);
 
-        [Header("URP Volume Profile (任意)")]
-        public bool applyVolume = false;
-        [ShowIf(nameof(applyVolume))] public VolumeProfile volumeProfile;
+        // ▼▼▼ 変更: URP Volume Profile の設定を削除 ▼▼▼
+        // [Header("URP Volume Profile (任意)")]
+        // public bool applyVolume = false;
+        // [ShowIf(nameof(applyVolume))] public VolumeProfile volumeProfile;
+        // ▲▲▲ 変更
     }
 
     /// <summary>
@@ -76,19 +84,19 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
     public Volume globalVolume; // 任意（切替えたい時だけアサイン）
     public UnityEvent ApplingEvent;
 
-    // ▼▼▼ データ構造をDictionaryに変更 ▼▼▼
     [Title("Profiles")]
     [InfoBox("時間帯とプレイヤーの場所（家の中/外）に応じて適用するプロファイルを設定します。")]
     [DictionaryDrawerSettings(KeyLabel = "時間帯", ValueLabel = "場所ごとのプロファイル設定")]
     public Dictionary<TimeOfDay, LocationProfiles> profiles = new();
-    // ▲▲▲ ▲▲▲
 
     [ReadOnly, ShowInInspector, LabelText("現在の時間帯")]
     public TimeOfDay Current { get; private set; }
 
     private readonly HashSet<GameObject> allRoots = new();
+    // ▼▼▼ 変更: 全ての追加ボリュームをキャッシュするためのHashSetを追加 ▼▼▼
+    private readonly HashSet<GameObject> allAddVolumes = new();
+    // ▲▲▲ 変更
 
-    // SingletonのAwakeを呼び出すために追記
     protected override void Awake()
     {
         base.Awake();
@@ -100,10 +108,8 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         if (applyOnEnable) Apply(initialTime);
     }
     
-    // ▼▼▼ PlayerLocationのイベントを購読する処理を追加 ▼▼▼
     void Start()
     {
-        // 実行中のみ、PlayerLocationの場所変更イベントを監視する
         if (Application.isPlaying)
         {
             if (PlayerLocation.instance != null)
@@ -119,30 +125,39 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
 
     void OnDestroy()
     {
-        // オブジェクト破棄時にイベントの監視を解除する
         if (Application.isPlaying && PlayerLocation.instance != null)
         {
             PlayerLocation.instance.SetLocationEvent.RemoveListener(ApplyCurrentStateWithCurrentTime);
         }
     }
-    // ▲▲▲ ▲▲▲
 
     void OnValidate() => BuildCaches();
 
-    // ▼▼▼ 新しいデータ構造に合わせてキャッシュ構築処理を修正 ▼▼▼
+    // ▼▼▼ 変更: 新しいaddVolumesリストもキャッシュするように修正 ▼▼▼
     void BuildCaches()
     {
         allRoots.Clear();
+        allAddVolumes.Clear(); // キャッシュをクリア
 
         void Collect(Profile p)
         {
-            if (p == null || p.activeRoots == null) return;
-            foreach (var go in p.activeRoots) if (go) allRoots.Add(go);
+            if (p == null) return;
+            
+            // activeRoots をキャッシュ
+            if (p.activeRoots != null)
+            {
+                foreach (var go in p.activeRoots) if (go) allRoots.Add(go);
+            }
+
+            // addVolumes をキャッシュ
+            if (p.addVolumes != null)
+            {
+                foreach (var go in p.addVolumes) if (go) allAddVolumes.Add(go);
+            }
         }
         
         if (profiles == null) return;
 
-        // 全ての時間帯、全ての場所のプロファイルを走査してキャッシュする
         foreach(var locationProfiles in profiles.Values)
         {
             if (locationProfiles?.ProfilesByLocation == null) continue;
@@ -152,20 +167,19 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
             }
         }
     }
+    // ▲▲▲ 変更
 
     /// <summary>
     /// 現在の時間帯と場所に基づいて、適用すべきプロファイルを取得します。
     /// </summary>
     Profile GetProfile(TimeOfDay t)
     {
-        // PlayerLocationから現在の場所を取得
-        PlayerLocation.Location currentLocation = PlayerLocation.Location.Outside; // デフォルト値
+        PlayerLocation.Location currentLocation = PlayerLocation.Location.Outside;
         if (Application.isPlaying && PlayerLocation.instance != null)
         {
             currentLocation = PlayerLocation.instance.currentLocation;
         }
 
-        // Dictionaryから該当するプロファイルを検索
         if (profiles.TryGetValue(t, out LocationProfiles locProfiles) && locProfiles?.ProfilesByLocation != null)
         {
             if (locProfiles.ProfilesByLocation.TryGetValue(currentLocation, out Profile profile))
@@ -186,7 +200,6 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         Current = t;
         var p = GetProfile(t);
 
-        // プロファイルが見つからなかった場合は処理を中断
         if (p == null)
         {
             Debug.LogError($"[TimeOfDayRenderer] Apply failed because no matching profile was found for Time: {t} and the current location.");
@@ -198,15 +211,26 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         // 1) まず全ルートをOFF
         foreach (var go in allRoots) if (go) go.SetActive(false);
 
-        // 2) 対象プロファイルのルートだけON
+        // ▼▼▼ 変更: 全ての追加ボリュームを非アクティブ化 ▼▼▼
+        // 2) 次に全追加VolumeをOFFにしてリセット
+        foreach (var go in allAddVolumes) if (go) go.SetActive(false);
+        // ▲▲▲ 変更
+
+        // 3) 対象プロファイルのルートだけON
         if (p.activeRoots != null)
             foreach (var go in p.activeRoots) if (go) go.SetActive(true);
+            
+        // ▼▼▼ 変更: 対象プロファイルの追加ボリュームをアクティブ化 ▼▼▼
+        // 4) 対象プロファイルの追加VolumeだけON
+        if (p.addVolumes != null)
+            foreach (var go in p.addVolumes) if (go) go.SetActive(true);
+        // ▲▲▲ 変更
 
-        // 3) Skybox
+        // 5) Skybox
         if (p.applySkybox && p.skybox)
             RenderSettings.skybox = p.skybox;
 
-        // 4) Fog
+        // 6) Fog
         if (p.applyFog)
         {
             RenderSettings.fog = p.useFog;
@@ -223,7 +247,7 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
             }
         }
         
-        // 5) Ambient Light
+        // 7) Ambient Light
         if (p.applyAmbient)
         {
             RenderSettings.ambientMode = p.ambientMode;
@@ -242,12 +266,13 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
                     break;
             }
         }
+        
+        // ▼▼▼ 変更: URP Volume Profile の切り替え処理を削除 ▼▼▼
+        // if (p.applyVolume && globalVolume && p.volumeProfile)
+        //     globalVolume.sharedProfile = p.volumeProfile;
+        // ▲▲▲ 変更
 
-        // 6) URP Volume
-        if (p.applyVolume && globalVolume && p.volumeProfile)
-            globalVolume.sharedProfile = p.volumeProfile;
-
-        // 7) 環境反映（Skybox/Ambient）
+        // 8) 環境反映（Skybox/Ambient）
         DynamicGI.UpdateEnvironment();
     }
     
