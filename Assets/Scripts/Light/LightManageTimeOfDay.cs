@@ -87,7 +87,7 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
                 ApplySettings(nightSettings);
                 break;
         }
-
+        Debug.Log("currentState: " + currentState);
         // 現在の状態を「前回の状態」として記憶
         previousState = currentState;
     }
@@ -99,7 +99,6 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
     private void ApplySettings(LightSettingsProfile profile)
     {
         controlledLight.enabled = profile.isEnabled;
-        
         // ライトが有効な場合のみ、他のプロパティも設定
         if (profile.isEnabled)
         {
