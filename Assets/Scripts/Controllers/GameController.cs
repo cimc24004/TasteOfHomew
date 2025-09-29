@@ -13,10 +13,12 @@ public class GameController : Singleton<GameController>
     //なのでステージごとに配置するコントローラーを分けている。
 
     // Start is called before the first frame update
-    void Start(){
+    void Start()
+    {
         game_state_controller = GameStateController.instance;
         game_state_controller.ActionByModeSelect(game_state, CursorVisible);
         NowSceneName = SceneManager.GetActiveScene().name;
+        DontDestroyOnLoad(this.gameObject);
     }
 
 }
