@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 [DisallowMultipleComponent]
 public class PhaseStepController : SerializedMonoBehaviour
 {
+    
     [Title("Phases（親：フェーズ / 子：ステップ）")]
     [ListDrawerSettings(Expanded = true, DraggableItems = true)]
     public List<PhaseBlock> phases = new();
@@ -90,7 +91,6 @@ public class PhaseStepController : SerializedMonoBehaviour
         _autoStarted = false;
         // ゲートの InvokeOnce 状態は保持（必要ならここで _invokedGateIndices.Clear() してリセット運用に）
     }
-
     private async UniTask InitializeOnEnableAsync()
     {
         // 1フレ待って他シングルトンの初期化を待つ

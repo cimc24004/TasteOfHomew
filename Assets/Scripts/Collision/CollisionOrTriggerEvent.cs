@@ -17,10 +17,15 @@ public class CollisionOrTriggerEvent : MonoBehaviour
     // ==== Trigger ====
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("OntriggerEnter: " + other.gameObject);
         if (IsInLayerMask(other.gameObject))
         {
+        Debug.Log("OntriggerEnter2 : " + other.gameObject);
             if (string.IsNullOrEmpty(targetTag) || other.CompareTag(targetTag))
+            {
+                Debug.Log("OntriggerEnter3 : " + other.gameObject);
                 onEnter?.Invoke();
+            }
         }
     }
 
