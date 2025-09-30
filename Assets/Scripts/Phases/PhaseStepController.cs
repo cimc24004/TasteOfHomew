@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 [DisallowMultipleComponent]
 public class PhaseStepController : SerializedMonoBehaviour
@@ -15,8 +16,6 @@ public class PhaseStepController : SerializedMonoBehaviour
 
     [Title("起動設定")]
     [LabelText("OnEnableで開始")] public bool autoStartOnEnable = false;
-    [LabelText("開始フェーズ")] public GameFlowController.Phase startPhase = GameFlowController.Phase.Morning;
-    [LabelText("開始ステップ Key（空なら先頭）")] public string startStepKey;
 
     [Title("表示制御オプション")]
     [LabelText("開始時に全Stepオブジェクトを非表示にする")]
@@ -71,13 +70,12 @@ public class PhaseStepController : SerializedMonoBehaviour
     // 内部状態
     private bool _subscribed;
     private bool _autoStarted;
-
+    private DataShareController dataShareController;
     // ===== Unity =====
-    private void OnEnable()
-    {
-        if (hideAllObjectsOnStart) HideAllObjects();
-        InitializeOnEnableAsync().Forget();
-    }
+    // private void OnEnable()
+    // {
+
+    // }
 
     private void OnDisable()
     {
@@ -91,35 +89,94 @@ public class PhaseStepController : SerializedMonoBehaviour
         _autoStarted = false;
         // ゲートの InvokeOnce 状態は保持（必要ならここで _invokedGateIndices.Clear() してリセット運用に）
     }
+    void Start()
+    {
+
+        dataShareController = DataShareController.Instance;
+        onStepEntered.AddListener((step) =>
+        {
+            dataShareController.CurrentPhaseStep = step;
+        });
+        this.CurrentStepKey = dataShareController.CurrentPhaseStep;
+        if (hideAllObjectsOnStart) HideAllObjects();
+        InitializeOnEnableAsync().Forget();
+    }
+
+    void OnDestroy()
+    {
+        onStepEntered.RemoveAllListeners();
+    }
     private async UniTask InitializeOnEnableAsync()
     {
-        // 1フレ待って他シングルトンの初期化を待つ
-        await UniTask.NextFrame();
+        var ct = this.GetCancellationTokenOnDestroy(); // 破棄されたら中止信号を出すトークンを取得
 
+        await UniTask.NextFrame(ct);
         TrySubscribeGameFlow();
 
-        // autoStart
-        if (autoStartOnEnable && phases.Count > 0 && !_autoStarted)
+        if (autoStartOnEnable && !_autoStarted)
         {
-            var gfc = GameFlowController.instance;
-            if (gfc && gfc.CurrentIndex >= 0)
-            {
-                await SwitchPhaseAsync(gfc.CurrentPhase, null, invokeOldExit: false);
-            }
-            else
-            {
-                var has = FindPhaseIndex(startPhase) >= 0;
-                var phaseToUse = has ? startPhase : phases[0].phase;
-                await SwitchPhaseAsync(phaseToUse, startStepKey, invokeOldExit: false);
-            }
+            // DataShareControllerから現在の状態を無条件に取得
+            var initialPhase = dataShareController.CurrentPhase;
+            var initialStepKey = dataShareController.CurrentPhaseStep;
+
+            // 取得した状態で初期化を強制実行
+            await ForceSwitchStateOnInit(initialPhase, initialStepKey,ct);
+
             _autoStarted = true;
         }
 
-        // 起動時の範囲評価
         if (enablePhaseRangeGates && evaluateRangeOnEnable)
+        {
             EvaluatePhaseRangeGates(phaseOverride: null, isFromPhaseChange: false);
-
+        }
     }
+    private async UniTask<bool> ForceSwitchStateOnInit(GameFlowController.Phase phase, string stepKey, CancellationToken cancellationToken)
+    {
+        int pi = FindPhaseIndex(phase);
+        if (pi < 0)
+        {
+            Debug.LogError($"[PhaseStepController] Initial phase '{phase}' not found in configuration!");
+            return false;
+        }
+
+        int si = FindStepIndex(pi, stepKey);
+        if (si < 0)
+        {
+            Debug.LogWarning($"[PhaseStepController] Initial stepKey '{stepKey}' not found. Falling back to the first step of phase '{phase}'.");
+            // 指定されたStepが見つからなければ、そのPhaseの最初のStepで代用する
+            if (!TryResolveFirstStepIndex(pi, null, out si))
+            {
+                Debug.LogError($"[PhaseStepController] Phase '{phase}' has no steps to initialize to!");
+                return false;
+            }
+        }
+        
+        // 状態変数を直接設定
+        CurrentPhase = phase;
+        CurrentStepKey = phases[pi].steps[si].key;
+
+        // 念のため全オブジェクトを非表示にしてクリーンな状態から始める
+        if (hideAllObjectsOnStart)
+        {
+            HideAllObjects();
+            await UniTask.Yield(cancellationToken); // 非表示の反映を1フレーム待つ
+        }
+         cancellationToken.ThrowIfCancellationRequested();
+        // 対象のステップを取得して、オブジェクト表示とイベント実行
+        if (TryGetStep(pi, si, out var stepData))
+        {
+            SetActiveList(stepData.objectsToShow, true, this.gameObject);
+            InvokeEvents(stepData.onEnterEvents);
+            InvokeEvents(stepData.onEnterEvents2);
+        }
+
+        // 起動時のイベントを発火
+        onPhaseEntered?.Invoke(CurrentPhase);
+        onStepEntered?.Invoke(CurrentStepKey);
+
+        return true;
+    }
+
 
     private void TrySubscribeGameFlow()
     {
@@ -281,25 +338,35 @@ public class PhaseStepController : SerializedMonoBehaviour
     public async UniTask<bool> SwitchPhaseAsync(GameFlowController.Phase phase, string firstStepKey = null, bool invokeOldExit = true)
     {
         int newPi = FindPhaseIndex(phase);
-        if (newPi < 0) { Debug.LogWarning($"Phase '{phase}' not found in list."); return false; }
+        if (newPi < 0) { Debug.LogWarning($"[PhaseStepController] Phase '{phase}' not found in list."); return false; }
 
+        // ▼▼▼ 修正箇所 ▼▼▼
+        // フェーズが同じ場合でも、ステップの初期化/切り替え処理を行うようにロジックを修正
         if (Equals(phase, CurrentPhase))
         {
-            if (string.IsNullOrWhiteSpace(CurrentStepKey))
+            // 遷移先のステップインデックスを解決する
+            if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var si2))
             {
-                if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var siInit))
+                // 起動時などでCurrentStepKeyがまだなく、firstStepKeyも指定されていない場合、
+                // そのフェーズの最初のステップに設定を試みる
+                if (string.IsNullOrWhiteSpace(CurrentStepKey))
+                {
+                    if (!TryResolveFirstStepIndex(newPi, null, out si2)) return false;
+                }
+                else
+                {
+                    // すでに何らかのステップにいるが、遷移先が指定されていない場合は何もしない
                     return false;
-                return SwitchStepByIndex(newPi, siInit);
+                }
             }
-
-            if (string.IsNullOrWhiteSpace(firstStepKey) ||
-                string.Equals(firstStepKey, CurrentStepKey, StringComparison.Ordinal))
-                return false;
-
-            int siSame = FindStepIndex(newPi, firstStepKey);
-            if (siSame < 0) return false;
-            return SwitchStepByIndex(newPi, siSame);
+            
+            // SwitchStepByIndex に処理を委ねる。
+            // このメソッド内で、同じステップへの遷移は自動的にキャンセルされるため安全。
+            return SwitchStepByIndex(newPi, si2);
         }
+        // ▲▲▲ 修正ここまで ▲▲▲
+
+        // --- 以下はフェーズが異なる場合の従来の処理（変更なし） ---
 
         var oldPhase = CurrentPhase;
         var oldStep  = CurrentStepKey;
@@ -326,7 +393,6 @@ public class PhaseStepController : SerializedMonoBehaviour
 
         return SwitchStepByIndex(newPi, si);
     }
-
     public void SwitchPhase(GameFlowController.Phase phase, string firstStepKey = null, bool invokeOldExit = true)
         => SwitchPhaseAsync(phase, firstStepKey, invokeOldExit).Forget();
 

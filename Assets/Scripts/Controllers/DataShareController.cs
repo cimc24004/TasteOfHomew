@@ -16,7 +16,8 @@ public class DataShareController : SerializedMonoBehaviour
 
     // ★ 追加: FlagEventRunnerDictionary
     public Dictionary<string, bool> FlagEventRunnerDictionary = new Dictionary<string, bool>();
-
+    public string CurrentPhaseStep = "1";
+    public GameFlowController.Phase CurrentPhase = GameFlowController.Phase.Morning;
     void Awake()
     {
         if (Instance != null && Instance != this)
