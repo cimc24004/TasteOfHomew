@@ -1381,6 +1381,88 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.350659, y: 0.000000013038516, z: 0.4954316}
   m_Center: {x: -1.1775284, y: 0.009275679, z: -0.14771572}
+--- !u!1 &5125138836454150372
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1019262475413832686}
+  - component: {fileID: 8448620803499476520}
+  - component: {fileID: 982749122870689143}
+  m_Layer: 6
+  m_Name: PCMonitorInteractEvent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1019262475413832686
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5125138836454150372}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.00026595587, z: -0, w: 1}
+  m_LocalPosition: {x: 0.43404007, y: 0.018147588, z: 0.031758904}
+  m_LocalScale: {x: 0.20666325, y: 0.20666322, z: 0.20666325}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7787349493155695241}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8448620803499476520
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5125138836454150372}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9.94216, y: 3.7356756, z: 5.0308094}
+  m_Center: {x: -1.2434456, y: 1.367838, z: -2.015412}
+--- !u!114 &982749122870689143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5125138836454150372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c01d644a5ccd341468badabea6f0a542, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractEventRelay
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  onInteract:
+    m_PersistentCalls:
+      m_Calls: []
+  displayText: 
+  highlightWhenAvailable: 1
+  once: 0
+  disableGameObjectAfterInvoke: 0
 --- !u!1 &5176151746811708400
 GameObject:
   m_ObjectHideFlags: 0
@@ -3152,11 +3234,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 577571924476600086, guid: d28940b5a9e35f146a0a12ef8c2ba5f6, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4462430572159413518, guid: d28940b5a9e35f146a0a12ef8c2ba5f6, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6865,11 +6947,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 577571924476600086, guid: d28940b5a9e35f146a0a12ef8c2ba5f6, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4462430572159413518, guid: d28940b5a9e35f146a0a12ef8c2ba5f6, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9123,7 +9205,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 150570666650205259, guid: b2a95639a0b72c145a09383e03f95dd0, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1019262475413832686}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b2a95639a0b72c145a09383e03f95dd0, type: 3}
 --- !u!4 &7787349493155695241 stripped

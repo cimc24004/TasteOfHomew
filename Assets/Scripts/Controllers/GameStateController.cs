@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class GameStateController : Singleton<GameStateController>
 {
@@ -17,6 +18,15 @@ public class GameStateController : Singleton<GameStateController>
     private PlayerStatus playerStatus;
     private CMFPSController cMFPSController;
     void Start()
+    {
+        playerStatus = PlayerStatus.instance;
+        this.playerInput = playerStatus.playerInput;
+        playerInput.SwitchCurrentActionMap("Player");
+        cMFPSController = CMFPSController.instance;
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         playerStatus = PlayerStatus.instance;
         this.playerInput = playerStatus.playerInput;
