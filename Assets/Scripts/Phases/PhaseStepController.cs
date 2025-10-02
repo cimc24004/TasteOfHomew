@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 
 [DisallowMultipleComponent]
-public class PhaseStepController : SerializedMonoBehaviour
+public class PhaseStepController : Singleton<PhaseStepController>
 {
     
     [Title("Phases（親：フェーズ / 子：ステップ）")]

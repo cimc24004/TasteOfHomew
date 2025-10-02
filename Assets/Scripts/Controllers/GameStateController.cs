@@ -14,25 +14,13 @@ public class GameStateController : Singleton<GameStateController>
 
     [Header("現在のゲームの状態 メニュー画面だったり、スタート画面ならUIが選択")]
     public GameState gameState;
-    private PlayerInput playerInput;
-    private PlayerStatus playerStatus;
-    private CMFPSController cMFPSController;
+    private PlayerDataHub playerDataHub;
     void Start()
     {
-        playerStatus = PlayerStatus.instance;
-        this.playerInput = playerStatus.playerInput;
-        playerInput.SwitchCurrentActionMap("Player");
-        cMFPSController = CMFPSController.instance;
+        playerDataHub = PlayerDataHub.instance;
+        playerDataHub.CurrentplayerInput.SwitchCurrentActionMap("Player");
+    }
 
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        playerStatus = PlayerStatus.instance;
-        this.playerInput = playerStatus.playerInput;
-        playerInput.SwitchCurrentActionMap("Player");
-        cMFPSController = CMFPSController.instance;
-    }
     public void ActionByModeSelect(GameState game_state, bool cursor_display)
     {
         if (game_state == GameState.Gameplay)
@@ -48,11 +36,11 @@ public class GameStateController : Singleton<GameStateController>
     public void GameplayMode()
     {
         //ゲームをプレイしてるとき
-        cMFPSController.UnlockView();
-        playerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
-        playerInput.actions.FindActionMap("ReadEvent").Disable();
-        playerInput.actions.FindActionMap("Player").Enable();
-        playerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
+        playerDataHub.CurrentCMFPSController.UnlockView();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Enable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         Debug.Log("GameplayModeGameplayModeGameplayModeGameplayModeGameplayMode");
@@ -62,11 +50,11 @@ public class GameStateController : Singleton<GameStateController>
     public void MenuOnGamePlayMode(bool visibleCursor)
     {
         //ゲームプレイ中にメニューを開いたとき readableEventや dialogue時など
-        cMFPSController.LockView();
-        playerInput.actions.FindActionMap("MenuOnGamePlay").Enable();
-        playerInput.actions.FindActionMap("Player").Disable();
-        playerInput.actions.FindActionMap("ReadEvent").Disable();
-        playerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
+        playerDataHub.CurrentCMFPSController.LockView();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Enable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
         if (visibleCursor)
         {
             //カーソルは表示
@@ -79,11 +67,10 @@ public class GameStateController : Singleton<GameStateController>
 
     public void ReadEventMode(bool visibleCursor)
     {
-        playerInput.actions.FindActionMap("Player").Disable();
-        playerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
-        playerInput.actions.FindActionMap("ReadEvent").Enable();
-
-        playerInput.actions.FindActionMap("GamePlayAndMenuCommon").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Enable();
+        playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Disable();
         if (visibleCursor)
         {
             //カーソルは表示

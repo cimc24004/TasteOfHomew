@@ -41,7 +41,10 @@ public class DataShareController : SerializedMonoBehaviour
         if (string.IsNullOrEmpty(key)) return;
         EndingShareDictionary[key] = value;
     }
-
+    public void ChangePhaseStep(string _step)
+    {
+        this.CurrentPhaseStep = _step;
+    }
     public bool GetFlag(string key)
     {
         if (string.IsNullOrEmpty(key)) return false;

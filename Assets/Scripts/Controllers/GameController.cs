@@ -18,7 +18,6 @@ public class GameController : Singleton<GameController>
         game_state_controller = GameStateController.instance;
         game_state_controller.ActionByModeSelect(game_state, CursorVisible);
         NowSceneName = SceneManager.GetActiveScene().name;
-        DontDestroyOnLoad(this.gameObject);
     }
 
 }

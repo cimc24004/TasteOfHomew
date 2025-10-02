@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DontDestroyOnLoadController : MonoBehaviour
+public class DODontDestroyOnLoad : MonoBehaviour
 {
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

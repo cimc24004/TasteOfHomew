@@ -11,6 +11,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
@@ -23,7 +24,7 @@ public class DialogueController : Singleton<DialogueController>
 
     [Title("UI (Default)")]
     [Tooltip("デフォルトのUI参照。オーバーライドされなかった場合に使われる。")]
-    [SerializeField] public DialogueUIRefs defaultUIRefs;
+    private DefaultDialogueUIInfo defaultUIInfo;
 
     // 実行時に使用するUI参照を動的に保持する
     private DialogueUIRefs _currentUIRefs;
@@ -81,13 +82,40 @@ public class DialogueController : Singleton<DialogueController>
     void Start()
     {
         RebuildLookup();
-        _currentUIRefs = defaultUIRefs;
+        SceneManager.sceneLoaded += SceneLoaded;
+        Init();
+        if (!dialogueRaycaster)
+        {
+            dialogueRaycaster = GetComponent<GraphicRaycaster>();
+            if (!dialogueRaycaster)
+                dialogueRaycaster = GetComponentInParent<GraphicRaycaster>();
+        }
+    }
+    private void SceneLoaded(Scene scene, LoadSceneMode mode) {
+        Init();
+    }
+    private void Init()
+    {
         CleanupUI();
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
-        playerInput = GetComponent<PlayerInput>();
-        if (!playerInput && PlayerStatus.instance) playerInput = PlayerStatus.instance.playerInput;
-
+        playerInput = PlayerStatus.instance.playerInput;
+        var currentSceneUIRefs = DefaultDialogueUIInfo.instance;
+        if (currentSceneUIRefs != null)
+        {
+            defaultUIInfo = DefaultDialogueUIInfo.instance;
+            _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
+                                                defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
+        }
+        else
+        {
+            // 新しいシーンにUIが見つからない場合は警告を出します。
+            // インスペクターで設定した初期の参照がまだ有効な場合（最初のシーンなど）は
+            // そのまま使いますが、シーン遷移後はnullになる可能性が高いです。
+            if (defaultUIInfo == null) {
+                Debug.LogWarning("[DialogueController] 新しいシーンで DialogueUIRefs が見つかりませんでした。UIが表示されない可能性があります。");
+            }
+        }
         if (playerInput != null)
         {
             var map = playerInput.actions;
@@ -99,15 +127,7 @@ public class DialogueController : Singleton<DialogueController>
         {
             Debug.LogWarning("[DialogueController] PlayerInput が見つかりません。");
         }
-
-        if (!dialogueRaycaster)
-        {
-            dialogueRaycaster = GetComponent<GraphicRaycaster>();
-            if (!dialogueRaycaster)
-                dialogueRaycaster = GetComponentInParent<GraphicRaycaster>();
-        }
     }
-
     void OnDisable() { StopCurrent(); }
 
     [Button("Rebuild Lookup")]
@@ -158,8 +178,18 @@ public class DialogueController : Singleton<DialogueController>
         StopCurrent();
         int runId = _nextRunId++; _runId = runId;
 
-        _currentUIRefs = (overrideUIRefs != null) ? overrideUIRefs : defaultUIRefs;
-
+        if (overrideUIRefs != null)
+        {
+            _currentUIRefs = overrideUIRefs;
+        }
+        else
+        {
+            // Init()ですでにデフォルトUIが設定されているので、このelseブロック自体が不要な場合もありますが、
+            // 安全のため、毎度デフォルト参照で更新するのは良い方法です。
+            _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
+                                                defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
+        }
+        
         if (_currentUIRefs == null)
         {
             Debug.LogError("[DialogueController] UI references are not set correctly!");
@@ -197,7 +227,8 @@ public class DialogueController : Singleton<DialogueController>
                 if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
             }
             _runCts?.Dispose(); _runCts = null;
-            _currentUIRefs = defaultUIRefs;
+            _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
+                                            defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
         }
     }
 
@@ -523,7 +554,8 @@ public class DialogueController : Singleton<DialogueController>
     private IEnumerator BriefMessageRoutine(DialogueUIRefs customUiRef, string speaker, string body, float duration)
     {
         // 使用するUIを決定する (指定がなければデフォルトUIにフォールバック)
-        DialogueUIRefs uiToUse = customUiRef ?? defaultUIRefs;
+        DialogueUIRefs uiToUse = customUiRef ?? new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
+                                                defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
 
         // --- 1. UIの存在チェック ---
         if (uiToUse == null)

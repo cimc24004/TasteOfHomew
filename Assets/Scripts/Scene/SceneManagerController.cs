@@ -26,7 +26,6 @@ public class SceneManagerController : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
@@ -41,26 +40,8 @@ public class SceneManagerController : MonoBehaviour
             onLoadFailed?.Invoke();
             return;
         }
-
-        // 簡易チェック：ビルドに存在するか（名前ベース）
-        bool existsInBuild = false;
-        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-        {
-            string path = SceneUtility.GetScenePathByBuildIndex(i);
-            string name = System.IO.Path.GetFileNameWithoutExtension(path);
-            if (name == sceneName)
-            {
-                existsInBuild = true;
-                break;
-            }
-        }
-
-        if (!existsInBuild)
-        {
-            Debug.LogWarning($"[SceneManagerController] LoadScene: scene '{sceneName}' not found in Build Settings.");
-            onLoadFailed?.Invoke();
-            return;
-        }
+        Debug.LogWarning($"[SceneManagerController] LoadScene: scene '{sceneName}' not found in Build Settings.");
+        onLoadFailed?.Invoke();
 
         StopAllCoroutines();
         StartCoroutine(DoLoadSceneAsync(sceneName));
