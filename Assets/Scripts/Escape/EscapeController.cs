@@ -12,7 +12,7 @@ public class EscapeController : MonoBehaviour
     [Header("フラグキー")]
     [SerializeField] private string friendHouseKey = "EscapeFriendHouse";
     [SerializeField] private string myHouseKey = "EscapeMyHouse";
-    [SerializeField] private string myMotherKilledKey = "EscapeMyHouseMotherKiled"; // ← これを“使う”ようにした
+    [SerializeField] private string myMotherKilledKey = "EscapeMyHouseMotherKilled"; // ← これを“使う”ようにした
 
     [Header("イベント（Start / End を外部からアサイン）")]
     public UnityEvent onFriendStart;
