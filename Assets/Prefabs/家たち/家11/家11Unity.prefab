@@ -519,6 +519,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u5BB611Unity"
       objectReference: {fileID: 0}
+    - target: {fileID: 3934666843580163123, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -546,8 +550,37 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
       insertIndex: -1
       addedObject: {fileID: 165281645209058212}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3934666843580163123, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8022776963211870994}
   m_SourcePrefab: {fileID: 100100000, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
+--- !u!1 &5932543847529688660 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3934666843580163123, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
+  m_PrefabInstance: {fileID: 7263777983594613351}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &8022776963211870994
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5932543847529688660}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 7.4736853, y: 4.508565, z: 5.8035226}
+  m_Center: {x: -3.7138386, y: 0.7376831, z: -1.4061644}
 --- !u!4 &7153025633093201292 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 29753d1bc951b7340a549f79ffa44abf, type: 3}
