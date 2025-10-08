@@ -155,25 +155,30 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     // ===== Public API =====
-    public void StartDialogue(string groupKey, string sequenceId, int startStepId = 1)
-        => StartDialogueAsync(groupKey, sequenceId, null, default, startStepId).Forget();
+    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
+    public void StartDialogue(string groupKey, string sequenceId, int startStepId = 1, bool changeGameState = true)
+        => StartDialogueAsync(groupKey, sequenceId, null, default, startStepId, changeGameState).Forget();
 
-    public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, int startStepId = 1)
+    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
+    public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, int startStepId = 1, bool changeGameState = true)
     {
         if (!groupAsset) { Debug.LogWarning("GroupAsset is null"); return; }
-        StartDialogue(groupAsset.groupKey, sequenceId, startStepId);
+        StartDialogue(groupAsset.groupKey, sequenceId, startStepId, changeGameState);
     }
 
-    public void StartDialogue(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1)
-        => StartDialogueAsync(groupKey, sequenceId, overrideUIRefs, default, startStepId).Forget();
+    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
+    public void StartDialogue(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1, bool changeGameState = true)
+        => StartDialogueAsync(groupKey, sequenceId, overrideUIRefs, default, startStepId, changeGameState).Forget();
     
-    public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1)
+    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
+    public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1, bool changeGameState = true)
     {
         if (!groupAsset) { Debug.LogWarning("GroupAsset is null"); return; }
-        StartDialogue(groupAsset.groupKey, sequenceId, overrideUIRefs, startStepId);
+        StartDialogue(groupAsset.groupKey, sequenceId, overrideUIRefs, startStepId, changeGameState);
     }
     
-    public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1)
+    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
+    public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1, bool changeGameState = true)
     {
         StopCurrent();
         int runId = _nextRunId++; _runId = runId;
@@ -213,7 +218,8 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
-            if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
+            // ▼▼▼【変更点】'changeGameState' が true の場合のみ GameState を変更する ▼▼▼
+            if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
         catch (OperationCanceledException) { }
@@ -224,7 +230,8 @@ public class DialogueController : Singleton<DialogueController>
                 CleanupUI();
                 onDialogueEnded?.Invoke();
                 if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Player);
-                if (gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
+                // ▼▼▼【変更点】'changeGameState' が true の場合のみ GameState を元に戻す ▼▼▼
+                if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
             }
             _runCts?.Dispose(); _runCts = null;
             _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
@@ -325,7 +332,6 @@ public class DialogueController : Singleton<DialogueController>
         }
     }
 
-    // ▼▼▼【重要】前回記載が漏れていたメソッド群 ▼▼▼
     private bool CheckConditions(List<FlagCondition> conds)
     {
         if (conds == null || conds.Count == 0) return true;
@@ -384,7 +390,6 @@ public class DialogueController : Singleton<DialogueController>
         if (!_lookup.TryGetValue(groupKey, out var map) || map == null) return false;
         return map.TryGetValue(seqId, out asset);
     }
-    // ▲▲▲ ここまでが記載漏れのメソッド群です ▲▲▲
 
     // ===== Typewriter =====
     private async UniTask TypeTextAsync(int runId, string content, CancellationToken token)
@@ -555,7 +560,7 @@ public class DialogueController : Singleton<DialogueController>
     {
         // 使用するUIを決定する (指定がなければデフォルトUIにフォールバック)
         DialogueUIRefs uiToUse = customUiRef ?? new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
-                                                defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
+                                                                    defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
 
         // --- 1. UIの存在チェック ---
         if (uiToUse == null)

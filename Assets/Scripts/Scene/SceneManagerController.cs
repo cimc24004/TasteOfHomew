@@ -29,7 +29,7 @@ public class SceneManagerController : MonoBehaviour
     [Header("動作設定")]
     [Tooltip("非同期ロード中にアクティブシーンを即時アンロードする（通常は true でOK）")]
     public bool unloadPreviousImmediately = true;
-
+    public bool dontDestroyOnLoad = true;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -38,7 +38,10 @@ public class SceneManagerController : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (dontDestroyOnLoad)
+        {
+            DontDestroyOnLoad(gameObject);
+        }
 
         // ▼▼▼ ここを修正 ▼▼▼
         // Awakeは初期状態（真っ暗）を設定するだけにする。

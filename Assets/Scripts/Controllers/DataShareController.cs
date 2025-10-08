@@ -9,6 +9,7 @@ using Sirenix.OdinInspector;
 /// </summary>
 public class DataShareController : SerializedMonoBehaviour
 {
+    
     public static DataShareController Instance { get; private set; }
 
     // ★ リネーム: shareDictionary → EndingShareDictionary

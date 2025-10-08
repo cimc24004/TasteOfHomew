@@ -31,8 +31,8 @@ public class FootStepController : SerializedMonoBehaviour
     private float runStepInterval = 0.3f;
     public Dictionary<string, List<AudioClip>> footstepSounds = new Dictionary<string, List<AudioClip>>();
 
-    [ShowInInspector, ReadOnly]
-    public MovementState CurrentState { get; set; } = MovementState.Idle;
+    [ShowInInspector]
+    public MovementState CurrentState = MovementState.Idle;
 
     private float stepTimer = 0f;
 
