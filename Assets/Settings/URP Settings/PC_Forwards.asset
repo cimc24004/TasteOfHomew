@@ -12,14 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52e2e32e102e44abeb72209e7ce030c3, type: 3}
   m_Name: KawaseBlur
   m_EditorClassIdentifier: Assembly-CSharp::KawaseBlur
-  m_Active: 1
-  settings:
-    renderPassEvent: 450
-    blurMaterial: {fileID: 2100000, guid: a00afda211f274f6ca6cce958e4e13a5, type: 2}
-    blurPasses: 10
-    downsample: 2
-    copyToFramebuffer: 0
-    targetName: _BlurTexture
 --- !u!114 &-5224646485807250438
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89,10 +81,7 @@ MonoBehaviour:
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
-  m_AssetVersion: 3
-  m_PrepassLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
+  m_AssetVersion: 2
   m_OpaqueLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
