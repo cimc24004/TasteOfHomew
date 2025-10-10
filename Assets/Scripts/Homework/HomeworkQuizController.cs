@@ -5,31 +5,46 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using DG.Tweening;
 
 [DisallowMultipleComponent]
 public class HomeworkQuizController : MonoBehaviour
 {
     [Header("UI (SetActive 切替)")]
-    [SerializeField] private GameObject panelRoot;        // 宿題UIルート
-    [SerializeField] private Image sheetImage;            // 紙画像（Raycast無効に）
-    [SerializeField] private Transform choicesRoot;       // 選択肢ボタン親（VerticalLayout推奨）
-    [SerializeField] private Button choiceButtonPrefab;   // TMP_Text入りボタン
+    [SerializeField] private GameObject panelRoot;
+    [SerializeField] private Transform choicesRoot;
+    [SerializeField] private Button choiceButtonPrefab;
+    [SerializeField] private TextMeshProUGUI homeWorkBodyText;
+
+    [Header("Feedback UI")]
+    [SerializeField] private Image correctFeedbackImage; // 〇画像
+    [SerializeField] private Image wrongFeedbackImage;   // ×画像
+
+    [Header("Feedback Animation Settings")]
+    [SerializeField] private float feedbackDuration = 0.3f; // アニメーション時間
+    [SerializeField] private float correctScaleFactor = 1.5f; // 正解時の拡大倍率
+    [SerializeField] private float wrongScaleFactor = 1.2f;   // 不正解時の拡大倍率
+    [SerializeField] private Ease feedbackEase = Ease.OutBack; // アニメーションのイージング
 
     [Header("問題セット")]
     [SerializeField] private List<QuizQuestionAsset> questions = new();
 
     [Header("Dialogue 設定")]
-    [SerializeField] private string questionGroupKey  = "HWQ";   // 問題文グループ
-    [SerializeField] private string prelineGroupKey   = "HW";    // 「正解は……？」グループ
+    [SerializeField] private string questionGroupKey = "HWQ";
+    [SerializeField] private string prelineGroupKey = "HW";
     [SerializeField] private string prelineSequenceId = "Preline";
 
     [Header("SFX")]
-    [SerializeField] private AudioSource sfxSource;      // PlayOnAwake OFF
+    [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioClip defaultCorrectSfx;
     [SerializeField] private AudioClip defaultWrongSfx;
 
+    [Header("BGM")]
+    [SerializeField] private AudioSource horrorBgmSource;
+    [SerializeField] private float bgmFadeDuration = 1.0f; // BGMのフェードイン・アウト時間
+
     [Header("進行")]
-    [SerializeField] private bool autoProceedNext = true;         // 最終問以外は次の問題へ
+    [SerializeField] private bool autoProceedNext = true;
     [SerializeField, Min(0f)] private float proceedDelaySeconds = 0.6f;
 
     [Header("クリック時の挙動")]
@@ -37,19 +52,20 @@ public class HomeworkQuizController : MonoBehaviour
     [SerializeField] private bool hideAllChoicesOnClick = true;
 
     [Header("既存のクリック受け（Inspectorでアサイン）")]
-    [SerializeField] private Button revealClickCatcher;  // 透明フルスクリーンの既存Button
+    [SerializeField] private Button revealClickCatcher;
 
     [Header("Events")]
     public UnityEvent onQuizStarted;
-    public UnityEvent<int> onQuestionStarted;            // (index)
-    public UnityEvent<int, bool> onAnswered;             // (index, isCorrect)
-    public UnityEvent onQuizCompleted;                   // 互換用（従来イベント）
+    public UnityEvent<int> onQuestionStarted;
+    public UnityEvent<int, bool> onAnswered;
+    public UnityEvent onQuizCompleted;
     [Tooltip("全ての問題に回答し終えた瞬間に発火（即クローズ後）")]
-    public UnityEvent onAllQuestionsAnswered;            // ★ 追加
+    public UnityEvent onAllQuestionsAnswered;
 
-    // 内部
     private int currentIndex = -1;
     private readonly List<Button> spawned = new();
+    private Tween currentFeedbackTween;
+    private Tween currentBgmTween;
 
     void Awake()
     {
@@ -57,21 +73,24 @@ public class HomeworkQuizController : MonoBehaviour
         if (!choicesRoot) Debug.LogError("[HomeworkQuiz] choicesRoot 未設定");
         if (!choiceButtonPrefab) Debug.LogError("[HomeworkQuiz] choiceButtonPrefab 未設定");
 
-        // 紙はクリックをブロックしない
-        if (sheetImage)
-        {
-            sheetImage.raycastTarget = false;
-            sheetImage.transform.SetAsFirstSibling(); // 最背面
-        }
-
-        // 既存のクリック受けは最初はOFF
         if (revealClickCatcher)
         {
             if (revealClickCatcher.targetGraphic) revealClickCatcher.targetGraphic.raycastTarget = true;
             revealClickCatcher.gameObject.SetActive(false);
         }
 
+        SetupFeedbackImage(correctFeedbackImage);
+        SetupFeedbackImage(wrongFeedbackImage);
+
         ShowPanel(false);
+    }
+
+    private void SetupFeedbackImage(Image image)
+    {
+        if (image == null) return;
+        image.gameObject.SetActive(false);
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 0f);
+        image.transform.localScale = Vector3.one;
     }
 
     [ContextMenu("StartQuiz")]
@@ -93,9 +112,9 @@ public class HomeworkQuizController : MonoBehaviour
 
     private async UniTask NextQuestionAsync()
     {
-        currentIndex++;
+        ResetFeedbackImages();
 
-        // 全問終わっていれば即終了（保険）
+        currentIndex++;
         if (currentIndex >= questions.Count)
         {
             CompleteQuiz();
@@ -105,49 +124,90 @@ public class HomeworkQuizController : MonoBehaviour
         var q = questions[currentIndex];
         onQuestionStarted?.Invoke(currentIndex);
 
-        // 紙更新（常に背面・Raycast無効）
-        if (sheetImage)
+        currentBgmTween?.Kill();
+
+        if (q.horrorDirection)
         {
-            sheetImage.sprite = q.sheetSprite;
-            sheetImage.raycastTarget = false;
-            sheetImage.transform.SetAsFirstSibling();
+            if (horrorBgmSource)
+            {
+                if (q.horrorSound != null && horrorBgmSource.clip != q.horrorSound)
+                {
+                    horrorBgmSource.clip = q.horrorSound;
+                    horrorBgmSource.volume = 0;
+                    horrorBgmSource.Play();
+                }
+                
+                if (!horrorBgmSource.isPlaying && horrorBgmSource.clip != null)
+                {
+                    horrorBgmSource.volume = 0;
+                    horrorBgmSource.Play();
+                }
+
+                currentBgmTween = horrorBgmSource.DOFade(q.horrorVolume, bgmFadeDuration)
+                    .SetEase(Ease.Linear);
+            }
+        }
+        else
+        {
+            if (horrorBgmSource && horrorBgmSource.isPlaying)
+            {
+                currentBgmTween = horrorBgmSource.DOFade(0, bgmFadeDuration)
+                    .SetEase(Ease.Linear)
+                    .OnComplete(() => {
+                        horrorBgmSource.Stop();
+                        horrorBgmSource.clip = null;
+                    });
+            }
         }
 
-        // ① 問題文（クリックで閉じるまで待つ）
         var dlg = DialogueController.instance;
+        List<DialogueSequenceAsset> dialogueSequenceAssets = dlg.sequenceGroupAssets.Find(g => g.groupKey == questionGroupKey).sequences;
+        homeWorkBodyText.text = dialogueSequenceAssets.Find(s => s.id == q.questionSequenceId).steps[0].text;
         if (dlg != null && !string.IsNullOrWhiteSpace(q.questionSequenceId))
         {
             await dlg.StartDialogueAsync(questionGroupKey, q.questionSequenceId);
         }
 
-        // ② 「正解は……？」を固定表示（ダイアログ進行は止める）
         if (dlg != null && !string.IsNullOrWhiteSpace(prelineGroupKey) && !string.IsNullOrWhiteSpace(prelineSequenceId))
         {
-            dlg.PauseAdvance(true);                               // advance/skip無効。UIはそのまま。
+            dlg.PauseAdvance(true);
             dlg.StartDialogueAsync(prelineGroupKey, prelineSequenceId).Forget();
         }
 
-        // ③ “次のクリックで選択肢出現” → 既存の RevealClickCatcher を使う
         if (!revealClickCatcher)
         {
-            Debug.LogError("[HomeworkQuiz] RevealClickCatcher が未アサインです（既存オブジェクトをInspectorで割り当ててください）");
+            Debug.LogError("[HomeworkQuiz] RevealClickCatcher が未アサインです");
         }
         else
         {
             revealClickCatcher.onClick.RemoveAllListeners();
             revealClickCatcher.onClick.AddListener(OnRevealChoicesClicked);
             revealClickCatcher.gameObject.SetActive(true);
-            revealClickCatcher.transform.SetAsLastSibling(); // 最前面
+            revealClickCatcher.transform.SetAsLastSibling();
         }
     }
 
-    // === 「正解は……？」のあと、既存の RevealClickCatcher をクリックで呼ばれる ===
+    private void ResetFeedbackImages()
+    {
+        currentFeedbackTween?.Kill();
+
+        if (correctFeedbackImage)
+        {
+            correctFeedbackImage.gameObject.SetActive(false);
+            correctFeedbackImage.color = new Color(correctFeedbackImage.color.r, correctFeedbackImage.color.g, correctFeedbackImage.color.b, 0f);
+            correctFeedbackImage.transform.localScale = Vector3.one;
+        }
+        if (wrongFeedbackImage)
+        {
+            wrongFeedbackImage.gameObject.SetActive(false);
+            wrongFeedbackImage.color = new Color(wrongFeedbackImage.color.r, wrongFeedbackImage.color.g, wrongFeedbackImage.color.b, 0f);
+            wrongFeedbackImage.transform.localScale = Vector3.one;
+        }
+    }
+
     private void OnRevealChoicesClicked()
     {
-        // 受けはOFFにしてボタン操作を通す
         if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
-
-        // 選択肢生成（この時点で「正解は……？」は表示されたまま）
         var q = questions[currentIndex];
         BuildChoices(q);
     }
@@ -165,8 +225,6 @@ public class HomeworkQuizController : MonoBehaviour
         for (int i = 0; i < q.choices.Count; i++)
         {
             var btn = Instantiate(choiceButtonPrefab, choicesRoot);
-
-            // 念のためActive化
             if (!btn.gameObject.activeSelf) btn.gameObject.SetActive(true);
             btn.interactable = true;
             if (btn.targetGraphic) btn.targetGraphic.raycastTarget = true;
@@ -179,7 +237,6 @@ public class HomeworkQuizController : MonoBehaviour
             spawned.Add(btn);
         }
 
-        // 最前面に（紙より前に確実に出す）
         choicesRoot.SetAsLastSibling();
     }
 
@@ -198,25 +255,53 @@ public class HomeworkQuizController : MonoBehaviour
 
     private void OnClickChoice(int choiceIndex, Button clickedButton)
     {
-        // 1) 押した瞬間にボタン非表示
         HideChoices(clickedButton);
 
         var q = questions[currentIndex];
         bool isCorrect = (choiceIndex == q.correctIndex);
 
-        // 2) SFX
+        if (!q.horrorDirection)
+        {
+            Image targetImage = null;
+            float targetScale = 1f;
+
+            if (isCorrect)
+            {
+                targetImage = correctFeedbackImage;
+                targetScale = correctScaleFactor;
+            }
+            else
+            {
+                targetImage = wrongFeedbackImage;
+                targetScale = wrongScaleFactor;
+            }
+
+            if (targetImage != null)
+            {
+                currentFeedbackTween?.Kill();
+
+                targetImage.gameObject.SetActive(true);
+                targetImage.transform.localScale = Vector3.one;
+                targetImage.color = new Color(targetImage.color.r, targetImage.color.g, targetImage.color.b, 0f);
+
+                currentFeedbackTween = DOTween.Sequence()
+                    .Append(targetImage.DOFade(1f, feedbackDuration))
+                    .Join(targetImage.transform.DOScale(targetScale, feedbackDuration).SetEase(feedbackEase))
+                    .SetLink(targetImage.gameObject)
+                    .Play();
+            }
+        }
+
         if (!q.muteSfxForThisQuestion && sfxSource)
         {
             var clip = isCorrect
                 ? (q.correctSfxOverride ? q.correctSfxOverride : defaultCorrectSfx)
-                : (q.wrongSfxOverride   ? q.wrongSfxOverride   : defaultWrongSfx);
+                : (q.wrongSfxOverride ? q.wrongSfxOverride : defaultWrongSfx);
             if (clip) sfxSource.PlayOneShot(clip);
         }
 
-        // 3) コールバック
         onAnswered?.Invoke(currentIndex, isCorrect);
 
-        // 4) 「正解は……？」を閉じ、ダイアログ入力を元に戻す
         var dlg = DialogueController.instance;
         if (dlg != null)
         {
@@ -224,11 +309,10 @@ public class HomeworkQuizController : MonoBehaviour
             dlg.StopCurrent();
         }
 
-        // 5) 最終問なら即クローズ＆イベント、そうでなければ次へ
         bool isLast = (currentIndex == questions.Count - 1);
         if (isLast)
         {
-            CompleteQuiz();               // ← 全問回答の瞬間に閉じてイベント発火
+            CompleteQuiz();
         }
         else if (autoProceedNext)
         {
@@ -244,15 +328,20 @@ public class HomeworkQuizController : MonoBehaviour
 
     private void CompleteQuiz()
     {
-        // クリック受けを確実にOFF
         if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
+        
+        currentBgmTween?.Kill();
 
-        // UIクローズ
+        if (horrorBgmSource && horrorBgmSource.isPlaying)
+        {
+            horrorBgmSource.DOFade(0, bgmFadeDuration).OnComplete(() => horrorBgmSource.Stop());
+        }
+        
+        ResetFeedbackImages();
         ShowPanel(false);
 
-        // イベント発火（新しい方を先に、互換の onQuizCompleted も呼ぶ）
-        onAllQuestionsAnswered?.Invoke();  // ★ 新イベント
-        onQuizCompleted?.Invoke();         // 既存イベント
+        onAllQuestionsAnswered?.Invoke();
+        onQuizCompleted?.Invoke();
     }
 
     private void ClearChoices()
@@ -269,7 +358,6 @@ public class HomeworkQuizController : MonoBehaviour
         if (!panelRoot) return;
         panelRoot.SetActive(show);
 
-        // パネルOFF時はクリック受けもOFF
         if (!show && revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
     }
 }
