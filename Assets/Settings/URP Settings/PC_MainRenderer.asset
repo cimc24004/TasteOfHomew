@@ -1,5 +1,72 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8248370463879029896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11f67d4f7fae37c409831334bf9012e0, type: 3}
+  m_Name: CheapCamera
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    intensity: 1
+    lensVignette: {x: 0, y: 0, z: 0}
+    lensChromaticAberration: {x: 0, y: 0, z: 0, w: 0}
+    lensRadialDistortion: {x: 0, y: 0, z: 0}
+    lensTangentialDistortion: {x: 0, y: 0}
+    lensZoom: 1
+    sensorResolution: 1
+    sensorBlurQuality: 0
+    sensorPixelNoise: {x: 0.1, y: 0.05, z: 0.5}
+    sensorExposure: 1
+    sensorGain: 1
+    sensorDynamicRange: 0.3
+    processorFunctions: {x: 1, y: 0.8, z: 1}
+    processorWhiteBalance: {x: 1, y: 1, z: 1}
+    brightness: 0
+    contrast: 1
+    gamma: 1
+    hue: 0
+    saturation: 1
+    affectSceneView: 0
+    whenToInsert: 550
+--- !u!114 &-6531413924470005348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 063490ea7eee1234dae602553a20b2f5, type: 3}
+  m_Name: Interferences
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    intensity: 0.133
+    blend: 2
+    offset: 1
+    distortion: 0.25
+    distortionSpeed: 10
+    distortionDensity: 2
+    distortionAmplitude: 0.15
+    distortionFrequency: 0.3
+    scanlines: 0.75
+    scanlinesDensity: 0.25
+    scanlinesOpacity: 0.5
+    brightness: 0
+    contrast: 1
+    gamma: 1
+    hue: 0
+    saturation: 1
+    affectSceneView: 0
+    whenToInsert: 550
 --- !u!114 &-5874568704061588740
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,7 +152,11 @@ MonoBehaviour:
   - {fileID: -3225849299276641227}
   - {fileID: 557922041594668980}
   - {fileID: -5224646485807250438}
-  m_RendererFeatureMap: ad6b866f10d7b46c354cac51277b3bd3b4679c0d2423be07fa4377d8b3537eb7
+  - {fileID: 3753705970896739161}
+  - {fileID: -8248370463879029896}
+  - {fileID: 192097095406243827}
+  - {fileID: -6531413924470005348}
+  m_RendererFeatureMap: ad6b866f10d7b46c354cac51277b3bd3b4679c0d2423be07fa4377d8b3537eb7591b904ab1d71734789baaccc3e6878df3cf125e4a77aa029ce1ecfea3c15ba5
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -111,6 +182,38 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &192097095406243827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bb6521c5ca91c9439a5b7bcbe17b2c8, type: 3}
+  m_Name: Artifacts
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    intensity: 1
+    size: {x: 16, y: 16}
+    luminanceRange: {x: 0, y: 1}
+    blocks: 0.1
+    blockBlend: 13
+    blockTint: {r: 0, g: 1, b: 0, a: 0.25}
+    lines: 0.4
+    lineBlend: 13
+    lineTint: {r: 0, g: 1, b: 0, a: 0.5}
+    aberration: 0.395
+    interleave: 1
+    brightness: 0
+    contrast: 1
+    gamma: 1
+    hue: 0
+    saturation: 1
+    affectSceneView: 0
+    whenToInsert: 450
 --- !u!114 &557922041594668980
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -156,12 +259,44 @@ MonoBehaviour:
   stripBeautifyFrame: 1
   stripBeautifyFilmGrain: 1
   stripUnityFilmGrain: 0
-  stripUnityDithering: 0
+  stripUnityDithering: 1
   stripUnityTonemapping: 1
   stripUnityBloom: 1
   stripUnityChromaticAberration: 0
   stripUnityDistortion: 0
   stripUnityDebugVariants: 0
+--- !u!114 &3753705970896739161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d56597b0a50618247b43536d4501a4bf, type: 3}
+  m_Name: VHS
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    intensity: 0.212
+    noise: 0.3
+    noiseSpeed: 2
+    noiseSize: 0.2
+    noiseBlend: 0
+    noiseColor: {r: 1, g: 1, b: 1, a: 1}
+    pause: 0.25
+    pauseNoise: 0.1
+    pauseBand: 1
+    pauseBlend: 16
+    pauseColor: {r: 1, g: 1, b: 1, a: 1}
+    brightness: 0
+    contrast: 1
+    gamma: 1
+    hue: 0
+    saturation: 1
+    affectSceneView: 0
+    whenToInsert: 550
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0

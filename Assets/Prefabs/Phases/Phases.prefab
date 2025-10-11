@@ -204,15 +204,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 3, y: 3, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &391244871940465616
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,15 +320,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 3, y: 3, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &542949511050573695
 GameObject:
   m_ObjectHideFlags: 0
@@ -702,6 +694,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 1
+  changeGameState: 1
 --- !u!114 &5086833898853145273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -884,6 +877,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse5
+  changeGameState: 1
 --- !u!114 &5810495380121205031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1101,6 +1095,7 @@ MonoBehaviour:
   groupKey: Michibiki
   groupAsset: {fileID: 11400000, guid: 2680c371db508c7489e4f78e8e18e9ef, type: 2}
   sequenceId: 5
+  changeGameState: 1
 --- !u!1 &930496309028620379
 GameObject:
   m_ObjectHideFlags: 0
@@ -1209,6 +1204,7 @@ MonoBehaviour:
   groupKey: AbsenceHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 1
+  changeGameState: 1
 --- !u!114 &3161450906015773704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1359,6 +1355,7 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
+  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -1366,7 +1363,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!1 &1050020055001232429
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,15 +1689,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &1718385482935086521
 GameObject:
   m_ObjectHideFlags: 0
@@ -1753,15 +1745,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 3, y: 3, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &1749169388523254129
 GameObject:
   m_ObjectHideFlags: 0
@@ -2029,6 +2017,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse4
+  changeGameState: 1
 --- !u!114 &6140011549074560512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2332,15 +2321,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 3, y: 3, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &2009203285245077556
 GameObject:
   m_ObjectHideFlags: 0
@@ -2391,7 +2376,7 @@ GameObject:
   - component: {fileID: 1212394919704415485}
   - component: {fileID: 6263681045948455581}
   - component: {fileID: 1771338924284487446}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: StopOutside (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2441,8 +2426,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2464,7 +2447,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -2521,6 +2503,7 @@ MonoBehaviour:
   groupKey: Michibiki
   groupAsset: {fileID: 11400000, guid: 7d98d9bf74c6e15428549d31bb08cf61, type: 2}
   sequenceId: 2
+  changeGameState: 1
 --- !u!114 &1771338924284487446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2612,15 +2595,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &2252275984692658861
 GameObject:
   m_ObjectHideFlags: 0
@@ -2685,6 +2664,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeFriendHouse:1
+  changeGameState: 1
 --- !u!114 &3138162544715890903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3150,7 +3130,7 @@ GameObject:
   - component: {fileID: 2757404771180204762}
   - component: {fileID: 970868441515176010}
   - component: {fileID: 2363868311026895989}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: StopOutside (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3200,8 +3180,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3223,7 +3201,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -3540,6 +3517,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse1
+  changeGameState: 1
 --- !u!114 &8809804203591758901
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3949,6 +3927,7 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
+  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -3956,7 +3935,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!1 &3609680774794924361
 GameObject:
   m_ObjectHideFlags: 0
@@ -4551,15 +4529,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &3957246978566343501
 GameObject:
   m_ObjectHideFlags: 0
@@ -4611,15 +4585,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 2, y: 2, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &3998650002547269320
 GameObject:
   m_ObjectHideFlags: 0
@@ -4696,6 +4666,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 8
+  changeGameState: 1
 --- !u!114 &8299372715805397499
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4986,6 +4957,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 4
+  changeGameState: 1
 --- !u!114 &3332788071417201934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5067,15 +5039,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &4277621351375163711
 GameObject:
   m_ObjectHideFlags: 0
@@ -5778,7 +5746,7 @@ GameObject:
   - component: {fileID: 5183105672788009875}
   - component: {fileID: 5275739681528973296}
   - component: {fileID: 8905857769094830446}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: StopOutside (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5828,8 +5796,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5851,7 +5817,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -5908,6 +5873,7 @@ MonoBehaviour:
   groupKey: Michibiki
   groupAsset: {fileID: 11400000, guid: 7d98d9bf74c6e15428549d31bb08cf61, type: 2}
   sequenceId: 4
+  changeGameState: 1
 --- !u!114 &8905857769094830446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6433,6 +6399,7 @@ MonoBehaviour:
   groupKey: MorningHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 4
+  changeGameState: 1
 --- !u!114 &8538991416823300655
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6539,6 +6506,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 9
+  changeGameState: 1
 --- !u!114 &5281655658899325744
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6620,15 +6588,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &4997462497243794672
 GameObject:
   m_ObjectHideFlags: 0
@@ -6974,15 +6938,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &5094956364015063970
 GameObject:
   m_ObjectHideFlags: 0
@@ -7059,6 +7019,7 @@ MonoBehaviour:
   groupKey: EveningHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 3
+  changeGameState: 1
 --- !u!114 &2454448581323999713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7140,15 +7101,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &5128683282385791248
 GameObject:
   m_ObjectHideFlags: 0
@@ -7509,6 +7466,7 @@ MonoBehaviour:
   groupKey: EveningHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 2
+  changeGameState: 1
 --- !u!114 &4328440500328642595
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7627,6 +7585,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 3
+  changeGameState: 1
 --- !u!114 &6832893263943281976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7967,15 +7926,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 2, y: 2, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &5593551390970586226
 GameObject:
   m_ObjectHideFlags: 0
@@ -8084,6 +8039,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 6
+  changeGameState: 1
 --- !u!114 &6470513722249904477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8165,15 +8121,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1.28, y: 1.5, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &5871298867246691452
 GameObject:
   m_ObjectHideFlags: 0
@@ -8522,6 +8474,7 @@ MonoBehaviour:
   groupKey: ShedHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 2
+  changeGameState: 1
 --- !u!1 &6275241090245923953
 GameObject:
   m_ObjectHideFlags: 0
@@ -8569,7 +8522,7 @@ GameObject:
   - component: {fileID: 8586530248119948291}
   - component: {fileID: 7362261068886299548}
   - component: {fileID: 6227478105054151317}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: StopOutside (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8619,8 +8572,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8642,7 +8593,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -9097,8 +9047,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9120,7 +9068,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -9369,6 +9316,7 @@ MonoBehaviour:
   groupKey: MomReturn
   groupAsset: {fileID: 0}
   sequenceId: 1
+  changeGameState: 1
 --- !u!114 &916895310869185023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9672,6 +9620,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 7
+  changeGameState: 1
 --- !u!114 &2128307966648826529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9826,6 +9775,7 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
+  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -9833,7 +9783,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!1 &7068160089166236180
 GameObject:
   m_ObjectHideFlags: 0
@@ -10315,6 +10264,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeFriendHouse:2
+  changeGameState: 1
 --- !u!114 &436299191857938050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10409,6 +10359,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 2
+  changeGameState: 1
 --- !u!114 &1282742150097623089
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10780,7 +10731,7 @@ GameObject:
   - component: {fileID: 402870010584542300}
   - component: {fileID: 2212659572267143418}
   - component: {fileID: 6498793436855202660}
-  m_Layer: 6
+  m_Layer: 9
   m_Name: StopOutside
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10830,8 +10781,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10853,7 +10802,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -10910,6 +10858,7 @@ MonoBehaviour:
   groupKey: Michibiki
   groupAsset: {fileID: 11400000, guid: 7d98d9bf74c6e15428549d31bb08cf61, type: 2}
   sequenceId: 1
+  changeGameState: 1
 --- !u!114 &6498793436855202660
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11026,6 +10975,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: 5
+  changeGameState: 1
 --- !u!114 &2776239933010902579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11144,6 +11094,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse3
+  changeGameState: 1
 --- !u!114 &7520005998754152403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11250,6 +11201,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: FriendGamePlayNow
+  changeGameState: 1
 --- !u!114 &8594695543334000779
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11406,15 +11358,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &7832773632786683971
 GameObject:
   m_ObjectHideFlags: 0
@@ -11635,6 +11583,7 @@ MonoBehaviour:
   groupKey: Michibiki
   groupAsset: {fileID: 11400000, guid: 2680c371db508c7489e4f78e8e18e9ef, type: 2}
   sequenceId: 6
+  changeGameState: 1
 --- !u!1 &8161755828390189229
 GameObject:
   m_ObjectHideFlags: 0
@@ -11900,6 +11849,7 @@ MonoBehaviour:
   groupKey: MorningHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 3
+  changeGameState: 1
 --- !u!114 &7389085192316896991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12202,6 +12152,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse2
+  changeGameState: 1
 --- !u!114 &5662385961394028404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12368,6 +12319,7 @@ MonoBehaviour:
   groupKey: ShedHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 1
+  changeGameState: 1
 --- !u!114 &1902629927760897332
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12624,15 +12576,11 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_RenderingLayerMask:
-    serializedVersion: 0
-    m_Bits: 1
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 2, y: 2, z: 1}
   m_FadeFactor: 1
-  version: 1
-  m_DecalLayerMask: 1
 --- !u!1 &8898501811731451342
 GameObject:
   m_ObjectHideFlags: 0
@@ -12845,6 +12793,7 @@ MonoBehaviour:
   groupKey: Friend
   groupAsset: {fileID: 0}
   sequenceId: FriendGameAdvert
+  changeGameState: 1
 --- !u!114 &548700965045393138
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13079,6 +13028,7 @@ MonoBehaviour:
   groupKey: EscapeChoose
   groupAsset: {fileID: 0}
   sequenceId: EscapeChoose
+  changeGameState: 1
 --- !u!1 &9026470676173497941
 GameObject:
   m_ObjectHideFlags: 0
@@ -13605,6 +13555,7 @@ MonoBehaviour:
   groupKey: Escape
   groupAsset: {fileID: 0}
   sequenceId: EscapeMyHouse6
+  changeGameState: 1
 --- !u!114 &1373801510573535174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14196,6 +14147,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 5534488449729125592, guid: 8fbc10f977c0f194c82613e08ad8f131, type: 3}
+    - target: {fileID: 5769563949635021430, guid: 8fbc10f977c0f194c82613e08ad8f131, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 5769563949635021430, guid: 8fbc10f977c0f194c82613e08ad8f131, type: 3}
       propertyPath: serializationData.Prefab
       value: 

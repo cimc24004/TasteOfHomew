@@ -97,6 +97,7 @@ public class DialogueController : Singleton<DialogueController>
     private void Init()
     {
         CleanupUI();
+        MergeFlagsFromDataShare(); // ← 【追加】DataShareからフラグを読み込む
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
         playerInput = PlayerStatus.instance.playerInput;
@@ -600,5 +601,26 @@ public class DialogueController : Singleton<DialogueController>
     private void ThrowIfStale(int runId)
     {
         if (runId != _runId) throw new OperationCanceledException("stale run");
+    }
+
+
+    /// <summary>
+    /// DataShareControllerからフラグの値をマージ（同期）します。
+    /// </summary>
+    private void MergeFlagsFromDataShare()
+    {
+        var ds = DataShareController.Instance;
+        if (ds == null) return;
+
+        // DataShareControllerのEndingShareDictionaryからフラグを読み込む
+        // 既存のキーは上書きされ、新しいキーは追加されます。
+        foreach (var kv in ds.EndingShareDictionary)
+        {
+            if (!string.IsNullOrWhiteSpace(kv.Key))
+            {
+                flags[kv.Key] = kv.Value;
+                // Debug.Log($"[DialogueController] Merged flag from DataShare: {kv.Key} = {kv.Value}");
+            }
+        }
     }
 }

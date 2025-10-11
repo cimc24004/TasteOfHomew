@@ -100,7 +100,7 @@ MonoBehaviour:
     m_Value: 0
   sharpenIntensity:
     m_OverrideState: 1
-    m_Value: 7.2
+    m_Value: 6.2
   sharpenDepthThreshold:
     m_OverrideState: 0
     m_Value: 0.035
@@ -176,10 +176,10 @@ MonoBehaviour:
     m_Value: {r: 1, g: 1, b: 1, a: 0}
   colorTempBlend:
     m_OverrideState: 0
-    m_Value: 0.096
+    m_Value: 0.027
   colorTemp:
     m_OverrideState: 0
-    m_Value: 25289
+    m_Value: 16993
   lut:
     m_OverrideState: 0
     m_Value: 1
@@ -293,7 +293,7 @@ MonoBehaviour:
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   anamorphicFlaresIntensity:
     m_OverrideState: 0
-    m_Value: 0.3
+    m_Value: 0.03
   anamorphicFlaresThreshold:
     m_OverrideState: 0
     m_Value: 0.75
@@ -340,13 +340,13 @@ MonoBehaviour:
     m_Value: 0
   sunFlaresIntensity:
     m_OverrideState: 0
-    m_Value: 1
+    m_Value: 0.212
   sunFlaresTint:
     m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   sunFlaresSolarWindSpeed:
     m_OverrideState: 0
-    m_Value: 0.01
+    m_Value: 0
   sunFlaresRotationDeadZone:
     m_OverrideState: 0
     m_Value: 0
@@ -372,10 +372,10 @@ MonoBehaviour:
     m_Value: 30
   sunFlaresSunIntensity:
     m_OverrideState: 0
-    m_Value: 0.089
+    m_Value: 1
   sunFlaresSunDiskSize:
     m_OverrideState: 0
-    m_Value: 0.05
+    m_Value: 0
   sunFlaresSunRayDiffractionIntensity:
     m_OverrideState: 0
     m_Value: 3.5
@@ -408,13 +408,13 @@ MonoBehaviour:
     m_Value: 0
   sunFlaresGhosts1Size:
     m_OverrideState: 0
-    m_Value: 0.03
+    m_Value: 0.549
   sunFlaresGhosts1Offset:
     m_OverrideState: 0
     m_Value: 1.04
   sunFlaresGhosts1Brightness:
     m_OverrideState: 0
-    m_Value: 0.037
+    m_Value: 0.355
   sunFlaresGhosts2Size:
     m_OverrideState: 0
     m_Value: 0.1
@@ -450,20 +450,20 @@ MonoBehaviour:
     m_Value: 15.1415
   sunFlaresHaloIntensity:
     m_OverrideState: 0
-    m_Value: 0.01
-  lensDirtIntensity:
-    m_OverrideState: 0
     m_Value: 0
+  lensDirtIntensity:
+    m_OverrideState: 1
+    m_Value: 2
   lensDirtThreshold:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.5
   lensDirtTexture:
     m_OverrideState: 0
     m_Value: {fileID: 0}
     dimension: 1
   lensDirtSpread:
-    m_OverrideState: 0
-    m_Value: 3
+    m_OverrideState: 1
+    m_Value: 5
   chromaticAberrationIntensity:
     m_OverrideState: 0
     m_Value: 0
@@ -678,9 +678,9 @@ MonoBehaviour:
     dimension: 1
   outline:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   outlineColor:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {r: 0, g: 0, b: 0, a: 0.8}
   outlineTechnique:
     m_OverrideState: 0
@@ -692,8 +692,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0
   outlineThreshold:
-    m_OverrideState: 0
-    m_Value: 0.2
+    m_OverrideState: 1
+    m_Value: 0.5
   outlineMinDepthThreshold:
     m_OverrideState: 0
     m_Value: 0.0005
@@ -734,7 +734,7 @@ MonoBehaviour:
     m_Value: 0
   nightVision:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   nightVisionColor:
     m_OverrideState: 0
     m_Value: {r: 0.5, g: 1, b: 0.5, a: 0.5}
@@ -758,7 +758,7 @@ MonoBehaviour:
     m_Value: 0.005
   frame:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   frameStyle:
     m_OverrideState: 0
     m_Value: 0
@@ -779,23 +779,23 @@ MonoBehaviour:
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   frameThickness:
     m_OverrideState: 0
-    m_Value: 0.047
+    m_Value: 0.052
   frameSharpness:
     m_OverrideState: 0
-    m_Value: 50
+    m_Value: 255
   frameMask:
     m_OverrideState: 0
     m_Value: {fileID: 0}
     dimension: 1
   filmGrainEnabled:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   filmGrainIntensity:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   filmGrainResolution:
     m_OverrideState: 0
-    m_Value: 0.85
+    m_Value: 0.069
   filmGrainLumaAttenuation:
     m_OverrideState: 0
     m_Value: 0.8
@@ -813,7 +813,7 @@ MonoBehaviour:
     m_Value: 0.3
   blurIntensity:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 0.5
   blurMask:
     m_OverrideState: 0
     m_Value: {fileID: 0}

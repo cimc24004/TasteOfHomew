@@ -1,12 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Sirenix.OdinInspector; // ★ Odin
+using Sirenix.OdinInspector;
 
-public class TodoController : MonoBehaviour
+public class TodoController : SerializedMonoBehaviour
 {
     [Title("生成設定")]
     [SerializeField] private Transform todoLists;
     [SerializeField] private TodoBox todoBoxPrefab;
+
+    [Title("ToDoリストのプリセット")]
+    [InfoBox("ここで定義したキー（文字列）を使って、UnityEventから特定のリストを呼び出せます。")]
+    [SerializeField]
+    private Dictionary<string, List<TodoItemData>> presetTodoLists = new();
 
     // 内部
     private readonly Dictionary<string, TodoBox> _byId = new();
@@ -35,6 +40,44 @@ public class TodoController : MonoBehaviour
         var id = Add(text);
         if (id != null) _keyToId[key] = id;
         return id;
+    }
+
+    /// <summary>
+    /// ToDoリストの状態を指定されたリストの内容で完全に上書きします。
+    /// </summary>
+    /// <param name="todoItems">表示したいアイテムのリスト</param>
+    [Button]
+    public void SetTodoList(List<TodoItemData> todoItems)
+    {
+        // 1. 現在のリストをすべてクリアする
+        ClearAll();
+
+        if (todoItems == null) return;
+
+        // 2. 新しいリストのアイテムを生成する
+        foreach (var item in todoItems)
+        {
+            if (item != null && !string.IsNullOrEmpty(item.text))
+            {
+                AddWithKey(item.key, item.text);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 指定されたキーに対応するToDoリストのプリセットを適用します。
+    /// </summary>
+    /// <param name="key">presetTodoListsで定義したキー</param>
+    public void SetTodoListByKey(string key)
+    {
+        if (presetTodoLists.TryGetValue(key, out var todoList))
+        {
+            SetTodoList(todoList);
+        }
+        else
+        {
+            Debug.LogWarning($"[TodoController] 指定されたキー '{key}' に対応するToDoリストが見つかりません。");
+        }
     }
 
     public void SetCheckedById(string id, bool isChecked)
@@ -79,7 +122,7 @@ public class TodoController : MonoBehaviour
     [Title("Odin Debug Tools")]
     [GUIColor(0.8f, 1f, 0.8f)]
     [Button("Add Todo")]
-    public void _Add([GUIColor(1f,1f,0.6f)] string text = "新しいタスク")
+    public void _Add([GUIColor(1f, 1f, 0.6f)] string text = "新しいタスク")
     {
         Add(text);
     }
@@ -90,7 +133,7 @@ public class TodoController : MonoBehaviour
     {
         AddWithKey(key, text);
     }
-
+    
     [GUIColor(1f, 0.9f, 0.6f)]
     [Button("Toggle Check By Key")]
     public void _ToggleByKey(string key = "task1")
