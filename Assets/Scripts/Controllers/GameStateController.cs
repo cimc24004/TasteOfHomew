@@ -18,7 +18,9 @@ public class GameStateController : Singleton<GameStateController>
     void Start()
     {
         playerDataHub = PlayerDataHub.instance;
-        playerDataHub.CurrentplayerInput.SwitchCurrentActionMap("Player");
+        if(playerDataHub.CurrentplayerInput != null){
+            playerDataHub.CurrentplayerInput.SwitchCurrentActionMap("Player");
+        }
     }
 
     public void ActionByModeSelect(GameState game_state, bool cursor_display)

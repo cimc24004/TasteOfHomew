@@ -9,7 +9,9 @@ public class CollisionOrTriggerEvent : MonoBehaviour
 
     [Header("イベント")]
     public UnityEvent onEnter;
+    public UnityEvent2 onEnterByUnityEvent2;
     public UnityEvent onExit;
+    public UnityEvent2 onExitByUnityEvent2;
 
     [Header("レイヤーマスク（デフォルト: 全部）")]
     public LayerMask layerMask = ~0; // -1 と同じ。全部のレイヤー
@@ -25,6 +27,7 @@ public class CollisionOrTriggerEvent : MonoBehaviour
             {
                 Debug.Log("OntriggerEnter3 : " + other.gameObject);
                 onEnter?.Invoke();
+                onEnterByUnityEvent2.Invoke();
             }
         }
     }
@@ -34,7 +37,11 @@ public class CollisionOrTriggerEvent : MonoBehaviour
         if (IsInLayerMask(other.gameObject))
         {
             if (string.IsNullOrEmpty(targetTag) || other.CompareTag(targetTag))
+            {
                 onExit?.Invoke();
+                onExitByUnityEvent2?.Invoke();
+            }
+
         }
     }
 
@@ -45,7 +52,10 @@ public class CollisionOrTriggerEvent : MonoBehaviour
         if (IsInLayerMask(collision.gameObject))
         {
             if (string.IsNullOrEmpty(targetTag) || collision.collider.CompareTag(targetTag))
+            {
                 onEnter?.Invoke();
+                onEnterByUnityEvent2?.Invoke();
+            }
         }
     }
 
@@ -54,7 +64,10 @@ public class CollisionOrTriggerEvent : MonoBehaviour
         if (IsInLayerMask(collision.gameObject))
         {
             if (string.IsNullOrEmpty(targetTag) || collision.collider.CompareTag(targetTag))
+            {
                 onExit?.Invoke();
+                onExitByUnityEvent2?.Invoke();
+            }
         }
     }
 

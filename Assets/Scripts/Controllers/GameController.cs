@@ -16,6 +16,7 @@ public class GameController : Singleton<GameController>
     void Start()
     {
         game_state_controller = GameStateController.instance;
+        if (SceneManager.GetActiveScene().name == "End") return;
         game_state_controller.ActionByModeSelect(game_state, CursorVisible);
         NowSceneName = SceneManager.GetActiveScene().name;
     }

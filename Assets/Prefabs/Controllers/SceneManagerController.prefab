@@ -61,7 +61,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_TargetDisplay: 0
 --- !u!114 &3407195351428606526
 MonoBehaviour:
@@ -237,6 +237,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   fadeCanvasGroup: {fileID: 7063843731051104761}
   fadeDuration: 0.5
+  checkDelay: 0.1
+  loadedSceneHistory: []
   onLoadStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -247,3 +249,4 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   unloadPreviousImmediately: 1
+  dontDestroyOnLoad: 1
