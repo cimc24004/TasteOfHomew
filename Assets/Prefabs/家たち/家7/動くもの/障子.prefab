@@ -146,12 +146,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2017846551987811393, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1448384155056654068}
+    - targetCorrespondingSourceObject: {fileID: 2017846551987811393, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 816423637566823650}
     - targetCorrespondingSourceObject: {fileID: -7148763992202177069, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3850822332917588988}
     - targetCorrespondingSourceObject: {fileID: -7148763992202177069, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5459137553024664424}
+    - targetCorrespondingSourceObject: {fileID: -7148763992202177069, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 256967461141390702}
   m_SourcePrefab: {fileID: 100100000, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
 --- !u!1 &795793873927799078 stripped
 GameObject:
@@ -276,6 +282,54 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &256967461141390702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795793873927799078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4681bae13e40f649ad58594f6d72d45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  open_type: 0
+  nowDoorStatus: 0
+  ToOpenTransform: {fileID: 5189412762495484935}
+  TargetRotateVector: {x: 0, y: 0, z: 0}
+  Duration: 0.5
+  TriggerChangeModeOpenClose: 1
+  OpenStartEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  CloseCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenClip: {fileID: 0}
+  CloseClip: {fileID: 0}
+  CloseCompletedClip: {fileID: 0}
+  move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
 --- !u!1 &847120892951748788 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2017846551987811393, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
@@ -399,3 +453,61 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &816423637566823650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 847120892951748788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4681bae13e40f649ad58594f6d72d45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  open_type: 0
+  nowDoorStatus: 0
+  ToOpenTransform: {fileID: 7896966779621325197}
+  TargetRotateVector: {x: 0, y: 0, z: 0}
+  Duration: 0.5
+  TriggerChangeModeOpenClose: 1
+  OpenStartEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  CloseCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenClip: {fileID: 0}
+  CloseClip: {fileID: 0}
+  CloseCompletedClip: {fileID: 0}
+  move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp
+--- !u!4 &5189412762495484935 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -2322388322461839118, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
+  m_PrefabInstance: {fileID: 1711727715394622709}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7896966779621325197 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8815495260112825720, guid: 726acbebd6419394cb88cb49f7f88c09, type: 3}
+  m_PrefabInstance: {fileID: 1711727715394622709}
+  m_PrefabAsset: {fileID: 0}
