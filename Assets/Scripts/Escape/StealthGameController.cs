@@ -84,7 +84,8 @@ public class StealthGameController : SerializedMonoBehaviour
 
     private Coroutine _randomDialogueCo;
     private DialogueSequenceAsset _targetSequence;
-
+    [SerializeField]
+    private AudioSource StealthBGM;
     // ======= Guard 設定 =======
     [System.Serializable]
     public class GuardEntry
@@ -147,7 +148,7 @@ public class StealthGameController : SerializedMonoBehaviour
         }
         myHouseEscapeGameController.OnStealthGameStart();
         if (enableTimer) StartTimer();
-        
+        StealthBGM.Play();
         StartRandomDialogue();
         
         foreach (var g in guards) StartGuard(g);
@@ -159,6 +160,7 @@ public class StealthGameController : SerializedMonoBehaviour
     {
         foreach (var g in guards) StopGuard(g);
         StopTimer();
+        StealthBGM.Stop();
         StopRandomDialogue();
     }
 

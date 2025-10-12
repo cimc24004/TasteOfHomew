@@ -10,7 +10,6 @@ public class PlayerStatus : Singleton<PlayerStatus>
     public CrossHairController crossHairController;
     private CMFPSController cMFPSController;
     public static Action<PlayerStatus> playerSpawnedEvent;
-    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
