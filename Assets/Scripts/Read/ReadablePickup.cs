@@ -10,18 +10,22 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     public bool once = false;
 
     [Title("Events")]
-    [SerializeField, LabelText("閉じた（毎回）")] private UnityEvent2 onClosedEveryTime;
-    [SerializeField, LabelText("閉じた（最初の1回だけ）")] private UnityEvent2 onClosedOnce;
-    public AudioClip overrideTurnSE;  // ← 追加
-    private UnityEvent2 onClosed;
+    [SerializeField, LabelText("開いた（毎回）")] public UnityEvent onOpenedEveryTime;
+    [SerializeField, LabelText("開いた（最初の1回だけ）")] public UnityEvent onOpenedOnce; // ◀◀◀【追加】
+    [SerializeField, LabelText("ページ変更時")] private UnityEvent onPageChanged;
+    [SerializeField, LabelText("閉じた（毎回）")] private UnityEvent onClosedEveryTime;
+    [SerializeField, LabelText("閉じた（最初の1回だけ）")] private UnityEvent onClosedOnce;
+    
+    public AudioClip overrideTurnSE;
 
     private bool consumed = false;
 
     // このピックアップから開いた読書がまだ閉じていない時 true
     private bool _openedByThis = false;
-    private bool _subscribed   = false;
+    private bool _subscribed = false;
 
-    // 「最初の1回だけ」発火済みフラグ
+    // 各「最初の1回だけ」イベントの発火済みフラグ
+    private bool _openedOnceFired = false; // ◀◀◀【追加】
     private bool _closedOnceFired = false;
 
     public void Interact()
@@ -31,45 +35,68 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
         var ctrl = ReaderController.instance;
         if (!ctrl) { Debug.LogError("ReaderController.instance が見つかりません"); return; }
 
-        // 閉じイベントを一度だけ購読（遅延解除）
+        // イベントを購読
         if (!_subscribed)
         {
             ctrl.onClosed.AddListener(OnReaderClosed);
+            ctrl.onPageChanged.AddListener(OnReaderPageChanged);
             _subscribed = true;
+        }
+
+        // ---- 開いた時のイベントを発火 ----
+        onOpenedEveryTime?.Invoke();
+
+        if (!_openedOnceFired) // ◀◀◀【追加】
+        {
+            onOpenedOnce?.Invoke();
+            _openedOnceFired = true;
         }
 
         _openedByThis = true;
         ctrl.Open(readable, -1, overrideTurnSE);
-        // ※ 「once」の消費は“閉じた後”に行う（読み切りで消費）
+    }
+
+    // ReaderController側の onPageChanged から呼ばれる
+    private void OnReaderPageChanged()
+    {
+        if (!_openedByThis) return;
+        onPageChanged?.Invoke();
     }
 
     // ReaderController 側の Close() から呼ばれる
     private void OnReaderClosed()
     {
-        // 他のソースから開かれて閉じた場合は無視
         if (!_openedByThis) return;
-
         _openedByThis = false;
 
-        // ---- 新イベントたち ----
+        // ---- 閉じた時のイベントを発火 ----
         onClosedEveryTime?.Invoke();
-
         if (!_closedOnceFired)
         {
             onClosedOnce?.Invoke();
             _closedOnceFired = true;
         }
 
-        // ---- 互換用（旧）----
-        onClosed?.Invoke();
-
         if (once) consumed = true;
 
-        // もう購読不要なら解除（必要なら複数回読む挙動に合わせてここを外す）
+        // イベント購読を解除
         var ctrl = ReaderController.instance;
         if (ctrl && _subscribed)
         {
             ctrl.onClosed.RemoveListener(OnReaderClosed);
+            ctrl.onPageChanged.RemoveListener(OnReaderPageChanged);
+            _subscribed = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 安全のため購読解除
+        var ctrl = ReaderController.instance;
+        if (ctrl && _subscribed)
+        {
+            ctrl.onClosed.RemoveListener(OnReaderClosed);
+            ctrl.onPageChanged.RemoveListener(OnReaderPageChanged);
             _subscribed = false;
         }
     }
@@ -82,16 +109,5 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     {
         var ctrl = ReaderController.instance;
         if (ctrl && readable) Interact();
-    }
-
-    private void OnDestroy()
-    {
-        // 安全のため購読解除
-        var ctrl = ReaderController.instance;
-        if (ctrl && _subscribed)
-        {
-            ctrl.onClosed.RemoveListener(OnReaderClosed);
-            _subscribed = false;
-        }
     }
 }

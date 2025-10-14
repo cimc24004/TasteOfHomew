@@ -51,13 +51,15 @@ public class ReaderController : Singleton<ReaderController>
     public int TotalPages => _now?.pages != null ? _now.pages.Count : 0;
     public int CurrentPage1 => _now == null ? 0 : (_page + 1);
     public string PageCounterText => $"{(TotalPages > 0 ? CurrentPage1 : 0)}/{TotalPages}";
-    // ReaderController のフィールドに追加
+
     [Title("デバッグ/挙動オプション")]
-    [SerializeField] private bool clearSpriteWhenHidden = false;        // ← 非表示時に sprite=null にもするか
-    [SerializeField] private bool logApplyImage = false;                // ← ログ出力
+    [SerializeField] private bool clearSpriteWhenHidden = false;
+    [SerializeField] private bool logApplyImage = false;
+
     [Title("ページ番号表示")]
-    [SerializeField] private GameObject pageNumberRoot; // ← 未指定なら pageNumberText.gameObject を使う
-    private AudioClip _turnSEOverride; // ← ピックアップ側から受け取ったら保持する
+    [SerializeField] private GameObject pageNumberRoot;
+    private AudioClip _turnSEOverride;
+
     void Start()
     {
         if (!root) Debug.LogWarning("ReaderController: CanvasGroup(root) 未割当");
@@ -88,7 +90,7 @@ public class ReaderController : Singleton<ReaderController>
         int total = Math.Max(0, TotalPages);
         int start1 = (startPage1 > 0 ? startPage1 : Mathf.Max(1, asset.defaultStartPage));
         _page = (total > 0) ? Mathf.Clamp(start1 - 1, 0, total - 1) : 0;
-        _turnSEOverride = overrideTurnSE; // ← ここで受け取る
+        _turnSEOverride = overrideTurnSE;
         if (switchUIOnOpenClose && uiSwitcher) uiSwitcher.SwitchTo(uiKindOnOpen);
 
         SetActive(true);
@@ -113,13 +115,11 @@ public class ReaderController : Singleton<ReaderController>
 
     public bool HasRead(string readableId) => _readFlags.Contains(readableId);
 
-    // ==== ページ操作（ボタンのみ） ====
     public void NextPage() => TryNextPage();
 
     private bool TryNextPage()
     {
         if (_now == null) return false;
-
         int total = TotalPages;
         if (total <= 0) return false;
 
@@ -145,60 +145,59 @@ public class ReaderController : Singleton<ReaderController>
         }
     }
 
-    // ==== 表示更新 ====
-    // ReaderController.RefreshPage() の画像反映部分を差し替え
     private void RefreshPage()
     {
         if (!_now) return;
 
-        // 本文テキスト系は従来通り
         string text = "";
         if (TotalPages > 0 && _page < TotalPages)
             text = _now.pages[_page] ?? "";
 
         if (titleText) titleText.text = _now.title ?? "";
         if (bodyText) bodyText.text = text ?? "";
-        if (pageNumberText) pageNumberText.text = PageCounterText;
-
-        // RefreshPage() の画像取得～反映部分を差し替え
-        // 画像（背景 / 前面）
+        
         var bg = GetSpriteSafely(_now.backgroundImages, _page);
         var fg = GetSpriteSafely(_now.foregroundImages, _page);
-
-        // ★ SetActive で切替（必要なら sprite もクリア）
         ApplyImageGo(backgroundImage, bg, "BG");
         ApplyImageGo(foregroundImage, fg, "FG");
 
-        // ナビ表示更新（従来通り）
+        // ナビ表示更新
         bool hasPrev = TotalPages > 0 && _page > 0;
         bool hasNext = TotalPages > 0 && _page < TotalPages - 1;
+        
+        if (closeButton)
+        {
+            bool showCloseButton = true;
+            // ◀◀◀【修正】変数名を `showCloseButtonOnPages` に修正
+            if (_now.showCloseButtonOnPages != null && _page >= 0 && _page < _now.showCloseButtonOnPages.Count)
+            {
+                showCloseButton = _now.showCloseButtonOnPages[_page];
+            }
+            closeButton.gameObject.SetActive(showCloseButton);
+        }
 
         if (prevIndicator) prevIndicator.SetActive(hasPrev);
         else if (prevButton) prevButton.gameObject.SetActive(hasPrev);
 
         if (nextIndicator) nextIndicator.SetActive(hasNext);
         else if (nextButton) nextButton.gameObject.SetActive(hasNext);
-        // RefreshPage() の該当箇所を差し替え
-        // 本文やタイトルの更新のあとに：
+
+        // ページ番号表示
         bool showPageNumber = TotalPages > 1;
-
-        // 表示/非表示だけ先に適用
         SetPageNumberActive(showPageNumber);
-
-        // 表示する場合だけテキスト更新（0/0や1/1を出さない）
         if (showPageNumber && pageNumberText)
         {
-            pageNumberText.text = PageCounterText; // e.g. "2/5"
+            pageNumberText.text = PageCounterText;
         }
 
+        // ここでイベントを発火させることで、購読しているReadablePickupに通知がいく
         onPageChanged?.Invoke();
     }
 
     private static Sprite GetSpriteSafely(System.Collections.Generic.List<Sprite> list, int index)
     {
-        if (list == null) return null;
-        if (index < 0 || index >= list.Count) return null;
-        return list[index]; // 無ければ null を返す想定
+        if (list == null || index < 0 || index >= list.Count) return null;
+        return list[index];
     }
 
     private void SetActive(bool on)
@@ -211,22 +210,21 @@ public class ReaderController : Singleton<ReaderController>
         if (_now != null && _now.pauseWhileOpen)
             Time.timeScale = on ? 0f : 1f;
     }
-    // ReaderController 内に追加：画像適用用ヘルパー
-    // 画像適用ヘルパーを差し替え
+
     private void ApplyImageGo(Image img, Sprite spr, string tagForLog)
     {
         if (!img) return;
 
         if (spr)
         {
-            img.sprite = spr; // ここは常に差し替え（古い見た目が残らないように）
+            img.sprite = spr;
             if (!img.gameObject.activeSelf) img.gameObject.SetActive(true);
             if (logApplyImage)
                 Debug.Log($"[ReaderController] Show {tagForLog}: go={img.gameObject.name}, sprite={(spr ? spr.name : "null")}, activeSelf=true");
         }
         else
         {
-            if (clearSpriteWhenHidden) img.sprite = null; // 任意：完全クリアしたい時だけ
+            if (clearSpriteWhenHidden) img.sprite = null;
             if (img.gameObject.activeSelf) img.gameObject.SetActive(false);
             if (logApplyImage)
                 Debug.Log($"[ReaderController] Hide {tagForLog}: go={img.gameObject.name}, spriteWas={(img.sprite ? img.sprite.name : "null")}, activeSelf=false");
@@ -238,12 +236,11 @@ public class ReaderController : Singleton<ReaderController>
         if (!_audio || !clip) return;
         _audio.PlayOneShot(clip);
     }
-    // ReaderController 内ヘルパーを追加
+
     private void SetPageNumberActive(bool on)
     {
         var go = pageNumberRoot ? pageNumberRoot : (pageNumberText ? pageNumberText.gameObject : null);
         if (!go) return;
         if (go.activeSelf != on) go.SetActive(on);
     }
-
 }

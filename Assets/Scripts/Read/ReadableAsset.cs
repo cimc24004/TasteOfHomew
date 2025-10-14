@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 public class ReadableAsset : ScriptableObject
 {
     [HorizontalGroup("h"), LabelText("ID"), Required]
-    public string id;                    // セーブ/フラグ用の一意キー
+    public string id;                   // セーブ/フラグ用の一意キー
     [HorizontalGroup("h"), LabelText("タイトル")]
     public string title;
 
@@ -24,8 +24,13 @@ public class ReadableAsset : ScriptableObject
     [Title("UI/挙動")]
     [LabelText("開いたらゲームを一時停止")]
     public bool pauseWhileOpen = true;
+
     [LabelText("最初に開くページ(1始まり)")]
     [MinValue(1)] public int defaultStartPage = 1;
+
+    [LabelText("各ページで閉じるボタンを表示")]
+    [Tooltip("本文ページのインデックスに対応します。チェックすると表示、しないと非表示。数が足りないページは表示されます。")]
+    public List<bool> showCloseButtonOnPages = new();
 
     [Title("効果音(任意)")]
     public AudioClip openSE;
