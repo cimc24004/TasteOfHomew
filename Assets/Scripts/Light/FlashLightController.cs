@@ -1,4 +1,3 @@
-// FlashLightController.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Sirenix.OdinInspector;
@@ -15,6 +14,9 @@ public class FlashLightController : SerializedMonoBehaviour
     [Title("Settings")]
     [Tooltip("外部要因（イベント等）でライトの切り替えを許可するかどうか")]
     public bool permitSwitchLight = true;
+
+    [Tooltip("家の中にいるときライトを強制的に消すかどうか")]
+    public bool autoTurnOffInHouse = true;  // ←★追加
 
     [Title("Follow (Camera.main を基準に追従)")]
     public Vector3 positionOffset = new Vector3(0f, -0.12f, 0.5f);
@@ -114,9 +116,9 @@ public class FlashLightController : SerializedMonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Mathf.Clamp01(Time.deltaTime * rotationLerpSpeed));
         }
         
-        // ▼▼▼ 自動で消す機能を復活 ▼▼▼
-        // 家の中にいる、かつ、ライトが点灯している場合は強制的に消す
-        if (PlayerLocation.instance != null && 
+        // ▼▼▼ 家の中での自動消灯 ▼▼▼
+        if (autoTurnOffInHouse &&                 // ←★ここを追加
+            PlayerLocation.instance != null && 
             PlayerLocation.instance.currentLocation == PlayerLocation.Location.InHouse && 
             flashlightLight.enabled)
         {
@@ -129,7 +131,6 @@ public class FlashLightController : SerializedMonoBehaviour
     /// <summary>
     /// 外部からライトの切り替え許可を操作します。
     /// </summary>
-    /// <param name="permit">trueで許可、falseで禁止</param>
     public void ChangePermitSwitchLight(bool permit)
     {
         permitSwitchLight = permit;
