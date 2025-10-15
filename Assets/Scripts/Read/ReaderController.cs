@@ -38,7 +38,7 @@ public class ReaderController : Singleton<ReaderController>
     [Title("イベント")]
     public UnityEvent onOpened;
     public UnityEvent onClosed;
-    public UnityEvent onPageChanged;
+    public UnityEvent<int> onPageChanged;
 
     // ==== 内部 ====
     private ReadableAsset _now;
@@ -191,7 +191,7 @@ public class ReaderController : Singleton<ReaderController>
         }
 
         // ここでイベントを発火させることで、購読しているReadablePickupに通知がいく
-        onPageChanged?.Invoke();
+        onPageChanged?.Invoke(CurrentPage1);
     }
 
     private static Sprite GetSpriteSafely(System.Collections.Generic.List<Sprite> list, int index)

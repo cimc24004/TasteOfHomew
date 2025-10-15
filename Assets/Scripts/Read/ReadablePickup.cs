@@ -12,8 +12,8 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     [Title("Events")]
     [SerializeField, LabelText("開いた（毎回）")] public UnityEvent onOpenedEveryTime;
     [SerializeField, LabelText("開いた（最初の1回だけ）")] public UnityEvent onOpenedOnce; // ◀◀◀【追加】
-    [SerializeField, LabelText("ページ変更時")] private UnityEvent onPageChanged;
-    [SerializeField, LabelText("閉じた（毎回）")] private UnityEvent onClosedEveryTime;
+    [SerializeField, LabelText("ページ変更時")] public UnityEvent<int> onPageChanged;
+    [SerializeField, LabelText("閉じた（毎回）")] public UnityEvent onClosedEveryTime;
     [SerializeField, LabelText("閉じた（最初の1回だけ）")] private UnityEvent onClosedOnce;
     
     public AudioClip overrideTurnSE;
@@ -27,7 +27,7 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     // 各「最初の1回だけ」イベントの発火済みフラグ
     private bool _openedOnceFired = false; // ◀◀◀【追加】
     private bool _closedOnceFired = false;
-
+    public int pageNow;
     public void Interact()
     {
         if (once && consumed) return;
@@ -57,10 +57,11 @@ public class ReadablePickup : SerializedMonoBehaviour, IInteractable
     }
 
     // ReaderController側の onPageChanged から呼ばれる
-    private void OnReaderPageChanged()
+    private void OnReaderPageChanged(int pageNow)
     {
         if (!_openedByThis) return;
-        onPageChanged?.Invoke();
+        onPageChanged?.Invoke(pageNow);
+        this.pageNow = pageNow;
     }
 
     // ReaderController 側の Close() から呼ばれる
