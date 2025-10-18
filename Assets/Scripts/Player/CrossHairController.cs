@@ -34,8 +34,8 @@ public class CrossHairController : Singleton<CrossHairController>
         SetHighlight(false);
         if (promptText) promptText.enabled = false;
 
-        playerInput = PlayerStatus.instance.playerInput;
-        interactAction = playerInput.currentActionMap.FindAction("InteractAction");
+        playerInput = PlayerDataHub.instance.CurrentplayerInput;
+        interactAction = playerInput.actions.FindAction("InteractAction");
         gameController = GameController.instance;
         playerUIInfo = gameController.playerUIInfo;
         crosshairAnimator = playerUIInfo.crosshair.GetComponent<Animator>();

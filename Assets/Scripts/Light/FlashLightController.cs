@@ -38,52 +38,32 @@ public class FlashLightController : SerializedMonoBehaviour
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
         if (flashlightLight == null) flashlightLight = GetComponentInChildren<Light>();
-        
+
         isOn = flashlightLight.enabled;
-    }
-
-    void OnEnable()
-    {
-        if (PlayerStatus.instance != null)
-        {
-            InitializeWithPlayer(PlayerStatus.instance);
-        }
-        else
-        {
-            PlayerStatus.playerSpawnedEvent += InitializeWithPlayer;
-        }
-    }
-
-    void OnDisable()
-    {
-        PlayerStatus.playerSpawnedEvent -= InitializeWithPlayer;
-        if (flashAction != null)
-        {
-            flashAction.performed -= OnFlashPerformed;
-        }
-    }
-
-    private void InitializeWithPlayer(PlayerStatus playerStatus)
-    {
-        playerInput = playerStatus.playerInput;
-        Debug.Assert(playerInput != null, "FlashLightController: PlayerInput が見つかりませんでした。");
-
-        if (flashAction != null)
-        {
-            flashAction.performed -= OnFlashPerformed;
-        }
         
-        flashAction = playerInput?.actions?.FindAction("LightSwitchAction");
+    }
+    void Start()
+    {
+        flashAction = PlayerDataHub.instance.CurrentplayerInput.actions.FindAction("LightSwitchAction");
         if (flashAction != null)
         {
             flashAction.performed += OnFlashPerformed;
         }
-        else
+    }
+    void OnEnable()
+    {
+
+    }
+
+    void OnDisable()
+    {
+        if (flashAction != null)
         {
-            Debug.LogError("LightSwitchActionが見つかりません！Input Action Assetの設定を確認してください。");
+            flashAction.performed -= OnFlashPerformed;
         }
     }
-    
+
+
     void OnFlashPerformed(InputAction.CallbackContext ctx)
     {
         ToggleFlashlight();

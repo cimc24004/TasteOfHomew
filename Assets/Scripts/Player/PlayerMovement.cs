@@ -79,13 +79,11 @@ public class PlayerMovement : SerializedMonoBehaviour
         controller = GetComponent<CharacterController>();
         mainCamera = Camera.main;
 
-        playerInput = GetComponent<PlayerInput>();
-        if (!playerInput && PlayerStatus.instance != null)
-            playerInput = PlayerStatus.instance.playerInput;
+        playerInput = PlayerDataHub.instance.CurrentplayerInput;
 
-        moveAction   = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(moveActionName) ? "Move" : moveActionName);
-        sprintAction = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(sprintActionName) ? "Sprint" : sprintActionName);
-        crouchAction = playerInput.currentActionMap.FindAction(string.IsNullOrEmpty(crouchActionName) ? "Crouch" : crouchActionName);
+        moveAction   = playerInput.actions.FindAction(string.IsNullOrEmpty(moveActionName) ? "Move" : moveActionName);
+        sprintAction = playerInput.actions.FindAction(string.IsNullOrEmpty(sprintActionName) ? "Sprint" : sprintActionName);
+        crouchAction = playerInput.actions.FindAction(string.IsNullOrEmpty(crouchActionName) ? "Crouch" : crouchActionName);
 
         if (cameraRoot)
         {

@@ -11,6 +11,12 @@ public class SceneManagerController : MonoBehaviour
 {
     public static SceneManagerController Instance { get; private set; }
 
+    // 最後に明転が完了した時刻（リアルタイム）
+    public static float LastFadeOutCompletedTime { get; private set; } = -1f;
+
+    // ロード中フラグ
+    public bool IsLoading { get; private set; } = false;
+
     [Header("フェード設定")]
     public CanvasGroup fadeCanvasGroup;
     public float fadeDuration = 0.5f;
@@ -30,6 +36,7 @@ public class SceneManagerController : MonoBehaviour
     [Tooltip("非同期ロード中にアクティブシーンを即時アンロードする（通常は true でOK）")]
     public bool unloadPreviousImmediately = true;
     public bool dontDestroyOnLoad = true;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -43,14 +50,18 @@ public class SceneManagerController : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
 
-        // ▼▼▼ ここを修正 ▼▼▼
-        // Awakeは初期状態（真っ暗）を設定するだけにする。
-        // 実際の明転処理はOnSceneLoadedに任せる。
         if (fadeCanvasGroup != null)
         {
             fadeCanvasGroup.alpha = 1f;
             fadeCanvasGroup.blocksRaycasts = true; // 最初のフレームでの誤操作を防ぐ
         }
+        
+        // 起動直後はすぐにポーズできるよう、十分に過去の時刻で初期化
+        LastFadeOutCompletedTime = Time.realtimeSinceStartup - 1.0f;
+        
+        // <<< ここが修正点 >>>
+        // 起動時、最初の明転処理が完了するまではロード中とする
+        IsLoading = true; 
     }
 
     private void OnEnable()
@@ -66,21 +77,27 @@ public class SceneManagerController : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"[SceneManagerController] OnSceneLoaded: '{scene.name}' がロードされました。");
-        // このチェックはゲーム起動時とシーン遷移後の両方で機能する
         if (fadeCanvasGroup.alpha >= 1.0f)
         {
             Debug.Log("[SceneManagerController] 画面が暗転状態のため、明転処理を開始します。");
             StartCoroutine(CheckForTimelineFadeAndFadeOut());
         }
+        else
+        {
+            // LoadSceneImmediateなどでフェードが1fでない場合（同期ロードなど）
+            IsLoading = false;
+        }
     }
 
     public void LoadScene(string sceneName)
     {
+        IsLoading = true; // ロード開始
         Debug.Log($"[SceneManagerController] LoadScene: '{sceneName}' のロードをリクエストされました。");
         if (string.IsNullOrEmpty(sceneName))
         {
             Debug.LogError("[SceneManagerController] ロードするシーン名が空です。");
             onLoadFailed?.Invoke();
+            IsLoading = false; // ロード失敗
             return;
         }
 
@@ -98,6 +115,7 @@ public class SceneManagerController : MonoBehaviour
         {
             Debug.LogError($"[SceneManagerController] シーン '{sceneName}' がBuild Settingsに存在しません。");
             onLoadFailed?.Invoke();
+            IsLoading = false; // ロード失敗
             return;
         }
 
@@ -123,6 +141,7 @@ public class SceneManagerController : MonoBehaviour
         {
             Debug.LogError("[SceneManagerController] SceneManager.LoadSceneAsyncがnullを返しました。");
             onLoadFailed?.Invoke();
+            IsLoading = false; // ロード失敗
             yield break;
         }
 
@@ -169,14 +188,21 @@ public class SceneManagerController : MonoBehaviour
             yield return fadeCanvasGroup.DOFade(0f, fadeDuration).WaitForCompletion();
             fadeCanvasGroup.blocksRaycasts = false;
         }
+        
+        // 明転が完了した時刻を記録
+        LastFadeOutCompletedTime = Time.realtimeSinceStartup;
+        IsLoading = false; // すべてのロード処理が完了
+
         Debug.Log("[SceneManagerController] CheckForTimelineFade: 明転が完了しました。シーン遷移完了。");
     }
     
     public void LoadSceneImmediate(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
     {
+        IsLoading = true; // ロード開始
         if (string.IsNullOrEmpty(sceneName))
         {
             onLoadFailed?.Invoke();
+            IsLoading = false; // ロード失敗
             return;
         }
         onLoadStarted?.Invoke();
@@ -190,6 +216,7 @@ public class SceneManagerController : MonoBehaviour
         {
             Debug.LogWarning($"[SceneManagerController] LoadSceneImmediate failed: {e.Message}");
             onLoadFailed?.Invoke();
+            IsLoading = false; // ロード失敗
         }
     }
 

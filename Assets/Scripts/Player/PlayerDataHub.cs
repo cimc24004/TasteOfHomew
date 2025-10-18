@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,8 +10,7 @@ public class PlayerDataHub : MonoBehaviour
     // 他のスクリプトはここから現在のプレイヤー情報を取得する
     public PlayerStatus CurrentPlayerStatus { get; private set; }
     public CMFPSController CurrentCMFPSController { get; private set; }
-
-    public PlayerInput CurrentplayerInput { get; private set; }
+    [SerializeField, ShowInInspector]public PlayerInput CurrentplayerInput;
     // 他にも必要なコンポーネントがあれば追加
 
     void Awake()
@@ -31,6 +31,5 @@ public class PlayerDataHub : MonoBehaviour
     {
         this.CurrentPlayerStatus = playerStatus;
         this.CurrentCMFPSController = cMFPSController;
-        this.CurrentplayerInput = playerStatus.playerInput;
     }
 }

@@ -100,7 +100,7 @@ public class DialogueController : Singleton<DialogueController>
         MergeFlagsFromDataShare(); // ← 【追加】DataShareからフラグを読み込む
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
-        playerInput = PlayerStatus.instance.playerInput;
+        playerInput = PlayerDataHub.instance.CurrentplayerInput;
         var currentSceneUIRefs = DefaultDialogueUIInfo.instance;
         if (currentSceneUIRefs != null)
         {

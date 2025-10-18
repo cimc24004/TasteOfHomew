@@ -60,7 +60,10 @@ public class ActionsForSignal : MonoBehaviour
     public void EnablePlayerControl()  => FreezePlayer(false);
     public void HideTargets()          => SetTargetsVisible(false);
     public void ShowTargets()          => SetTargetsVisible(true);
-
+    void Start()
+    {
+        playerInput = PlayerDataHub.instance.CurrentplayerInput;
+    }
     // ===== 実装 =====
     private void FreezePlayer(bool freeze)
     {
