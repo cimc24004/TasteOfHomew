@@ -72,7 +72,7 @@ public class FlashLightController : SerializedMonoBehaviour
     [Button]
     public void ToggleFlashlight()
     {
-        if (PlayerLocation.instance.currentLocation != PlayerLocation.Location.Outside || !permitSwitchLight)
+        if (autoTurnOffInHouse && (PlayerLocation.instance.currentLocation != PlayerLocation.Location.Outside || !permitSwitchLight))
         {
             return;
         }

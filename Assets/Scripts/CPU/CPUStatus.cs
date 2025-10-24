@@ -9,7 +9,6 @@ public class CPUStatus : MonoBehaviour
     [SerializeField] public Animator CPUAnimator;
     [SerializeField] private FootStepController footStepController;
     [SerializeField] public MultiAimConstraint multiAimConstraint;
-
     // 状態の閾値。この速度より大きければ「歩いている」と判断する
     [Header("設定")]
     [Tooltip("移動中と判断する最低速度")]
