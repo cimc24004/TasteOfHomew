@@ -64,13 +64,13 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         try
         {
             onDialogueStarted?.Invoke();                 // ← このCallerの開始イベント
-            npcActions.LookAtPlayerY();
+            if(LookAtPlayerY)npcActions.LookAtPlayerY();
             await ctrl.StartDialogueAsync(gKey, seqId);  // （ここが戻ってきたら閉じた合図）
         }
         finally
         {
             onDialogueClosed?.Invoke();                  // ← このCallerの終了イベント（常に自分だけ）
-            npcActions.LookAtDefaultY();
+            if(LookAtPlayerY)npcActions.LookAtDefaultY();
             if (once) consumed = true;
             localBusy = false;
         }
