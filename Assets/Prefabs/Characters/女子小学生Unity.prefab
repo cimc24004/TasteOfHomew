@@ -47,6 +47,95 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Weight: 1
   m_Effectors: []
+--- !u!1 &4037559482981860077
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6891059185063100114}
+  - component: {fileID: 4045270197896393630}
+  - component: {fileID: 1603331743458292894}
+  m_Layer: 6
+  m_Name: "DialogueCaller_\u5973\u5B50\u5C0F\u5B66\u751FNPC_1"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6891059185063100114
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4037559482981860077}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.002281189, y: 0.8933219, z: 0.011993408}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8061112358716915566}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4045270197896393630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4037559482981860077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92025575715d1bf49b7fbfe7a8ae9fb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  groupRef: 0
+  groupKey: "\u5973\u5B50\u5C0F\u5B66\u751FNPC"
+  groupAsset: {fileID: 0}
+  mode: 0
+  singleSequenceId: "\u5973\u5B50\u5C0F\u5B66\u751FNPC_1"
+  candidateSequenceIds: []
+  once: 0
+  blockWhileTalking: 1
+  onDialogueStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onDialogueClosed:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!65 &1603331743458292894
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4037559482981860077}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.33097076, y: 1.7607409, z: 0.22709656}
+  m_Center: {x: -0.009819031, y: 0.027446568, z: -0.00007247925}
 --- !u!1 &6336638792642667297
 GameObject:
   m_ObjectHideFlags: 0
@@ -191,6 +280,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0fb8fc2e2ba05d4458f3cacf116410b1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7934391933141055125}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0fb8fc2e2ba05d4458f3cacf116410b1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6891059185063100114}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0fb8fc2e2ba05d4458f3cacf116410b1, type: 3}
       insertIndex: -1

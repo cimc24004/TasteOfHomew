@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76cfb6b3f6987af48a96b1c169385173, type: 3}
-  m_Name: Seq_New2
+  m_Name: "\u7384\u95A2\u305B\u308A\u3075"
   m_EditorClassIdentifier: Assembly-CSharp::DialogueSequenceAsset
   serializationData:
     SerializedFormat: 2
@@ -21,12 +21,22 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  id: Choices1
-  memo: 
+  id: 6
+  memo: "\u5916\u306B\u51FA\u308B\u3068\u304D\u306E\u6C7A\u5FC3\n"
   steps:
   - displayStepId: 1
-    speaker: "\u30A2\u30A2\u30A2\u30F3"
-    text: "\u3042\u306A\u305F\u306F1\u3092\u9078\u3073\u307E\u3057\u305F\u3002\u304F\u305D\u3067\u3059\u3000\u3082\u3046\u4E00\u56DE\u9078\u3073\u306A\u3055\u3044"
+    speaker: 
+    text: "(\u4F11\u307F\u306E\u65E5\u306B\u5916\u306B\u51FA\u308B\u306E\u3001\u4E45\u3057\u3076\u308A\u3060\u306A..)\n"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 2
+    choices: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 2
+    speaker: 
+    text: "(\u6614\u4E00\u5EA6\u3060\u3051\u304A\u6BCD\u3055\u3093\u306B\u3059\u3054\u304F\u6012\u3089\u308C\u3066\u3001\u6016\u304B\u3063\u305F\u306A..\u3002)"
     conditions: []
     autoNext: 0
     autoNextDelay: 0.25
@@ -34,15 +44,25 @@ MonoBehaviour:
     flagEditsOnEnter: []
     useStepGoto: 0
     stepGotoId: 
-  - displayStepId: 2
+  - displayStepId: 3
     speaker: 
-    text: 
+    text: ....
     conditions: []
     autoNext: 0
     autoNextDelay: 0.25
     choices: []
     flagEditsOnEnter: []
-    useStepGoto: 1
-    stepGotoId: Mom_1:3
+    useStepGoto: 0
+    stepGotoId: 
+  - displayStepId: 4
+    speaker: 
+    text: "\u884C\u3053\u3046..\u3002"
+    conditions: []
+    autoNext: 0
+    autoNextDelay: 0.25
+    choices: []
+    flagEditsOnEnter: []
+    useStepGoto: 0
+    stepGotoId: 
   useGoto: 0
   gotoId: 

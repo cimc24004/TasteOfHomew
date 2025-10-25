@@ -23,11 +23,11 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
     [Title("Options")]
     [Tooltip("一度だけ起動して以降は無効にする")] public bool once = false;
     [Tooltip("このNPCで会話進行中は新たなTalkを無視（推奨）")] public bool blockWhileTalking = true;
+    [Tooltip("話しかけたときにプレイヤーの方向を向くか。")] public bool LookAtPlayerY;
 
     [Title("Local Events (このCaller専用)")]
     public UnityEvent onDialogueStarted;
     public UnityEvent onDialogueClosed;  // ← 会話が閉じた直後にこのCallerだけで発火
-
     private bool consumed = false;
     private bool localBusy = false;
 
@@ -38,7 +38,8 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 
     [Button("Talk()")]
     public void TalkButton() => Talk().Forget();
-
+    [ShowIf("LookAtPlayerY")]
+    [Required] [SerializeField] private NPCActions npcActions;
     public async UniTaskVoid Talk()
     {
         if (once && consumed) return;
@@ -63,11 +64,13 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         try
         {
             onDialogueStarted?.Invoke();                 // ← このCallerの開始イベント
+            npcActions.LookAtPlayerY();
             await ctrl.StartDialogueAsync(gKey, seqId);  // （ここが戻ってきたら閉じた合図）
         }
         finally
         {
             onDialogueClosed?.Invoke();                  // ← このCallerの終了イベント（常に自分だけ）
+            npcActions.LookAtDefaultY();
             if (once) consumed = true;
             localBusy = false;
         }
