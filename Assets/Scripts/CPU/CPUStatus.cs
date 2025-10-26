@@ -18,6 +18,7 @@ public class CPUStatus : MonoBehaviour
     public DialogueUIRefs dialogueUIRefs;
 
     // 前のフレームの状態を保存しておく変数
+    // (元のコード通り "MovementState" を使用)
     private MovementState previousState = MovementState.Idle;
 
     private void Start()
@@ -29,23 +30,40 @@ public class CPUStatus : MonoBehaviour
         }
         if (footStepController == null)
         {
-            Debug.LogError("FootStepControllerが設定されていません。", this.gameObject);
+            // footStepControllerがなくてもAnimatorは制御できるよう警告(Warning)に変更
+            Debug.LogWarning("FootStepControllerが設定されていません。", this.gameObject);
         }
+        if (CPUAnimator == null)
+        {
+            Debug.LogError("CPUAnimatorが設定されていません。", this.gameObject);
+        }
+
+        // 起動時の状態を反映
+        UpdateMovementState(true); 
     }
 
     void Update()
     {
+        UpdateMovementState(false);
+    }
+
+    /// <summary>
+    /// 現在の速度に基づき、状態（AnimatorとFootStep）を更新する
+    /// </summary>
+    /// <param name="forceUpdate">trueの場合、状態が変化していなくても強制的に値を設定する</param>
+    private void UpdateMovementState(bool forceUpdate = false)
+    {
         // 必要なコンポーネントがなければ処理を中断
-        if (navMeshAgent == null || footStepController == null)
+        if (navMeshAgent == null)
         {
             return;
         }
 
         // 1. 現在の速度を取得
-        // navMeshAgent.velocity.magnitude はエージェントの現在の速度（スカラー値）
         float currentSpeed = navMeshAgent.velocity.magnitude;
 
         // 2. 現在の速度から新しい状態を判断
+        // (元のコード通り "MovementState" を使用)
         MovementState newState;
         if (currentSpeed > moveThreshold)
         {
@@ -56,11 +74,34 @@ public class CPUStatus : MonoBehaviour
             newState = MovementState.Idle;
         }
 
-        // 3. 状態が変化した時だけ、FootStepControllerに通知
-        // 毎フレーム値を設定するのを防ぎ、効率化する
-        if (newState != previousState)
+        // 3. 状態が変化した時（または強制更新時）だけ通知
+        if (newState != previousState || forceUpdate)
         {
-            footStepController.CurrentState = newState;
+            // A. FootStepControllerに通知
+            if (footStepController != null)
+            {
+                footStepController.CurrentState = newState;
+            }
+
+            // B. Animatorに通知 (★要求されたロジック)
+            if (CPUAnimator != null)
+            {
+                switch (newState)
+                {
+                    case MovementState.Idle:
+                        CPUAnimator.SetBool("Walk", false);
+                        break;
+                    case MovementState.Walking:
+                        CPUAnimator.SetBool("Walk", true);
+                        break;
+                    
+                    // ※もし MovementState に Running がある場合の分岐例
+                    // case MovementState.Running:
+                    //     CPUAnimator.SetBool("Walk", true); 
+                    //     break;
+                }
+            }
+
             previousState = newState; // 現在の状態を保存
         }
     }

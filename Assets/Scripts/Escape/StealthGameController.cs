@@ -434,10 +434,6 @@ public class StealthGameController : SerializedMonoBehaviour
 
     private void StopGuard(GuardEntry g)
     {
-        if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
-        {
-            g.cpuStatus.CPUAnimator.SetBool("Walk", false);
-        }
 
         g.active = false;
         if (g.patrolCo != null) { StopCoroutine(g.patrolCo); g.patrolCo = null; }
@@ -456,11 +452,6 @@ public class StealthGameController : SerializedMonoBehaviour
             {
                 Vector3 targetPos = target.position;
                 g.agent.SetDestination(targetPos);
-                
-                if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
-                {
-                    g.cpuStatus.CPUAnimator.SetBool("Walk", true);
-                }
                 
                 float sinceSet = 0f;
                 while (g.active)
@@ -502,12 +493,7 @@ public class StealthGameController : SerializedMonoBehaviour
                 {
                     yield return null;
                 }
-                
-                if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
-                {
-                    g.cpuStatus.CPUAnimator.SetBool("Walk", false);
-                }
-                
+
                 float waitSec = Mathf.Max(0f, g.waitAtPointSeconds * Mathf.Max(0f, waitTimeScale));
                 if (waitSec > 0f)
                 {
@@ -519,10 +505,7 @@ public class StealthGameController : SerializedMonoBehaviour
             }
             else
             {
-                if (g.cpuStatus != null && g.cpuStatus.CPUAnimator != null)
-                {
-                    g.cpuStatus.CPUAnimator.SetBool("Walk", false);
-                }
+
                 yield return new WaitForSeconds(0.25f);
             }
         }

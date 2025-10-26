@@ -70,7 +70,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 700d9695348244847b8c57b447fd69ca, type: 3}
       propertyPath: m_Layer
-      value: 12
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 700d9695348244847b8c57b447fd69ca, type: 3}
       propertyPath: m_TagString
@@ -86,6 +86,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 700d9695348244847b8c57b447fd69ca, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2307212836539162163}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 700d9695348244847b8c57b447fd69ca, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1667603466797386988}
   m_SourcePrefab: {fileID: 100100000, guid: 700d9695348244847b8c57b447fd69ca, type: 3}
 --- !u!1 &3919775135198897917 stripped
 GameObject:
@@ -210,3 +213,51 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1667603466797386988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3919775135198897917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4681bae13e40f649ad58594f6d72d45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  open_type: 1
+  nowDoorStatus: 0
+  ToOpenTransform: {fileID: 0}
+  TargetRotateVector: {x: 0, y: 0, z: 0}
+  Duration: 0.5
+  TriggerChangeModeOpenClose: 1
+  OpenStartEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  CloseCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  OpenClip: {fileID: 8300000, guid: bebd7a5028f601a44ba66d3e731234a1, type: 3}
+  CloseClip: {fileID: 0}
+  CloseCompletedClip: {fileID: 8300000, guid: 9ee655d456919c546b3f3b58ffd9166a, type: 3}
+  move_x_y_z: 0
+  keyController: {fileID: 0}
+  LockedClip: {fileID: 0}
+  OnOpenBlockedByLock:
+    m_PersistentCalls:
+      m_Calls: []
+  useKeyGroupKey: Door
+  useKeySequenceId: UseKeyPrompt
+  useKeyFlagKey: __door_use_key_tmp

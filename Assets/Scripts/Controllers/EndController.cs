@@ -38,7 +38,7 @@ public class EndController : MonoBehaviour
     private async void Start()
     {
         // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
-        await UniTask.WaitForSeconds(1f);
+        // await UniTask.WaitForSeconds(1f);
         CheckKeys();
     }
 

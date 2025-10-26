@@ -44,7 +44,7 @@ public class EscapeController : MonoBehaviour
     {
         Debug.Log("[EscapeController] Friend end");
         onFriendEnd?.Invoke();
-        dataShareController.SetFlagToTrue("FriendHouseEnd");
+        dataShareController.SetFlagToTrue("EscapeFriendHouseEnd");
     }
 
     public void OnMySelected()
