@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events; // UnityEventを使うために必要
 
@@ -18,7 +20,7 @@ public class EventTimer : MonoBehaviour
     public UnityEvent2 onTimeElapsed;
 
     // --- プライベート変数 ---
-    private float currentTime = 0.0f;
+    [SerializeField]private float currentTime = 0.0f;
     private bool isTimerRunning = false;
 
     private void Awake()
