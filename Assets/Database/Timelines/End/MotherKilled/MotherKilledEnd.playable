@@ -1,5 +1,46 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7272824363533880773
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46e36075dd1c124a8422c228e75e1fb, type: 3}
+  m_Name: Signal Track (1)
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips: []
+  m_Markers:
+    m_Objects:
+    - {fileID: -7246183503340201874}
+    - {fileID: 4924601390609452176}
+--- !u!114 &-7246183503340201874
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
+  m_Name: Signal Emitter
+  m_EditorClassIdentifier: 
+  m_Time: 0
+  m_Retroactive: 0
+  m_EmitOnce: 0
+  m_Asset: {fileID: 11400000, guid: c5ae7c6d1f277d549bfa987ea2f461eb, type: 2}
 --- !u!114 &-4271853236860899453
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -15,7 +56,15 @@ MonoBehaviour:
   template:
     color: {r: 1, g: 1, b: 1, a: 1}
     fontSize: 35
-    text: "\u3042\u306E\u591C\u306E\u3053\u3068\u306F\u3001\u65AD\u7247\u3060\u3051\u304C\u9759\u304B\u306B\u8607\u308B\u3002\u624B\u306E\u9707\u3048\u3001\u606F\u3092\u6B62\u3081\u305F\u6642\u9593\u3001\u305D\u3057\u3066\u6697\u95C7\u306E\u4E2D\u3067\u805E\u3044\u305F\u81EA\u5206\u306E\u5FC3\u81D3\u306E\u97F3\u2500\u2500\u305D\u308C\u4EE5\u5916\u306E\u5927\u534A\u306F\u3001\u8A00\u8449\u306B\u306A\u3089\u306A\u3044\u3002\u50D5\u306F\u305F\u3060\u3001\u305D\u306E\u5834\u3067\u819D\u3092\u3064\u304D\u3001\u4E16\u754C\u304C\u3086\u3063\u304F\u308A\u3068\u91CD\u304F\u6C88\u3093\u3067\u3044\u304F\u306E\u3092\u611F\u3058\u305F\u3060\u3051\u3060\u3063\u305F\u3002\n\u8B66\u5BDF\u304C\u6765\u305F\u3068\u304D\u3001\u50D5\u306F\u3082\u3046\u307E\u3068\u3082\u306B\u9854\u3092\u4E0A\u3052\u308B\u3053\u3068\u304C\u3067\u304D\u306A\u304B\u3063\u305F\u3002\u8AAC\u660E\u3059\u308B\u8A00\u8449\u306F\u3042\u308B\u306B\u306F\u3042\u3063\u305F\u304C\u3001\u3069\u308C\u3082\u8584\u304F\u3001\u7D19\u306E\u3088\u3046\u306B\u983C\u308A\u306A\u304B\u3063\u305F\u3002\u7F8E\u548C\u304C\u507D\u306E\u6BCD\u3067\u3001\u3042\u306E\u65E5\u50D5\u304C\u898B\u305F\u3082\u306E\u304C\u4F55\u3060\u3063\u305F\u306E\u304B\u3002\u635C\u67FB\u306F\u7DFB\u5BC6\u306B\u9032\u307F\u3001\u73FE\u5834\u306E\u75D5\u8DE1\u306F\u6570\u3005\u306E\u76EE\u3067\u691C\u8A3C\u3055\u308C\u305F\u3002\u3051\u308C\u3069\u3001\u3069\u3093\u306A\u8A3C\u62E0\u3082\u3001\u50D5\u304C\u62B1\u3048\u3066\u3044\u308B\u91CD\u3055\u3092\u8EFD\u304F\u306F\u3057\u306A\u304B\u3063\u305F\u3002\n\u50D5\u306F\u3001\u81EA\u5206\u306E\u4E2D\u306B\u751F\u307E\u308C\u305F\u3082\u306E\u3068\u3069\u3046\u5411\u304D\u5408\u3048\u3070\u3044\u3044\u306E\u304B\u307E\u3060\u5206\u304B\u3089\u306A\u3044\u3002\u60B2\u3057\u307F\u3068\u6012\u308A\u3068\u3001\u8AAC\u660E\u306E\u3064\u304B\u306A\u3044\u5B89\u5835\u304C\u6DF7\u3056\u308A\u5408\u3063\u305F\u611F\u60C5\u304C\u6E26\u5DFB\u304F\u3002\u8AB0\u304B\u306B\u8CAC\u3081\u3089\u308C\u3066\u3082\u3001\u7F70\u3092\u53D7\u3051\u3066\u3082\u3001\u305D\u308C\u3067\u6D88\u3048\u308B\u308F\u3051\u3067\u306F\u306A\u3044\u3082\u306E\u304C\u6B8B\u3063\u305F\u3002\u7B54\u3048\u306F\u5916\u306B\u306F\u306A\u304F\u3001\u5185\u5074\u306B\u3060\u3051\u3042\u308B\u3002\u3051\u308C\u3069\u3001\u50D5\u306F\u751F\u304D\u3066\u3044\u308B\u3002\u547C\u5438\u3092\u3057\u3066\u3001\u76EE\u3092\u9589\u3058\u3001\u307E\u305F\u671D\u3092\u8FCE\u3048\u308B\u3002\u305D\u306E\u7E70\u308A\u8FD4\u3057\u306E\u4E2D\u3067\u3001\u3044\u3064\u304B\u5C0F\u3055\u306A\u8A31\u3057\u304B\u7406\u89E3\u306E\u6B20\u7247\u3092\u898B\u3064\u3051\u3089\u308C\u308B\u306E\u3060\u308D\u3046\u304B\u2500\u2500\u50D5\u306F\u307E\u3060\u3001\u305D\u306E\u53EF\u80FD\u6027\u3092\u63A2\u3057\u3066\u3044\u308B\u3002"
+    text: "\u50D5\u306F\u8B66\u5BDF\u306B\u4FDD\u8B77\u3055\u308C\u305F\u3002\r\n\u4E8C\u518A\u306E\u65E5\u8A18\u2015\u2015\u300E\u50D5\u306E\u672C\u5F53\u306E\u304A\u6BCD\u3055\u3093\u306E\u65E5\u8A18\u300F
+      \u3068\u300E\u7F8E\u548C\u306E\u65E5\u8A18\u300F \u2015\u2015\u304C\u3001\u50D5\u306E\u8A00\u8449\u3092\u88CF\u4ED8\u3051\u305F\u3002
+      \u5927\u4EBA\u305F\u3061\u306F\u8A00\u3063\u305F\u3002\u300C\u72B6\u6CC1\u7684\u306B\u4ED5\u65B9\u306A\u304B\u3063\u305F\u300D\u3063\u3066
+      \u3002\r\n\u3067\u3082\u3001\u9055\u3046\u3093\u3060\u3002 \u300C\u4ED5\u65B9\u306A\u304B\u3063\u305F\u300D\u3067\u3001\u3053\u306E\u624B\u306E\u611F\u89E6\u306F\u6D88\u3048\u306A\u3044\u3002\r\n\u8AB0\u3082\u50D5\u306E\u80F8\u306E\u4E2D\u306B\u3042\u308B\u7A74\u3092\u57CB\u3081\u3066\u306F\u304F\u308C\u306A\u304B\u3063\u305F
+      \u3002\r\n\u548C\u4E5F\u3092\u6B7B\u306A\u3055\u305B\u3066\u3057\u307E\u3063\u305F\u3002
+      \r\n\u305D\u3057\u3066\u50D5\u81EA\u8EAB\u304C\u6BBA\u3059\u5074\u306B\u306A\u3063\u3066\u3057\u307E\u3063\u305F\u3068\u3044\u3046\u4E8B\u5B9F\u3002\r\n\u6642\u3005\u3001\u5922\u306E\u4E2D\u3067\u7B11\u3046\u58F0\u304C\u3059\u308B
+      \u3002 \u9060\u304F\u3066\u512A\u3057\u304F\u3066 \u3001\u65E5\u8A18\u3067\u898B\u305F\u3001\u672C\u5F53\u306E\u304A\u6BCD\u3055\u3093\u306E\u58F0\u304B\u3082\u3057\u308C\u306A\u3044\u3002
+      \u3067\u3082\u3001\u50D5\u306F\u3082\u3046\u3001\u305D\u306E\u512A\u3057\u3055\u306B\u3075\u3055\u308F\u3057\u304F\u306A\u3044\u3002
+      \u3060\u3063\u3066\u3001\u50D5\u306E\u624B\u306F\u3001\u3042\u306E\u5973\u3068\u540C\u3058\u8272\u306B\u306A\u3063\u3066\u3057\u307E\u3063\u305F\u304B\u3089\u3002\r\n"
 --- !u!114 &-3792767523921699583
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -127,12 +176,27 @@ MonoBehaviour:
   - {fileID: 4210817699023922616}
   - {fileID: 5510713589690327069}
   - {fileID: 1010050922744068791}
+  - {fileID: 7454183829402840483}
+  - {fileID: -7272824363533880773}
+  - {fileID: 4106911640897660943}
   m_FixedDuration: 0
   m_EditorSettings:
     m_Framerate: 60
     m_ScenePreview: 1
   m_DurationMode: 0
   m_MarkerTrack: {fileID: 0}
+--- !u!114 &201449231436770339
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fde0d25a170598d46a0b9dc16b4527a5, type: 3}
+  m_Name: ActivationPlayableAsset(Clone)(Clone)
+  m_EditorClassIdentifier: 
 --- !u!114 &1010050922744068791
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -157,6 +221,46 @@ MonoBehaviour:
   m_Markers:
     m_Objects:
     - {fileID: 8375483192844787168}
+--- !u!114 &1278125854033111559
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
+  m_Name: Signal Emitter
+  m_EditorClassIdentifier: 
+  m_Time: 5.316666666666666
+  m_Retroactive: 0
+  m_EmitOnce: 0
+  m_Asset: {fileID: 11400000, guid: 5a0d26c7f6f4e764fae16850d563e2a4, type: 2}
+--- !u!114 &4106911640897660943
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46e36075dd1c124a8422c228e75e1fb, type: 3}
+  m_Name: Signal Track (2)
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips: []
+  m_Markers:
+    m_Objects:
+    - {fileID: 1278125854033111559}
 --- !u!114 &4210817699023922616
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -198,6 +302,22 @@ MonoBehaviour:
   m_OpenClipOffsetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_Rotation: {x: 0, y: 0, z: 0, w: 1}
   m_ApplyOffsets: 0
+--- !u!114 &4924601390609452176
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
+  m_Name: Signal Emitter
+  m_EditorClassIdentifier: 
+  m_Time: 2.6333333333333333
+  m_Retroactive: 0
+  m_EmitOnce: 0
+  m_Asset: {fileID: 11400000, guid: 5a0d26c7f6f4e764fae16850d563e2a4, type: 2}
 --- !u!114 &5510713589690327069
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -287,7 +407,15 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: "\u3042\u306E\u591C\u306E\u3053\u3068\u306F\u3001\u65AD\u7247\u3060\u3051\u304C\u9759\u304B\u306B\u8607\u308B\u3002\u624B\u306E\u9707\u3048\u3001\u606F\u3092\u6B62\u3081\u305F\u6642\u9593\u3001\u305D\u3057\u3066\u6697\u95C7\u306E\u4E2D\u3067\u805E\u3044\u305F\u81EA\u5206\u306E\u5FC3\u81D3\u306E\u97F3\u2500\u2500\u305D\u308C\u4EE5\u5916\u306E\u5927\u534A\u306F\u3001\u8A00\u8449\u306B\u306A\u3089\u306A\u3044\u3002\u50D5\u306F\u305F\u3060\u3001\u305D\u306E\u5834\u3067\u819D\u3092\u3064\u304D\u3001\u4E16\u754C\u304C\u3086\u3063\u304F\u308A\u3068\u91CD\u304F\u6C88\u3093\u3067\u3044\u304F\u306E\u3092\u611F\u3058\u305F\u3060\u3051\u3060\u3063\u305F\u3002\n\u8B66\u5BDF\u304C\u6765\u305F\u3068\u304D\u3001\u50D5\u306F\u3082\u3046\u307E\u3068\u3082\u306B\u9854\u3092\u4E0A\u3052\u308B\u3053\u3068\u304C\u3067\u304D\u306A\u304B\u3063\u305F\u3002\u8AAC\u660E\u3059\u308B\u8A00\u8449\u306F\u3042\u308B\u306B\u306F\u3042\u3063\u305F\u304C\u3001\u3069\u308C\u3082\u8584\u304F\u3001\u7D19\u306E\u3088\u3046\u306B\u983C\u308A\u306A\u304B\u3063\u305F\u3002\u7F8E\u548C\u304C\u507D\u306E\u6BCD\u3067\u3001\u3042\u306E\u65E5\u50D5\u304C\u898B\u305F\u3082\u306E\u304C\u4F55\u3060\u3063\u305F\u306E\u304B\u3002\u635C\u67FB\u306F\u7DFB\u5BC6\u306B\u9032\u307F\u3001\u73FE\u5834\u306E\u75D5\u8DE1\u306F\u6570\u3005\u306E\u76EE\u3067\u691C\u8A3C\u3055\u308C\u305F\u3002\u3051\u308C\u3069\u3001\u3069\u3093\u306A\u8A3C\u62E0\u3082\u3001\u50D5\u304C\u62B1\u3048\u3066\u3044\u308B\u91CD\u3055\u3092\u8EFD\u304F\u306F\u3057\u306A\u304B\u3063\u305F\u3002\n\u50D5\u306F\u3001\u81EA\u5206\u306E\u4E2D\u306B\u751F\u307E\u308C\u305F\u3082\u306E\u3068\u3069\u3046\u5411\u304D\u5408\u3048\u3070\u3044\u3044\u306E\u304B\u307E\u3060\u5206\u304B\u3089\u306A\u3044\u3002\u60B2\u3057\u307F\u3068\u6012\u308A\u3068\u3001\u8AAC\u660E\u306E\u3064\u304B\u306A\u3044\u5B89\u5835\u304C\u6DF7\u3056\u308A\u5408\u3063\u305F\u611F\u60C5\u304C\u6E26\u5DFB\u304F\u3002\u8AB0\u304B\u306B\u8CAC\u3081\u3089\u308C\u3066\u3082\u3001\u7F70\u3092\u53D7\u3051\u3066\u3082\u3001\u305D\u308C\u3067\u6D88\u3048\u308B\u308F\u3051\u3067\u306F\u306A\u3044\u3082\u306E\u304C\u6B8B\u3063\u305F\u3002\u7B54\u3048\u306F\u5916\u306B\u306F\u306A\u304F\u3001\u5185\u5074\u306B\u3060\u3051\u3042\u308B\u3002\u3051\u308C\u3069\u3001\u50D5\u306F\u751F\u304D\u3066\u3044\u308B\u3002\u547C\u5438\u3092\u3057\u3066\u3001\u76EE\u3092\u9589\u3058\u3001\u307E\u305F\u671D\u3092\u8FCE\u3048\u308B\u3002\u305D\u306E\u7E70\u308A\u8FD4\u3057\u306E\u4E2D\u3067\u3001\u3044\u3064\u304B\u5C0F\u3055\u306A\u8A31\u3057\u304B\u7406\u89E3\u306E\u6B20\u7247\u3092\u898B\u3064\u3051\u3089\u308C\u308B\u306E\u3060\u308D\u3046\u304B\u2500\u2500\u50D5\u306F\u307E\u3060\u3001\u305D\u306E\u53EF\u80FD\u6027\u3092\u63A2\u3057\u3066\u3044\u308B\u3002"
+    m_DisplayName: "\u50D5\u306F\u8B66\u5BDF\u306B\u4FDD\u8B77\u3055\u308C\u305F\u3002\r\n\u4E8C\u518A\u306E\u65E5\u8A18\u2015\u2015\u300E\u50D5\u306E\u672C\u5F53\u306E\u304A\u6BCD\u3055\u3093\u306E\u65E5\u8A18\u300F
+      \u3068\u300E\u7F8E\u548C\u306E\u65E5\u8A18\u300F \u2015\u2015\u304C\u3001\u50D5\u306E\u8A00\u8449\u3092\u88CF\u4ED8\u3051\u305F\u3002
+      \u5927\u4EBA\u305F\u3061\u306F\u8A00\u3063\u305F\u3002\u300C\u72B6\u6CC1\u7684\u306B\u4ED5\u65B9\u306A\u304B\u3063\u305F\u300D\u3063\u3066
+      \u3002\r\n\u3067\u3082\u3001\u9055\u3046\u3093\u3060\u3002 \u300C\u4ED5\u65B9\u306A\u304B\u3063\u305F\u300D\u3067\u3001\u3053\u306E\u624B\u306E\u611F\u89E6\u306F\u6D88\u3048\u306A\u3044\u3002\r\n\u8AB0\u3082\u50D5\u306E\u80F8\u306E\u4E2D\u306B\u3042\u308B\u7A74\u3092\u57CB\u3081\u3066\u306F\u304F\u308C\u306A\u304B\u3063\u305F
+      \u3002\r\n\u548C\u4E5F\u3092\u6B7B\u306A\u3055\u305B\u3066\u3057\u307E\u3063\u305F\u3002
+      \r\n\u305D\u3057\u3066\u50D5\u81EA\u8EAB\u304C\u6BBA\u3059\u5074\u306B\u306A\u3063\u3066\u3057\u307E\u3063\u305F\u3068\u3044\u3046\u4E8B\u5B9F\u3002\r\n\u6642\u3005\u3001\u5922\u306E\u4E2D\u3067\u7B11\u3046\u58F0\u304C\u3059\u308B
+      \u3002 \u9060\u304F\u3066\u512A\u3057\u304F\u3066 \u3001\u65E5\u8A18\u3067\u898B\u305F\u3001\u672C\u5F53\u306E\u304A\u6BCD\u3055\u3093\u306E\u58F0\u304B\u3082\u3057\u308C\u306A\u3044\u3002
+      \u3067\u3082\u3001\u50D5\u306F\u3082\u3046\u3001\u305D\u306E\u512A\u3057\u3055\u306B\u3075\u3055\u308F\u3057\u304F\u306A\u3044\u3002
+      \u3060\u3063\u3066\u3001\u50D5\u306E\u624B\u306F\u3001\u3042\u306E\u5973\u3068\u540C\u3058\u8272\u306B\u306A\u3063\u3066\u3057\u307E\u3063\u305F\u304B\u3089\u3002\r\n"
   m_Markers:
     m_Objects: []
 --- !u!114 &5646284926892577666
@@ -341,6 +469,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 4.9666667
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -372,7 +509,7 @@ AnimationClip:
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 2.05
+    m_StopTime: 4.9666667
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
@@ -410,6 +547,15 @@ AnimationClip:
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 4.9666667
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -422,6 +568,99 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events: []
+--- !u!114 &7454183829402840483
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21bf7f712d84d26478ebe6a299f21738, type: 3}
+  m_Name: Activation Track (1)
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips:
+  - m_Version: 1
+    m_Start: 2.6333333333333333
+    m_ClipIn: 0
+    m_Asset: {fileID: 201449231436770339}
+    m_Duration: 2.366666666666667
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: 7454183829402840483}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 0
+    m_BlendOutDuration: 0
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: Active
+  m_Markers:
+    m_Objects: []
+  m_PostPlaybackState: 3
 --- !u!114 &8375483192844787168
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -434,7 +673,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
   m_Name: Signal Emitter
   m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.SignalEmitter
-  m_Time: 2.7
+  m_Time: 2.85
   m_Retroactive: 0
   m_EmitOnce: 0
   m_Asset: {fileID: 11400000, guid: c0b2a9e330e9dca4988d93ee336525a8, type: 2}

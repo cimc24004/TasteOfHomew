@@ -1,14 +1,17 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class KeyUnityEvent
 {
     [Tooltip("チェックするキー名")]
     public string key;
-
+    [Tooltip("エンディング名")]
+    public string EndingName = "Ending1";
     [Tooltip("キーが true のときに呼ばれるイベント")]
     public UnityEvent onTrue;
 
@@ -23,23 +26,34 @@ public class KeyUnityEvent
 
 public class EndController : MonoBehaviour
 {
+    [SerializeField] private Button ClickedJudgeButton;
+    [SerializeField] private bool WaitForPlayerInputClick;
     public enum ResolvePolicy
     {
         HighestPriorityOnly, // 最も高い priority の1件だけ実行（同点はリスト順）
         InvokeAllTrue        // true のものは全部実行
     }
-
+    [SerializeField] private TextMeshProUGUI EndingNameTextUI;
     [SerializeField] private ResolvePolicy resolvePolicy = ResolvePolicy.HighestPriorityOnly;
 
     [SerializeField] private List<KeyUnityEvent> keyEvents = new List<KeyUnityEvent>();
 
     private DataShareController dataShareController;
-
+    [SerializeField] private TimelinePlayback EndingTimelinePlayback;
     private async void Start()
     {
         // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
         // await UniTask.WaitForSeconds(1f);
         CheckKeys();
+
+        ClickedJudgeButton.onClick.AddListener(() =>
+        {
+            if (WaitForPlayerInputClick)
+            {
+                EndingTimelinePlayback.Resume();
+                WaitForPlayerInputClick = false;
+            }
+        });
     }
 
     [ContextMenu("Check Keys (Run)")]
@@ -107,5 +121,22 @@ public class EndController : MonoBehaviour
                 winner.invoked = true;
             }
         }
+    }
+    public void EndingNameSet()
+    {
+        var candidates = new List<KeyUnityEvent>();
+        for (int i = 0; i < keyEvents.Count; i++)
+        {
+            var ke = keyEvents[i];
+            bool val = dataShareController.GetFlag(ke.key);
+            if (val)
+            {
+                EndingNameTextUI.SetText(ke.EndingName);
+            }
+        }
+    }
+    public void WaitForPlayerClick()
+    {
+        this.WaitForPlayerInputClick = true;
     }
 }
