@@ -12,21 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11f67d4f7fae37c409831334bf9012e0, type: 3}
   m_Name: CheapCamera
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   settings:
-    intensity: 1
-    lensVignette: {x: 0, y: 0, z: 0}
+    intensity: 0.2
+    lensVignette: {x: 0.96, y: -0.03, z: -0.16}
     lensChromaticAberration: {x: 0, y: 0, z: 0, w: 0}
     lensRadialDistortion: {x: 0, y: 0, z: 0}
     lensTangentialDistortion: {x: 0, y: 0}
     lensZoom: 1
-    sensorResolution: 1
+    sensorResolution: 0.455
     sensorBlurQuality: 0
-    sensorPixelNoise: {x: 0.1, y: 0.05, z: 0.5}
-    sensorExposure: 1
-    sensorGain: 1
+    sensorPixelNoise: {x: 0, y: -0.05, z: 0.5}
+    sensorExposure: 1.31
+    sensorGain: 0.9
     sensorDynamicRange: 0.3
-    processorFunctions: {x: 1, y: 0.8, z: 1}
+    processorFunctions: {x: 1, y: 1, z: 1}
     processorWhiteBalance: {x: 1, y: 1, z: 1}
     brightness: 0
     contrast: 1
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 0
   settings:
-    intensity: 0.133
+    intensity: 0.202
     blend: 2
     offset: 1
     distortion: 0.25
@@ -156,7 +156,8 @@ MonoBehaviour:
   - {fileID: -8248370463879029896}
   - {fileID: 192097095406243827}
   - {fileID: -6531413924470005348}
-  m_RendererFeatureMap: ad6b866f10d7b46c354cac51277b3bd3b4679c0d2423be07fa4377d8b3537eb7591b904ab1d71734789baaccc3e6878df3cf125e4a77aa029ce1ecfea3c15ba5
+  - {fileID: 415881385630686464}
+  m_RendererFeatureMap: ad6b866f10d7b46c354cac51277b3bd3b4679c0d2423be07fa4377d8b3537eb7591b904ab1d71734789baaccc3e6878df3cf125e4a77aa029ce1ecfea3c15ba500dd36b3ea81c505
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -194,18 +195,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bb6521c5ca91c9439a5b7bcbe17b2c8, type: 3}
   m_Name: Artifacts
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   settings:
-    intensity: 1
+    intensity: 0.177
     size: {x: 16, y: 16}
     luminanceRange: {x: 0, y: 1}
-    blocks: 0.1
+    blocks: 0.09
     blockBlend: 13
     blockTint: {r: 0, g: 1, b: 0, a: 0.25}
-    lines: 0.4
+    lines: 0.189
     lineBlend: 13
     lineTint: {r: 0, g: 1, b: 0, a: 0.5}
-    aberration: 0.395
+    aberration: 0.183
     interleave: 1
     brightness: 0
     contrast: 1
@@ -214,6 +215,45 @@ MonoBehaviour:
     saturation: 1
     affectSceneView: 0
     whenToInsert: 450
+--- !u!114 &415881385630686464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52cc32585eeb9bf459ef54c64ead17e3, type: 3}
+  m_Name: Hacked
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    intensity: 0.096
+    strength: 0.2
+    frameJump: 0
+    frameJumpSpeed: 1
+    jitter: 1
+    jitterSpeed: 0.2
+    jitterDensity: 15
+    blocks: 0.5
+    blockDensity: 10
+    blockAberration: {x: 1, y: 1}
+    blockNoise: {x: 0.5, y: 0.5}
+    waves: 1
+    waveSpeed: 10
+    waveRGBSplit: 30
+    scanlines: 0.2
+    scanlinesThreshold: 0.8
+    noise: 0.1
+    noiseSpeed: 0.1
+    brightness: 0
+    contrast: 1
+    gamma: 1
+    hue: 0
+    saturation: 1
+    affectSceneView: 0
+    whenToInsert: 550
 --- !u!114 &557922041594668980
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,17 +317,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d56597b0a50618247b43536d4501a4bf, type: 3}
   m_Name: VHS
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   settings:
     intensity: 1
-    noise: 0.3
-    noiseSpeed: 2
+    noise: 0.101
+    noiseSpeed: -7.1
     noiseSize: 0.2
     noiseBlend: 0
-    noiseColor: {r: 1, g: 1, b: 1, a: 1}
-    pause: 0.25
+    noiseColor: {r: 0.8037735, g: 0, b: 0, a: 1}
+    pause: 0
     pauseNoise: 0.1
-    pauseBand: 1
+    pauseBand: 0
     pauseBlend: 16
     pauseColor: {r: 1, g: 1, b: 1, a: 1}
     brightness: 0
