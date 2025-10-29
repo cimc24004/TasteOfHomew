@@ -61,10 +61,10 @@ public class EndController : MonoBehaviour
     {
         if (dataShareController == null)
         {
-            dataShareController = DataShareController.Instance;
+            dataShareController = DataShareController.instance;
             if (dataShareController == null)
             {
-                Debug.LogWarning("[EndController] DataShareController.Instance が見つかりません。");
+                Debug.LogWarning("[EndController] DataShareController.instance が見つかりません。");
                 return;
             }
         }

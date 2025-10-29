@@ -77,7 +77,7 @@ public class GameFlowController : Singleton<GameFlowController>
     // }
     void Start()
     {
-        dataShareController = DataShareController.Instance;
+        dataShareController = DataShareController.instance;
         onPhaseEntered.AddListener((_currentPhase) =>
         {
             dataShareController.CurrentPhase = _currentPhase;

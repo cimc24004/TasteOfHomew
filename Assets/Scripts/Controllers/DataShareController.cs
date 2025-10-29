@@ -1,36 +1,144 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine.SceneManagement; // SceneManager.sceneLoaded を使うために必要
 
 /// <summary>
 /// 文字列キー -> bool のフラグを共有するシンプルなコントローラー（シングルトン）
 /// EndingShareDictionary … エンディング到達等のフラグ用
 /// FlagEventRunnerDictionary … 一度きりのイベント実行管理等のフラグ用
 /// </summary>
-public class DataShareController : SerializedMonoBehaviour
+public class DataShareController : Singleton<DataShareController>
 {
-    
-    public static DataShareController Instance { get; private set; }
-
+    [Header("共有フラグ辞書")]
     // ★ リネーム: shareDictionary → EndingShareDictionary
     public Dictionary<string, bool> EndingShareDictionary = new Dictionary<string, bool>();
 
     // ★ 追加: FlagEventRunnerDictionary
     public Dictionary<string, bool> FlagEventRunnerDictionary = new Dictionary<string, bool>();
+
+    [Header("共有ゲーム進行データ")]
     public string CurrentPhaseStep = "1";
-    public GameFlowController.Phase CurrentPhase = GameFlowController.Phase.Morning;
-    void Awake()
+    
+    // ▼▼▼ GameFlowControllerが見つからない場合、コメントアウトを解除して下の行を使用してください ▼▼▼
+    public GameFlowController.Phase CurrentPhase = GameFlowController.Phase.Morning; 
+    // public int CurrentPhase = 0; // GameFlowController.Phase.Morning; 
+    // ▲▲▲▲▲▲
+
+    [Header("シーン連動設定")]
+    [Tooltip("（値リセット）このリストのシーンに移動した際、全フラグの値を false にリセットします（キーは残ります）")]
+    public List<string> resetValuesOnLoadScenes = new List<string>();
+
+    // ▼▼▼ テレポート連携 追加 (1/3) ▼▼▼
+    [Header("テレポート連携")]
+    [Tooltip("（実行予約）次にシーンをロードした際、このキー名でテレポートを実行します。実行後、この値はクリアされます。")]
+    [ReadOnly] // インスペクターからは変更させず、メソッド経由でのみ設定
+    public string NextTeleportKey = "";
+    // ▲▲▲ テレポート連携 追加 ▲▲▲
+    
+    
+    // ▼▼▼ OnEnable / OnDisable 修正 (2/3) ▼▼▼
+    // AwakeではなくOnEnableで登録することが推奨されます
+    private void OnEnable()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(this.gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(this.gameObject);
+        // シーンがロードされた時に OnSceneLoaded メソッドを呼ぶように登録
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    // ===== EndingShareDictionary 用（既存API互換名のまま中身をこちらに寄せる） =====
+    // OnEnableで登録したイベントは、OnDisableで解除します
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+    // ▲▲▲▲▲▲
+
+
+    /// <summary>
+    /// シーンがロードされたときに呼び出されるメソッド
+    /// </summary>
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // --- 1. 値リセットチェック ---
+        if (resetValuesOnLoadScenes.Contains(scene.name))
+        {
+            Debug.Log($"[{gameObject.name}] 値リセットシーン '{scene.name}' に移動したため、全てのフラグ値を false にします。");
+            ResetAllValuesToFalse();
+        }
+
+        // ▼▼▼ テレポート連携 修正 (3/3) ▼▼▼
+        // --- 2. テレポート実行予約チェック ---
+        // NextTeleportKeyにキー名がセットされていたら
+        if (!string.IsNullOrEmpty(NextTeleportKey))
+        {
+            // TeleportDataControllerが（このロードされたシーンに）存在するか確認
+            if (TeleportDataController.instance != null)
+            {
+                Debug.Log($"[{gameObject.name}] シーンロードにより、テレポート '{NextTeleportKey}' を予約実行します。");
+                
+                // TeleportDataControllerに「キー名」と「true (使用する)」を渡す
+                TeleportDataController.instance.TeleportDataUse(NextTeleportKey, true);
+                
+                // 予約を実行したので、キーをクリアする
+                NextTeleportKey = ""; 
+            }
+            else
+            {
+                // テレポートキーは予約されていたが、移動先のシーンにTeleportDataControllerがなかった場合
+                Debug.LogWarning($"[{gameObject.name}] テレポートキー '{NextTeleportKey}' が予約されていましたが、" +
+                                 $"シーン '{scene.name}' に TeleportDataController.instance が見つかりません。");
+                
+                // ※キーはクリアせず、次のシーンロードまで持ち越すことも可能ですが、
+                // 意図しないテレポートを防ぐため、ここではクリアします。
+                NextTeleportKey = "";
+            }
+        }
+        // ▲▲▲▲▲▲
+    }
+
+    /// <summary>
+    /// すべてのDictionaryの値を false にリセットします。
+    /// </summary>
+    private void ResetAllValuesToFalse()
+    {
+        // EndingShareDictionary
+        if (EndingShareDictionary != null && EndingShareDictionary.Count > 0)
+        {
+            List<string> keys = new List<string>(EndingShareDictionary.Keys);
+            foreach (string key in keys)
+            {
+                EndingShareDictionary[key] = false;
+            }
+        }
+
+        // FlagEventRunnerDictionary
+        if (FlagEventRunnerDictionary != null && FlagEventRunnerDictionary.Count > 0)
+        {
+            List<string> keys = new List<string>(FlagEventRunnerDictionary.Keys);
+            foreach (string key in keys)
+            {
+                FlagEventRunnerDictionary[key] = false;
+            }
+        }
+        
+        Debug.Log($"[{gameObject.name}] 全てのフラグの値が false にリセットされました。");
+    }
+
+    
+    // ===== テレポート連携API =====
+    
+    /// <summary>
+    /// 次回シーンロード時に使用するテレポートキーを予約（セット）します。
+    /// （例：スタート画面のContinueControllerから呼び出す）
+    /// </summary>
+    /// <param name="keyName">Teleport.csのteleportKeyNameと一致するキー</param>
+    public void SetNextTeleportKey(string keyName)
+    {
+        Debug.Log($"[{gameObject.name}] 次回テレポートキーを予約: {keyName}");
+        NextTeleportKey = keyName;
+    }
+
+
+    // ===== EndingShareDictionary 用API =====
     public void SetFlagToTrue(string key)
     {
         if (string.IsNullOrEmpty(key)) return;
@@ -87,7 +195,7 @@ public class DataShareController : SerializedMonoBehaviour
         EndingShareDictionary.Clear();
     }
 
-    // ===== FlagEventRunnerDictionary 用のAPI =====
+    // ===== FlagEventRunnerDictionary 用API =====
     public void SetFlagEventRunner(string key, bool value)
     {
         if (string.IsNullOrEmpty(key)) return;

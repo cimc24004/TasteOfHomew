@@ -30,7 +30,7 @@ public class EscapeController : MonoBehaviour
 
     void Start()
     {
-        dataShareController = DataShareController.Instance;
+        dataShareController = DataShareController.instance;
     }
 
     // --- Start 系（既存） ---

@@ -19,6 +19,7 @@
 // ---------------------------------------------------------------------
 
 using UnityEngine;
+using UnityEngine.SceneManagement; // <-- シーン管理のために追加
 
 // #define で指定されたアセットの 'using' のみコンパイル対象になります
 #if GLITCH_COLORBLINDNESS
@@ -52,10 +53,15 @@ using FronkonGames.Glitches.BrokenLCD;
 
 /// <summary>
 /// Fronkon Games Glitches の Render Feature 自体を SetActive(bool) で有効/無効にします。
-/// 【修正】プレイモード終了時に元の状態に復元する処理（エディタ専用）を追加。
+/// シーン移動時にリセットする機能、エディタ停止時にリセットする機能を含みます。
 /// </summary>
-public class URPFxController : Singleton<URPFxController> // Singleton<T> を継承
+public class URPFxController : Singleton<URPFxController>
 {
+    [Header("Settings")]
+    [SerializeField]
+    [Tooltip("trueの場合、シーンがロードされるたびにエフェクトの状態を起動時の状態にリセットします。")]
+    private bool resetOnSceneChange = true;
+
     // --- Instanceキャッシュ ---
 #if GLITCH_COLORBLINDNESS
     private ColorBlindness instanceColorBlindness;
@@ -95,10 +101,6 @@ public class URPFxController : Singleton<URPFxController> // Singleton<T> を継
 #endif
 
 
-    // ※Singleton<T> を使っている場合、Awake() が親クラスで定義されているはずなので、
-    // もし Awake() をオーバーライド（override）する必要があれば、base.Awake() を呼んでください。
-    // ここでは Start() を使います。
-    
     void Start()
     {
         // 各エフェクトの Instance と、起動時の Active 状態を取得・保存します。
@@ -147,44 +149,69 @@ public class URPFxController : Singleton<URPFxController> // Singleton<T> を継
         if (instanceBrokenLCD != null)
             initialActiveBrokenLCD = instanceBrokenLCD.isActive;
 #endif
+        
+        // 【追加】シーンがロードされた時のイベントに関数を登録
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
     }
-    
+
     /// <summary>
-    /// 【追加】プレイモード終了時（またはオブジェクト破棄時）に呼ばれます。
-    /// エディタ実行時のみ、SetActive() を Start() 時の値に戻します。
+    /// 【追加】全てのFronkonエフェクトを、Start()時に記憶した初期状態に戻します。
+    /// </summary>
+    private void ResetAllEffectsToInitialState()
+    {
+#if GLITCH_COLORBLINDNESS
+        if (instanceColorBlindness != null) instanceColorBlindness.SetActive(initialActiveColorBlindness);
+#endif
+#if GLITCH_CORRUPTMEMORY
+        if (instanceCorruptMemory != null) instanceCorruptMemory.SetActive(initialActiveCorruptMemory);
+#endif
+#if GLITCH_INTERFERENCES
+        if (instanceInterferences != null) instanceInterferences.SetActive(initialActiveInterferences);
+#endif
+#if GLITCH_VHS
+        if (instanceVHS != null) instanceVHS.SetActive(initialActiveVHS);
+#endif
+#if GLITCH_CHEAPCAMERA
+        if (instanceCheapCamera != null) instanceCheapCamera.SetActive(initialActiveCheapCamera);
+#endif
+#if GLITCH_BADGPU
+        if (instanceBadGPU != null) instanceBadGPU.SetActive(initialActiveBadGPU);
+#endif
+#if GLITCH_ARTIFACTS
+        if (instanceArtifacts != null) instanceArtifacts.SetActive(initialActiveArtifacts);
+#endif
+#if GLITCH_HACKED
+        if (instanceHacked != null) instanceHacked.SetActive(initialActiveHacked);
+#endif
+#if GLITCH_BROKENLCD
+        if (instanceBrokenLCD != null) instanceBrokenLCD.SetActive(initialActiveBrokenLCD);
+#endif
+    }
+
+    /// <summary>
+    /// 【追加】シーンが変更されたときに呼び出される関数
+    /// </summary>
+    private void OnActiveSceneChanged(Scene current, Scene next)
+    {
+        // bool が true に設定されている場合のみ、リセット処理を呼ぶ
+        if (resetOnSceneChange)
+        {
+            ResetAllEffectsToInitialState();
+        }
+    }
+
+    /// <summary>
+    /// プレイモード終了時（またはオブジェクト破棄時）に呼ばれます。
     /// </summary>
     void OnDestroy()
     {
-        // ビルドした実機では実行せず、エディタ内のみで実行
+        // 【変更】イベントの登録を解除 (メモリリーク防止)
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+
+        // 【変更】エディタ実行時のみ、エディタ停止時に値を戻す (ResetAllEffects...を呼ぶように変更)
         if (Application.isEditor)
         {
-#if GLITCH_COLORBLINDNESS
-            if (instanceColorBlindness != null) instanceColorBlindness.SetActive(initialActiveColorBlindness);
-#endif
-#if GLITCH_CORRUPTMEMORY
-            if (instanceCorruptMemory != null) instanceCorruptMemory.SetActive(initialActiveCorruptMemory);
-#endif
-#if GLITCH_INTERFERENCES
-            if (instanceInterferences != null) instanceInterferences.SetActive(initialActiveInterferences);
-#endif
-#if GLITCH_VHS
-            if (instanceVHS != null) instanceVHS.SetActive(initialActiveVHS);
-#endif
-#if GLITCH_CHEAPCAMERA
-            if (instanceCheapCamera != null) instanceCheapCamera.SetActive(initialActiveCheapCamera);
-#endif
-#if GLITCH_BADGPU
-            if (instanceBadGPU != null) instanceBadGPU.SetActive(initialActiveBadGPU);
-#endif
-#if GLITCH_ARTIFACTS
-            if (instanceArtifacts != null) instanceArtifacts.SetActive(initialActiveArtifacts);
-#endif
-#if GLITCH_HACKED
-            if (instanceHacked != null) instanceHacked.SetActive(initialActiveHacked);
-#endif
-#if GLITCH_BROKENLCD
-            if (instanceBrokenLCD != null) instanceBrokenLCD.SetActive(initialActiveBrokenLCD);
-#endif
+            ResetAllEffectsToInitialState();
         }
     }
 

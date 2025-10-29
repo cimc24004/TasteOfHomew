@@ -130,12 +130,29 @@ MonoBehaviour:
   - {fileID: 1277687104406711246}
   - {fileID: 1795050842542019905}
   - {fileID: 9121113566030967682}
+  - {fileID: 2542488124826682482}
   m_FixedDuration: 0
   m_EditorSettings:
     m_Framerate: 60
     m_ScenePreview: 1
   m_DurationMode: 0
   m_MarkerTrack: {fileID: 0}
+--- !u!114 &29330158904607720
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
+  m_Name: Signal Emitter
+  m_EditorClassIdentifier: 
+  m_Time: 5.983333333333333
+  m_Retroactive: 0
+  m_EmitOnce: 0
+  m_Asset: {fileID: 11400000, guid: 5a0d26c7f6f4e764fae16850d563e2a4, type: 2}
 --- !u!114 &1133097947293958375
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -185,7 +202,7 @@ MonoBehaviour:
     m_Start: 0
     m_ClipIn: 0
     m_Asset: {fileID: 8019681002066650816}
-    m_Duration: 5
+    m_Duration: 5.983333333333333
     m_TimeScale: 1
     m_ParentTrack: {fileID: 1277687104406711246}
     m_EaseInDuration: 0
@@ -278,7 +295,7 @@ MonoBehaviour:
     m_Start: 0
     m_ClipIn: 0
     m_Asset: {fileID: -4555003932137495069}
-    m_Duration: 5
+    m_Duration: 5.983333333333333
     m_TimeScale: 1
     m_ParentTrack: {fileID: 1795050842542019905}
     m_EaseInDuration: 0
@@ -346,6 +363,30 @@ MonoBehaviour:
   m_Markers:
     m_Objects: []
   m_PostPlaybackState: 3
+--- !u!114 &2542488124826682482
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46e36075dd1c124a8422c228e75e1fb, type: 3}
+  m_Name: Signal Track (3)
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips: []
+  m_Markers:
+    m_Objects:
+    - {fileID: 29330158904607720}
 --- !u!114 &4013437219698362886
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32aa5bedd16d804468faf974c51c8dc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DontDestroyOnLoadController
+  destroyOnLoadScenes: []
 --- !u!114 &-9020790437496653101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,3 +151,7 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  CurrentPhaseStep: 1
+  CurrentPhase: 0
+  resetValuesOnLoadScenes:
+  - Start

@@ -134,7 +134,7 @@ public class FlagEventRunner : MonoBehaviour
     // ★ DataShare から FlagEventRunnerDictionary の実値を取り込む
     private void MergeFromDataShare()
     {
-        var ds = DataShareController.Instance;
+        var ds = DataShareController.instance;
         if (ds == null) return;
 
         var dict = ds.FlagEventRunnerDictionary;

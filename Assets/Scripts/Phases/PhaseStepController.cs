@@ -5,11 +5,13 @@ using UnityEngine.Events;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using System.Linq; 
 
 [DisallowMultipleComponent]
 public class PhaseStepController : Singleton<PhaseStepController>
 {
-    
+    private const string SAVE_KEY = "PhaseStepController_VisitedHistory";
+
     [Title("Phases（親：フェーズ / 子：ステップ）")]
     [ListDrawerSettings(Expanded = true, DraggableItems = true)]
     public List<PhaseBlock> phases = new();
@@ -25,7 +27,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
     public bool hardExclusiveShowAcrossPhases = true;
 
     // ─────────────────────────────────────────────────────────────────────────────
-    // 追加：フェーズ範囲ゲート
+    // 範囲ゲート (変更なし)
     // ─────────────────────────────────────────────────────────────────────────────
     [Title("Phase Range Gates（範囲内ならイベント実行）")]
     [Tooltip("起動時と（オプションで）フェーズ遷移時に、現在フェーズが各ゲートの範囲内ならそのUnityEventを実行")]
@@ -48,7 +50,6 @@ public class PhaseStepController : Singleton<PhaseStepController>
     [Tooltip("フェーズが変わるたびに範囲ゲートを再評価してイベント実行")]
     public bool evaluateRangeOnPhaseChanged = false;
 
-    // 実行済みゲートを記録（InvokeOnce 用）
     private readonly HashSet<int> _invokedGateIndices = new();
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -71,11 +72,13 @@ public class PhaseStepController : Singleton<PhaseStepController>
     private bool _subscribed;
     private bool _autoStarted;
     private DataShareController dataShareController;
-    // ===== Unity =====
-    // private void OnEnable()
-    // {
+    private SaveDataBaseController saveController; 
+    
+    // ★ 実行時データ構造 (変更なし)
+    private Dictionary<GameFlowController.Phase, HashSet<string>> _visitedHistoryRuntime = 
+        new Dictionary<GameFlowController.Phase, HashSet<string>>();
 
-    // }
+    // ===== Unity =====
 
     private void OnDisable()
     {
@@ -87,17 +90,18 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
         _subscribed = false;
         _autoStarted = false;
-        // ゲートの InvokeOnce 状態は保持（必要ならここで _invokedGateIndices.Clear() してリセット運用に）
     }
+
     void Start()
     {
+        dataShareController = DataShareController.instance;
+        saveController = SaveDataBaseController.instance; 
 
-        dataShareController = DataShareController.Instance;
         onStepEntered.AddListener((step) =>
         {
             dataShareController.CurrentPhaseStep = step;
         });
-        this.CurrentStepKey = dataShareController.CurrentPhaseStep;
+        
         if (hideAllObjectsOnStart) HideAllObjects();
         InitializeOnEnableAsync().Forget();
     }
@@ -106,20 +110,49 @@ public class PhaseStepController : Singleton<PhaseStepController>
     {
         onStepEntered.RemoveAllListeners();
     }
+    
+    // ★ 変更：InitializeOnEnableAsync (string -> enum への変換を追加)
     private async UniTask InitializeOnEnableAsync()
     {
-        var ct = this.GetCancellationTokenOnDestroy(); // 破棄されたら中止信号を出すトークンを取得
+        var ct = this.GetCancellationTokenOnDestroy(); 
 
         await UniTask.NextFrame(ct);
         TrySubscribeGameFlow();
 
         if (autoStartOnEnable && !_autoStarted)
         {
-            // DataShareControllerから現在の状態を無条件に取得
+            PhaseStepSaveData loadedData = saveController.LoadData<PhaseStepSaveData>(SAVE_KEY);
+
+            _visitedHistoryRuntime.Clear();
+            if (loadedData != null && loadedData.visitedHistory != null)
+            {
+                // ロードしたリスト (string) を実行時データ (enum) に変換
+                foreach (var entry in loadedData.visitedHistory)
+                {
+                    // ★ string -> enum への変換
+                    if (Enum.TryParse<GameFlowController.Phase>(entry.phaseName, out var phaseEnum))
+                    {
+                        if (entry.visitedStepKeys != null)
+                        {
+                            _visitedHistoryRuntime[phaseEnum] = new HashSet<string>(entry.visitedStepKeys);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[PhaseStepController] ロード失敗: 不明なPhase名 '{entry.phaseName}'");
+                    }
+                }
+                Debug.Log($"[PhaseStepController] 訪問履歴をロードしました (Phase: {_visitedHistoryRuntime.Count}件)");
+            }
+            else
+            {
+                Debug.LogWarning($"[PhaseStepController] 訪問履歴セーブデータが見つかりません。");
+            }
+            
             var initialPhase = dataShareController.CurrentPhase;
             var initialStepKey = dataShareController.CurrentPhaseStep;
-
-            // 取得した状態で初期化を強制実行
+            Debug.Log($"[PhaseStepController] DataShareController から初期位置を取得: Phase={initialPhase}, Step={initialStepKey}");
+            
             await ForceSwitchStateOnInit(initialPhase, initialStepKey,ct);
 
             _autoStarted = true;
@@ -130,6 +163,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
             EvaluatePhaseRangeGates(phaseOverride: null, isFromPhaseChange: false);
         }
     }
+    
     private async UniTask<bool> ForceSwitchStateOnInit(GameFlowController.Phase phase, string stepKey, CancellationToken cancellationToken)
     {
         int pi = FindPhaseIndex(phase);
@@ -143,7 +177,6 @@ public class PhaseStepController : Singleton<PhaseStepController>
         if (si < 0)
         {
             Debug.LogWarning($"[PhaseStepController] Initial stepKey '{stepKey}' not found. Falling back to the first step of phase '{phase}'.");
-            // 指定されたStepが見つからなければ、そのPhaseの最初のStepで代用する
             if (!TryResolveFirstStepIndex(pi, null, out si))
             {
                 Debug.LogError($"[PhaseStepController] Phase '{phase}' has no steps to initialize to!");
@@ -151,18 +184,16 @@ public class PhaseStepController : Singleton<PhaseStepController>
             }
         }
         
-        // 状態変数を直接設定
         CurrentPhase = phase;
         CurrentStepKey = phases[pi].steps[si].key;
 
-        // 念のため全オブジェクトを非表示にしてクリーンな状態から始める
         if (hideAllObjectsOnStart)
         {
             HideAllObjects();
-            await UniTask.Yield(cancellationToken); // 非表示の反映を1フレーム待つ
+            await UniTask.Yield(cancellationToken); 
         }
          cancellationToken.ThrowIfCancellationRequested();
-        // 対象のステップを取得して、オブジェクト表示とイベント実行
+
         if (TryGetStep(pi, si, out var stepData))
         {
             SetActiveList(stepData.objectsToShow, true, this.gameObject);
@@ -170,9 +201,10 @@ public class PhaseStepController : Singleton<PhaseStepController>
             InvokeEvents(stepData.onEnterEvents2);
         }
 
-        // 起動時のイベントを発火
         onPhaseEntered?.Invoke(CurrentPhase);
         onStepEntered?.Invoke(CurrentStepKey);
+
+        MarkVisitedAndSave();
 
         return true;
     }
@@ -189,31 +221,26 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
     private void OnGameFlowPhaseChanged(GameFlowController.Phase oldP, GameFlowController.Phase newP)
     {
-        // Stepの初期キーはPhaseBlock.startStepKeyを使う（null指定で内部ロジック任せ）
         SwitchPhaseAsync(newP, null, invokeOldExit: true).Forget();
 
-        // ★ 変更点：第2引数に isFromPhaseChange: true を渡す
         if (enablePhaseRangeGates && evaluateRangeOnPhaseChanged)
             EvaluatePhaseRangeGates(newP, isFromPhaseChange: true); 
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
-    // 範囲ゲート：評価ロジック
+    // 範囲ゲート：評価ロジック (変更なし)
     // ─────────────────────────────────────────────────────────────────────────────
-    /// <summary>現在フェーズ（引数なし時は GameFlow / CurrentPhase）で範囲ゲートを評価し、該当イベントを実行</summary>
     public void EvaluatePhaseRangeGates(GameFlowController.Phase? phaseOverride = null, bool isFromPhaseChange = false)
     {
         if (!enablePhaseRangeGates || phaseRangeGates == null || phaseRangeGates.Count == 0)
             return;
 
         var phase = phaseOverride ?? (GameFlowController.instance && GameFlowController.instance.CurrentIndex >= 0
-                    ? GameFlowController.instance.CurrentPhase
-                    : CurrentPhase);
+                     ? GameFlowController.instance.CurrentPhase
+                     : CurrentPhase);
 
-        // 並び順のマップを作成
         var orderMap = BuildPhaseOrderIndex();
 
-        // 不明な並びは弾く
         if (!orderMap.TryGetValue(phase, out int curIdx))
         {
             Debug.LogWarning($"[PhaseStepController] Phase order not defined for '{phase}'");
@@ -227,17 +254,14 @@ public class PhaseStepController : Singleton<PhaseStepController>
             {
                 continue;
             }
-            // 開始/終了のインデックスが取れない場合はスキップ
             if (!orderMap.TryGetValue(gate.fromPhase, out int fromIdx)) continue;
             if (!orderMap.TryGetValue(gate.toPhase, out int toIdx)) continue;
 
-            // from > to の場合は自動で入れ替え（運用ミス防止）
             if (fromIdx > toIdx)
             {
                 var t = fromIdx; fromIdx = toIdx; toIdx = t;
             }
 
-            // 境界の包含/非包含
             bool lowerOk = gate.inclusiveFrom ? curIdx >= fromIdx : curIdx > fromIdx;
             bool upperOk = gate.inclusiveTo   ? curIdx <= toIdx   : curIdx < toIdx;
 
@@ -261,12 +285,10 @@ public class PhaseStepController : Singleton<PhaseStepController>
         }
     }
 
-    /// <summary>フェーズの並び順インデックスを構築（Override → GameFlow → enum）</summary>
     private Dictionary<GameFlowController.Phase, int> BuildPhaseOrderIndex()
     {
         var map = new Dictionary<GameFlowController.Phase, int>();
 
-        // 1) 明示オーバーライド
         if (phaseOrderOverride != null && phaseOrderOverride.Count > 0)
         {
             for (int i = 0; i < phaseOrderOverride.Count; i++)
@@ -274,7 +296,6 @@ public class PhaseStepController : Singleton<PhaseStepController>
             return map;
         }
 
-        // 2) GameFlowController の flowOrder
         var gfc = GameFlowController.instance;
         if (gfc != null && gfc.flowOrder != null && gfc.flowOrder.Count > 0)
         {
@@ -283,7 +304,6 @@ public class PhaseStepController : Singleton<PhaseStepController>
             return map;
         }
 
-        // 3) enum の宣言順
         var values = (GameFlowController.Phase[])Enum.GetValues(typeof(GameFlowController.Phase));
         for (int i = 0; i < values.Length; i++)
             map[values[i]] = i;
@@ -292,8 +312,17 @@ public class PhaseStepController : Singleton<PhaseStepController>
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
-    // Public API（従来）
+    // Public API (変更なし)
     // ─────────────────────────────────────────────────────────────────────────────
+
+    public bool HasVisited(GameFlowController.Phase phase, string stepKey)
+    {
+        if (_visitedHistoryRuntime.TryGetValue(phase, out var stepSet))
+        {
+            return stepSet.Contains(stepKey);
+        }
+        return false;
+    }
 
     [Button("UnityEvent → NextStep")]
     public void NextStepEvent() => NextStep();
@@ -340,33 +369,21 @@ public class PhaseStepController : Singleton<PhaseStepController>
         int newPi = FindPhaseIndex(phase);
         if (newPi < 0) { Debug.LogWarning($"[PhaseStepController] Phase '{phase}' not found in list."); return false; }
 
-        // ▼▼▼ 修正箇所 ▼▼▼
-        // フェーズが同じ場合でも、ステップの初期化/切り替え処理を行うようにロジックを修正
         if (Equals(phase, CurrentPhase))
         {
-            // 遷移先のステップインデックスを解決する
             if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var si2))
             {
-                // 起動時などでCurrentStepKeyがまだなく、firstStepKeyも指定されていない場合、
-                // そのフェーズの最初のステップに設定を試みる
                 if (string.IsNullOrWhiteSpace(CurrentStepKey))
                 {
                     if (!TryResolveFirstStepIndex(newPi, null, out si2)) return false;
                 }
                 else
                 {
-                    // すでに何らかのステップにいるが、遷移先が指定されていない場合は何もしない
                     return false;
                 }
             }
-            
-            // SwitchStepByIndex に処理を委ねる。
-            // このメソッド内で、同じステップへの遷移は自動的にキャンセルされるため安全。
             return SwitchStepByIndex(newPi, si2);
         }
-        // ▲▲▲ 修正ここまで ▲▲▲
-
-        // --- 以下はフェーズが異なる場合の従来の処理（変更なし） ---
 
         var oldPhase = CurrentPhase;
         var oldStep  = CurrentStepKey;
@@ -414,6 +431,44 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
     // ===== Internals =====
 
+    // ★ 変更：MarkVisitedAndSave (enum -> string への変換を追加)
+    private void MarkVisitedAndSave()
+    {
+        if (saveController == null)
+        {
+            Debug.LogError("[PhaseStepController] SaveControllerがnullのためセーブできません。");
+            return;
+        }
+        
+        if (!_visitedHistoryRuntime.TryGetValue(CurrentPhase, out var stepSet))
+        {
+            stepSet = new HashSet<string>();
+            _visitedHistoryRuntime[CurrentPhase] = stepSet;
+        }
+        
+        bool isNewVisit = stepSet.Add(CurrentStepKey);
+
+        if (!isNewVisit)
+        {
+            return;
+        }
+
+        // ★ 実行時データ(enum) から セーブ用リスト(string) に変換
+        var historyListForSave = _visitedHistoryRuntime.Select(pair => new PhaseHistoryEntry
+        {
+            phaseName = pair.Key.ToString(), // ★ enum -> string に変換
+            visitedStepKeys = pair.Value.ToList() 
+        }).ToList();
+
+        PhaseStepSaveData dataToSave = new PhaseStepSaveData
+        {
+            visitedHistory = historyListForSave
+        };
+        
+        saveController.SaveData<PhaseStepSaveData>(SAVE_KEY, dataToSave);
+        Debug.Log($"[PhaseStepController] 新規訪問を保存: {CurrentPhase}::{CurrentStepKey} (履歴Phase数: {dataToSave.visitedHistory.Count}件)");
+    }
+
     private bool TryResolveFirstStepIndex(int phaseIndex, string preferredKey, out int stepIndex)
     {
         stepIndex = -1;
@@ -460,6 +515,8 @@ public class PhaseStepController : Singleton<PhaseStepController>
         if (!string.IsNullOrEmpty(oldStepKey))
             onStepChanged?.Invoke(oldStepKey, CurrentStepKey);
 
+        MarkVisitedAndSave();
+
         return true;
     }
 
@@ -476,7 +533,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
         foreach (var go in list)
         {
             if (!go) continue;
-            if (self && go == self) continue; // 自分自身は触らない
+            if (self && go == self) continue; 
             if (go.activeSelf != active) go.SetActive(active);
         }
     }
@@ -551,7 +608,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
-    // 範囲ゲート用データ
+    // 範囲ゲート用データ (変更なし)
     // ─────────────────────────────────────────────────────────────────────────────
     [Serializable]
     public class PhaseRangeGate
@@ -573,6 +630,32 @@ public class PhaseStepController : Singleton<PhaseStepController>
         public bool evaluateOnPhaseChange = false;
 
     }
+
+    // ★★★ 全面的に変更 ★★★
+    
+    /// <summary>
+    /// ご要望のデータ構造：訪問したステップキーのリストをフェーズごとに保持
+    /// (例: {"phaseName" : "Morning", "visitedStepKeys" : ["1", "2 Gohan", "3"]})
+    /// </summary>
+    [Serializable]
+    public class PhaseHistoryEntry
+    {
+        // ★ enum ではなく string で保存
+        public string phaseName; 
+        public List<string> visitedStepKeys; // このPhaseで訪問済みのStepKeyリスト
+    }
+
+    /// <summary>
+    /// JSONとして保存するセーブデータのコンテナ
+    /// </summary>
+    [Serializable]
+    public class PhaseStepSaveData
+    {
+        // 訪問履歴のリスト (これだけ保存すればOK)
+        public List<PhaseHistoryEntry> visitedHistory = new List<PhaseHistoryEntry>();
+    }
+
+    // ★★★ 変更ここまで ★★★
 
     // ===== UnityEvent ジェネリック（外部定義の UnityEvent2 を利用） =====
     [Serializable] public class UnityEventPhase   : UnityEvent2<GameFlowController.Phase> {}

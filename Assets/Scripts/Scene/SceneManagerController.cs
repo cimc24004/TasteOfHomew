@@ -37,6 +37,12 @@ public class SceneManagerController : MonoBehaviour
     public bool unloadPreviousImmediately = true;
     public bool dontDestroyOnLoad = true;
 
+    // ▼▼▼ ここから追加 ▼▼▼
+    [Header("自己破棄設定")]
+    [Tooltip("このリストに含まれるシーンに移動した際、このオブジェクト自体を破棄します")]
+    public List<string> destroyOnLoadScenes = new List<string>();
+    // ▲▲▲ ここまで追加 ▲▲▲
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -71,11 +77,39 @@ public class SceneManagerController : MonoBehaviour
 
     private void OnDisable()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        // OnDestroyなどで呼ばれる可能性があるので、nullチェックを追加
+        if (Instance == this) 
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // ▼▼▼ ここから修正・追加 ▼▼▼
+        // 破棄リストに現在のシーン名が含まれているかチェック
+        if (destroyOnLoadScenes.Contains(scene.name))
+        {
+            Debug.Log($"[SceneManagerController] 破棄対象シーン '{scene.name}' に移動したため、自身を破棄します。");
+            
+            // イベント購読を解除 (Destroy前に必ず行う)
+            SceneManager.sceneLoaded -= OnSceneLoaded; 
+            
+            // シングルトン参照をクリア
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
+            // このゲームオブジェクトを破棄
+            Destroy(gameObject);
+            
+            // このオブジェクトは破棄されるため、以降の処理（フェードアウトなど）は行わない
+            return; 
+        }
+        // ▲▲▲ ここまで修正・追加 ▲▲▲
+
+
         Debug.Log($"[SceneManagerController] OnSceneLoaded: '{scene.name}' がロードされました。");
         if (fadeCanvasGroup.alpha >= 1.0f)
         {

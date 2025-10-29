@@ -609,7 +609,7 @@ public class DialogueController : Singleton<DialogueController>
     /// </summary>
     private void MergeFlagsFromDataShare()
     {
-        var ds = DataShareController.Instance;
+        var ds = DataShareController.instance;
         if (ds == null) return;
 
         // DataShareControllerのEndingShareDictionaryからフラグを読み込む
