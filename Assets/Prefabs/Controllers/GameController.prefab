@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2317509852650024847}
   - component: {fileID: 6919823847466540035}
   - component: {fileID: 851370541876722269}
+  - component: {fileID: 9034084502676199637}
   m_Layer: 0
   m_Name: InteractBox
   m_TagString: Untagged
@@ -118,6 +119,18 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!225 &9034084502676199637
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334657757564207574}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1290991283554620063
 GameObject:
   m_ObjectHideFlags: 0
@@ -2939,6 +2952,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b1bebddad77d8f40830a9eed45f007d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  resetOnSceneChange: 1
 --- !u!1 &5251063631614366478
 GameObject:
   m_ObjectHideFlags: 0
@@ -6135,6 +6158,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUIInfo
   promptText: {fileID: 1868794172325598173}
   InteractBox: {fileID: 334657757564207574}
+  InteractBoxCanvasGroup: {fileID: 9034084502676199637}
+  InteractImage: {fileID: 334657757564207574}
   crosshair: {fileID: 5794567888151709404}
 --- !u!114 &6013927826471301641
 MonoBehaviour:

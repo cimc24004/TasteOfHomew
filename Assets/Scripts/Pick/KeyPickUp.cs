@@ -41,7 +41,7 @@ public class KeyPickup : SerializedMonoBehaviour, IInteractable
 
     public string GetDisplayText()
     {
-        return $"鍵 ({keyId}) を拾う";
+        return $"鍵を拾う";
     }
 
     public bool ShouldHighlight() => true;

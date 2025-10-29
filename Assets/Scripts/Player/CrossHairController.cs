@@ -16,8 +16,9 @@ public class CrossHairController : Singleton<CrossHairController>
     [ShowIf(nameof(useSphereCast))] [SerializeField, Min(0f)] private float sphereRadius = 0.12f;
 
     [Title("UI")]
-    [SerializeField] private TextMeshProUGUI promptText;
-
+    [SerializeField] public TextMeshProUGUI promptText;
+    [SerializeField] public GameObject InteractBox;
+    [SerializeField] public CanvasGroup InteractBoxCanvasGroup;
     [Title("Animator")]
     private Animator crosshairAnimator;
 
@@ -32,7 +33,6 @@ public class CrossHairController : Singleton<CrossHairController>
     {
         if (!mainCamera) mainCamera = Camera.main;
         SetHighlight(false);
-        if (promptText) promptText.enabled = false;
 
         playerInput = PlayerDataHub.instance.CurrentplayerInput;
         interactAction = playerInput.actions.FindAction("InteractAction");
@@ -40,6 +40,8 @@ public class CrossHairController : Singleton<CrossHairController>
         playerUIInfo = gameController.playerUIInfo;
         crosshairAnimator = playerUIInfo.crosshair.GetComponent<Animator>();
         promptText = playerUIInfo.promptText;
+        InteractBox = playerUIInfo.InteractBox;
+        InteractBoxCanvasGroup = playerUIInfo.InteractBoxCanvasGroup;
     }
 
     void Update()

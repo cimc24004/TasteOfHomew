@@ -65,11 +65,13 @@ public class PlayerMovement : SerializedMonoBehaviour
     {
         playerFootStepController.CurrentState = MovementState.Idle;
         playerStatus.crossHairController.enabled = false;
+        playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 0;
     }
     void OnEnable()
     {
         if (playerStatus != null)
         {
+            playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 1;
             playerStatus.crossHairController.enabled = true;
         }
     }
