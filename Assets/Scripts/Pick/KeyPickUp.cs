@@ -13,7 +13,7 @@ public class KeyPickup : SerializedMonoBehaviour, IInteractable
 
     private AudioSource _audio;
 
-    void Awake()
+    void Start()
     {
         _audio = GetComponent<AudioSource>();
     }

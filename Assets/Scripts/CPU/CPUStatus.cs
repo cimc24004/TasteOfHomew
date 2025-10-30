@@ -19,7 +19,7 @@ public class CPUStatus : MonoBehaviour
 
     // 前のフレームの状態を保存しておく変数
     // (元のコード通り "MovementState" を使用)
-    private MovementState previousState = MovementState.Idle;
+    [SerializeField]private MovementState previousState = MovementState.Idle;
 
     private void Start()
     {

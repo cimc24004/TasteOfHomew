@@ -604,6 +604,7 @@ MonoBehaviour:
     SerializationNodes: []
   myHouseEscapeGameController: {fileID: 3247779416396414886}
   player: {fileID: 0}
+  playerFootStepController: {fileID: 0}
   stopAllOnDetect: 1
   autoStopWhenStateChanged: 1
   waitTimeScale: 1
@@ -626,6 +627,11 @@ MonoBehaviour:
     patrolPoints:
     - {fileID: 4396003437251136764}
     - {fileID: 4352246096283370591}
+    - {fileID: 8775315248525175220}
+    - {fileID: 1826271480433067626}
+    - {fileID: 932234839978402244}
+    - {fileID: 548981772404955381}
+    - {fileID: 3983288512598558433}
     randomPatrol: 0
     pingPong: 1
     startFromClosestPoint: 1
@@ -645,16 +651,28 @@ MonoBehaviour:
     obstructionLayers:
       serializedVersion: 2
       m_Bits: 1023
+    canHear: 1
+    hearingDistance: 8
+    investigateWaitTime: 1.5
+    playDialogueOnInvestigate: 1
+    investigateDialogueGroup: {fileID: 11400000, guid: a388277ceed7ff74e93078419a6cf695, type: 2}
+    investigateDialogueSequenceId: 1
+    investigateDialogueDuration: 3.5
     active: 0
     currentIndex: 0
     direction: 1
+    isInvestigating: 0
+    cachedInvestigateSequence: {fileID: 0}
   gizmoAlways: 1
   gizmoDrawFOV: 1
+  gizmoDrawHearing: 1
   gizmoDrawPatrol: 1
   gizmoDrawNavPath: 1
   gizmoShowAllRandomLinks: 0
   gizmoFOVFillColor: {r: 1, g: 1, b: 0, a: 0.15}
   gizmoFOVEdgeColor: {r: 1, g: 1, b: 0, a: 0.65}
+  gizmoHearingColor: {r: 0, g: 0.5, b: 1, a: 0.15}
+  gizmoHearingEdgeColor: {r: 0, g: 0.5, b: 1, a: 0.5}
   gizmoSightRayVisible: {r: 1, g: 0, b: 0, a: 1}
   gizmoSightRayBlocked: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   gizmoPatrolPointColor: {r: 0, g: 1, b: 1, a: 1}
@@ -789,6 +807,37 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 511
+--- !u!1 &578429044608828866
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3983288512598558433}
+  m_Layer: 6
+  m_Name: 1 (6)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3983288512598558433
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578429044608828866}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.135, y: -2.097, z: 4.198}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6751897399192776351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &652228654274394992
 GameObject:
   m_ObjectHideFlags: 0
@@ -2657,6 +2706,37 @@ MonoBehaviour:
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
+--- !u!1 &2198863258695151044
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 932234839978402244}
+  m_Layer: 6
+  m_Name: 1 (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &932234839978402244
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2198863258695151044}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.37, y: -2.097, z: -2.64}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6751897399192776351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2252275984692658861
 GameObject:
   m_ObjectHideFlags: 0
@@ -5161,6 +5241,37 @@ MonoBehaviour:
   highlightWhenAvailable: 1
   once: 0
   disableGameObjectAfterInvoke: 0
+--- !u!1 &4466639119360812872
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1826271480433067626}
+  m_Layer: 6
+  m_Name: 1 (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1826271480433067626
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4466639119360812872}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.911, y: -2.097, z: -6.825}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6751897399192776351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4479810698323127927
 GameObject:
   m_ObjectHideFlags: 0
@@ -5345,6 +5456,37 @@ MonoBehaviour:
             m_StringArgument: EscapeMyHouseMotherKilled
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!1 &4522440665720767895
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8775315248525175220}
+  m_Layer: 6
+  m_Name: 1 (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8775315248525175220
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4522440665720767895}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.49, y: -2.097, z: 1.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6751897399192776351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4747155195147963653
 GameObject:
   m_ObjectHideFlags: 0
@@ -7254,6 +7396,37 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!1 &6185198266233645822
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 548981772404955381}
+  m_Layer: 6
+  m_Name: 1 (5)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &548981772404955381
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6185198266233645822}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 19.9, y: -2.097, z: 1.23}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6751897399192776351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6190019715318522756
 GameObject:
   m_ObjectHideFlags: 0
@@ -9974,6 +10147,11 @@ Transform:
   m_Children:
   - {fileID: 4396003437251136764}
   - {fileID: 4352246096283370591}
+  - {fileID: 8775315248525175220}
+  - {fileID: 1826271480433067626}
+  - {fileID: 932234839978402244}
+  - {fileID: 548981772404955381}
+  - {fileID: 3983288512598558433}
   m_Father: {fileID: 8848160321321907748}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7835435069276289858

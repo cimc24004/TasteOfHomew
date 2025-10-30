@@ -1,4 +1,4 @@
-// StealthGameController.cs (修正後 全文)
+// StealthGameController.cs (聴覚 + 調査ダイアログ(単発) 最終版)
 
 using System.Collections;
 using System.Collections.Generic;
@@ -23,6 +23,10 @@ public class StealthGameController : SerializedMonoBehaviour
     public Transform player;
     private PlayerStatus playerStatus;
     private Transform playerHead;
+
+    [TitleGroup("References")]
+    [ReadOnly, Tooltip("プレイヤーから自動取得")]
+    public FootStepController playerFootStepController;
 
     // ======= Behaviour (全体) =======
     [TitleGroup("Behaviour"), PropertySpace]
@@ -86,6 +90,7 @@ public class StealthGameController : SerializedMonoBehaviour
     private DialogueSequenceAsset _targetSequence;
     [SerializeField]
     private AudioSource StealthBGM;
+    
     // ======= Guard 設定 =======
     [System.Serializable]
     public class GuardEntry
@@ -125,11 +130,43 @@ public class StealthGameController : SerializedMonoBehaviour
         [FoldoutGroup("Vision")][LabelText("Player Layer")] public LayerMask playerLayer = 1 << 6;
         [FoldoutGroup("Vision")][LabelText("Obstruction Layers")] public LayerMask obstructionLayers = ~0;
 
+        [FoldoutGroup("Hearing", true)]
+        [LabelText("Can Hear")] public bool canHear = true;
+        [FoldoutGroup("Hearing"), ShowIf("canHear")]
+        [LabelText("Hearing Distance")] public float hearingDistance = 8f;
+        [FoldoutGroup("Hearing"), ShowIf("canHear")]
+        [Tooltip("音の発生源に到着後、その場で待機する時間")]
+        [LabelText("Investigate Wait (s)")] public float investigateWaitTime = 3f;
+
+        // ▼▼▼ 調査ダイアログ設定 (修正) ▼▼▼
+        [FoldoutGroup("Investigate Dialogue", true)]
+        [LabelText("Play Dialogue On Investigate")] 
+        public bool playDialogueOnInvestigate = true;
+
+        [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
+        [Required, Tooltip("調査中に再生するセリフのGroup")]
+        public DialogueSequenceGroupAsset investigateDialogueGroup;
+
+        [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
+        [Tooltip("使用するSequenceのID")]
+        public string investigateDialogueSequenceId = "InvestigateTalk";
+
+        [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
+        [Range(1f, 10f), Tooltip("一回のセリフの表示時間（秒）")]
+        public float investigateDialogueDuration = 3.5f;
+
+        // (investigateDialogueInterval は削除)
+        // ▲▲▲ 修正ここまで ▲▲▲
+
         // Runtime
         [HideInInspector] public bool active;
         [HideInInspector] public int currentIndex;
         [HideInInspector] public Coroutine patrolCo;
         [HideInInspector] public int direction = 1;
+        [HideInInspector] public bool isInvestigating = false;
+        
+        [HideInInspector] public DialogueSequenceAsset cachedInvestigateSequence;
+        // (investigateDialogueCo は削除)
     }
 
     [TitleGroup("Guards"), PropertySpace]
@@ -141,11 +178,30 @@ public class StealthGameController : SerializedMonoBehaviour
     [Button("Start Stealth", ButtonSizes.Large)]
     public void StealthGameStart()
     {
-        if (player == null)
+        if (playerStatus != null)
         {
-            var p = GameObject.FindGameObjectWithTag("Player");
-            if (p) player = p.transform;
+            player = playerStatus.transform;
+            playerHead = playerStatus.playerHead;
+            playerFootStepController = playerStatus.playerFootStepController;
         }
+        else
+        {
+            if (player == null)
+            {
+                var p = GameObject.FindGameObjectWithTag("Player");
+                if (p) player = p.transform;
+            }
+            if (player != null && playerFootStepController == null)
+            {
+                playerFootStepController = player.GetComponent<FootStepController>();
+            }
+        }
+        
+        if (playerFootStepController == null && player != null)
+        {
+             playerFootStepController = player.GetComponent<FootStepController>();
+        }
+
         myHouseEscapeGameController.OnStealthGameStart();
         if (enableTimer) StartTimer();
         StealthBGM.Play();
@@ -191,23 +247,36 @@ public class StealthGameController : SerializedMonoBehaviour
     }
 
     // ======= Lifecycle =======
-    private void Awake()
+    
+    private void Start()
     {
         playerStatus = PlayerStatus.instance;
         if (playerStatus != null)
         {
             player = playerStatus.transform;
             playerHead = playerStatus.playerHead;
+            playerFootStepController = playerStatus.playerFootStepController;
         }
         else
         {
+            // Fallback
             if (player == null)
             {
                 var p = GameObject.FindGameObjectWithTag("Player");
                 if (p) player = p.transform;
             }
+            if (player != null)
+            {
+                playerFootStepController = player.GetComponent<FootStepController>();
+            }
+        }
+
+        if (player != null && playerFootStepController == null)
+        {
+            Debug.LogWarning($"[StealthGameController] Player '{player.name}' に FootStepController が見つかりません。聴覚が機能しません。", player);
         }
     }
+
 
     private void OnDisable()
     {
@@ -233,6 +302,8 @@ public class StealthGameController : SerializedMonoBehaviour
         foreach (var g in guards)
         {
             if (!g.active || g.agent == null) continue;
+
+            // 1. 視覚 (最優先)
             if (IsPlayerVisible(g))
             {
                 if (g.cpuStatus != null && g.cpuStatus.multiAimConstraint != null)
@@ -243,6 +314,17 @@ public class StealthGameController : SerializedMonoBehaviour
                 if (stopAllOnDetect) { StopAllGuards(); }
                 else { StopGuard(g); }
                 break;
+            }
+
+            // 2. 聴覚 (調査中でない場合のみ)
+            if (g.isInvestigating) continue; // 既に調査タスク実行中
+
+            if (IsPlayerHeard(g))
+            {
+                // プレイヤーの足音をキャッチ
+                Debug.Log($"[Stealth] {g.name} heard player!");
+                if (g.patrolCo != null) StopCoroutine(g.patrolCo); // 現状のパトロールを中断
+                g.patrolCo = StartCoroutine(InvestigateSoundCo(g, player.position)); // 調査コルーチンを開始
             }
         }
     }
@@ -324,12 +406,10 @@ public class StealthGameController : SerializedMonoBehaviour
     // ======= Random Dialogue Control =======
     private void StartRandomDialogue()
     {
-        Debug.Log("oi 1");
         if (!enableRandomDialogue)
         {
             return;
         }
-        Debug.Log("oi 2");
 
         // 指定されたIDのSequenceを探す
         _targetSequence = randomDialogueGroup.sequences.Find(seq => seq.id == randomDialogueSequenceId);
@@ -342,10 +422,8 @@ public class StealthGameController : SerializedMonoBehaviour
 
         if (_randomDialogueCo != null)
         {
-            Debug.Log("_randomDialogueCo-----------1--------------------");
             StopCoroutine(_randomDialogueCo);
         }
-        Debug.Log("oi 3");
 
         _randomDialogueCo = StartCoroutine(RandomDialogueLoop());
     }
@@ -380,7 +458,7 @@ public class StealthGameController : SerializedMonoBehaviour
         {
             // --- 話者となるガードを決定 ---
             // 1. 現在アクティブで、かつ有効なUIを持つガードのリストを作成
-            var validGuards = guards.FindAll(g => g.active && g.cpuStatus != null);
+            var validGuards = guards.FindAll(g => g.active && !g.isInvestigating && g.cpuStatus != null);
 
             // 2. 有効なガードが一人もいなければ、次のループまで待機
             if (validGuards.Count == 0)
@@ -412,6 +490,8 @@ public class StealthGameController : SerializedMonoBehaviour
             yield return new WaitForSeconds(waitTime);
         }
     }
+    
+    // (InvestigateDialogueLoop は削除)
 
     // ======= Guard 制御 =======
     private void StartGuard(GuardEntry g)
@@ -421,6 +501,7 @@ public class StealthGameController : SerializedMonoBehaviour
         g.active = true;
         g.direction = 1;
         g.currentIndex = 0;
+        g.isInvestigating = false;
         g.agent.autoBraking = g.useAutoBraking;
         if (g.arriveThreshold > 0f)
             g.agent.stoppingDistance = Mathf.Max(g.agent.stoppingDistance, g.arriveThreshold);
@@ -428,14 +509,39 @@ public class StealthGameController : SerializedMonoBehaviour
         if (g.startFromClosestPoint && g.patrolPoints != null && g.patrolPoints.Count > 1)
             g.currentIndex = FindClosestPointIndex(g);
 
+        // ▼▼▼ 調査ダイアログのキャッシュ処理 ▼▼▼
+        if (g.playDialogueOnInvestigate && g.investigateDialogueGroup != null)
+        {
+            g.cachedInvestigateSequence = g.investigateDialogueGroup.sequences.Find(seq => seq.id == g.investigateDialogueSequenceId);
+            if (g.cachedInvestigateSequence == null || g.cachedInvestigateSequence.steps.Count == 0)
+            {
+                Debug.LogWarning($"[Stealth] {g.name}: Investigate sequence '{g.investigateDialogueSequenceId}' not found or is empty.");
+                g.cachedInvestigateSequence = null; // 見つからなかったらnullにしておく
+            }
+        }
+        else
+        {
+            g.cachedInvestigateSequence = null;
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         if (g.patrolCo != null) StopCoroutine(g.patrolCo);
         g.patrolCo = StartCoroutine(PatrolLoop(g));
     }
 
     private void StopGuard(GuardEntry g)
     {
-
+        g.isInvestigating = false;
         g.active = false;
+
+        // (investigateDialogueCo の停止処理は不要になった)
+        
+        // lingering messageを消す
+        if (DialogueController.instance != null && g.cpuStatus != null)
+        {
+            DialogueController.instance.ShowBriefMessage(g.cpuStatus.dialogueUIRefs, "", "", 0);
+        }
+
         if (g.patrolCo != null) { StopCoroutine(g.patrolCo); g.patrolCo = null; }
         if (g.agent != null && g.agent.isOnNavMesh) g.agent.ResetPath();
     }
@@ -444,6 +550,9 @@ public class StealthGameController : SerializedMonoBehaviour
     {
         while (g.active)
         {
+            // PatrolLoopが呼ばれる＝通常巡回状態
+            g.isInvestigating = false;
+            
             Transform target = null;
             if (g.patrolPoints != null && g.patrolPoints.Count > 0)
                 target = g.patrolPoints[Mathf.Clamp(g.currentIndex, 0, g.patrolPoints.Count - 1)];
@@ -454,7 +563,7 @@ public class StealthGameController : SerializedMonoBehaviour
                 g.agent.SetDestination(targetPos);
                 
                 float sinceSet = 0f;
-                while (g.active)
+                while (g.active && !g.isInvestigating)
                 {
                     if (!g.agent.pathPending)
                     {
@@ -485,9 +594,13 @@ public class StealthGameController : SerializedMonoBehaviour
                         Debug.LogWarning($"[Stealth] {g.name}: ArrivalTimeout({g.arrivalTimeoutSeconds}s) 到達 → 次へ進む");
                         break;
                     }
+                    
+                    if (g.isInvestigating) yield break;
 
                     yield return null;
                 }
+                
+                if (g.isInvestigating) yield break; 
                 
                 while (g.active && g.agent.velocity.sqrMagnitude > 0.01f)
                 {
@@ -498,18 +611,128 @@ public class StealthGameController : SerializedMonoBehaviour
                 if (waitSec > 0f)
                 {
                     float t = 0f;
-                    while (g.active && t < waitSec) { t += Time.deltaTime; yield return null; }
+                    while (g.active && !g.isInvestigating && t < waitSec) { t += Time.deltaTime; yield return null; }
                 }
                 
+                if (g.isInvestigating) yield break; 
+
                 g.currentIndex = GetNextIndex(g);
             }
             else
             {
-
                 yield return new WaitForSeconds(0.25f);
             }
         }
     }
+
+    private IEnumerator InvestigateSoundCo(GuardEntry g, Vector3 soundPosition)
+    {
+        g.isInvestigating = true;
+
+        // ▼▼▼ 調査ダイアログを1回だけ再生 (修正) ▼▼▼
+        if (g.playDialogueOnInvestigate && g.cachedInvestigateSequence != null && 
+            g.cachedInvestigateSequence.steps.Count > 0 && DialogueController.instance != null && g.cpuStatus != null)
+        {
+            // Sequenceからランダムに1ステップ選ぶ
+            var steps = g.cachedInvestigateSequence.steps;
+            DialogueStep randomStep = steps[Random.Range(0, steps.Count)];
+            
+            DialogueController.instance.ShowBriefMessage(
+                g.cpuStatus.dialogueUIRefs,
+                randomStep.speaker,
+                randomStep.text,
+                g.investigateDialogueDuration
+            );
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
+
+
+        if (g.agent.isOnNavMesh)
+        {
+            g.agent.SetDestination(soundPosition);
+
+            // --- 到着待ち ---
+            float sinceSet = 0f;
+            while (g.active && g.isInvestigating)
+            {
+                if (!g.agent.pathPending)
+                {
+                    float stopThresh = Mathf.Max(g.agent.stoppingDistance, g.arriveThreshold);
+                    if (g.agent.remainingDistance <= stopThresh &&
+                        (!g.agent.hasPath || g.agent.velocity.sqrMagnitude < 0.01f))
+                        break; // 到着
+
+                    if (g.usePlanarDistance)
+                    {
+                        float planar = PlanarDistance(g.agent.transform.position, soundPosition);
+                        if (planar <= Mathf.Max(g.closeEnoughDistance, 0.001f))
+                            break; // 到着 (平面)
+                    }
+                    
+                    if (g.agent.pathStatus == NavMeshPathStatus.PathInvalid ||
+                        g.agent.pathStatus == NavMeshPathStatus.PathPartial)
+                    {
+                        Debug.LogWarning($"[Stealth] {g.name} (Investigate): pathStatus={g.agent.pathStatus} → 調査中断");
+                        break; // パス異常
+                    }
+                }
+
+                sinceSet += Time.deltaTime;
+                if (g.arrivalTimeoutSeconds > 0f && sinceSet >= g.arrivalTimeoutSeconds)
+                {
+                    Debug.LogWarning($"[Stealth] {g.name} (Investigate): ArrivalTimeout → 調査中断");
+                    break; // タイムアウト
+                }
+                
+                if (!g.active) yield break; 
+
+                yield return null;
+            }
+            // --- 到着待ちここまで ---
+            
+            // 停止するまで待機
+            while (g.active && g.isInvestigating && g.agent.velocity.sqrMagnitude > 0.01f)
+            {
+                yield return null;
+            }
+
+            // 調査地点で待機
+            float waitSec = Mathf.Max(0f, g.investigateWaitTime * Mathf.Max(0f, waitTimeScale));
+            if (waitSec > 0f)
+            {
+                float t = 0f;
+                while (g.active && g.isInvestigating && t < waitSec) 
+                { 
+                    t += Time.deltaTime; 
+                    yield return null; 
+                }
+            }
+        }
+        else
+        {
+            // NavMeshに乗っていない
+            yield return new WaitForSeconds(0.25f);
+        }
+
+        // ▼▼▼ 調査終了。念のためダイアログをクリア ▼▼▼
+        // (ShowBriefMessageが0 durationで呼ばれると、現在表示中のものを即時停止/クリアする)
+        if (g.playDialogueOnInvestigate && DialogueController.instance != null && g.cpuStatus != null)
+        {
+            DialogueController.instance.ShowBriefMessage(g.cpuStatus.dialogueUIRefs, "", "", 0);
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
+
+
+        g.isInvestigating = false;
+        
+        // 停止(StopGuard)されていなければ、パトロールを再開
+        if (g.active)
+        {
+            if (g.patrolCo != null) StopCoroutine(g.patrolCo);
+            g.patrolCo = StartCoroutine(PatrolLoop(g)); // PatrolLoopを最初から再開
+        }
+    }
+
     private int GetNextIndex(GuardEntry g)
     {
         if (g.patrolPoints == null || g.patrolPoints.Count <= 1) return 0;
@@ -589,6 +812,32 @@ public class StealthGameController : SerializedMonoBehaviour
         return false;
     }
 
+    private bool IsPlayerHeard(GuardEntry g)
+    {
+        // このガードが聴覚を持たないならチェックしない
+        if (!g.canHear) return false;
+
+        // playerFootStepController が null の場合、
+        // 次の行で NullReferenceException が発生し、取得失敗が明確になります。
+        
+        // プレイヤーの状態を取得 (nullならここでエラーが発生します)
+        var playerState = playerFootStepController.CurrentState;
+        
+        // ご要件通り: "Walking" または "Running" 状態か (CrouchingやIdleは除く)
+        bool isNoisy = (playerState == MovementState.Walking || playerState == MovementState.Running);
+
+        if (!isNoisy) return false; // 音を立てていない
+
+        // 距離判定
+        Vector3 guardPos = g.agent.transform.position;
+        Vector3 playerPos = player.position;
+        
+        float distSqr = (guardPos - playerPos).sqrMagnitude;
+        if (distSqr > g.hearingDistance * g.hearingDistance) return false; // 聴覚範囲外
+        
+        return true; // 聞こえた
+    }
+
     private float PlanarDistance(Vector3 a, Vector3 b)
     {
         a.y = 0f; b.y = 0f;
@@ -598,12 +847,15 @@ public class StealthGameController : SerializedMonoBehaviour
     // ======= Gizmos（各ガードの目から描画） =======
     [FoldoutGroup("Gizmos", expanded: true), PropertySpace] public bool gizmoAlways = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawFOV = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoDrawHearing = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawPatrol = true;
     [FoldoutGroup("Gizmos")] public bool gizmoDrawNavPath = true;
     [FoldoutGroup("Gizmos")] public bool gizmoShowAllRandomLinks = false;
 
     [FoldoutGroup("Gizmos")] public Color gizmoFOVFillColor = new Color(1f, 1f, 0f, 0.15f);
     [FoldoutGroup("Gizmos")] public Color gizmoFOVEdgeColor = new Color(1f, 1f, 0f, 0.65f);
+    [FoldoutGroup("Gizmos")] public Color gizmoHearingColor = new Color(0f, 0.5f, 1f, 0.15f);
+    [FoldoutGroup("Gizmos")] public Color gizmoHearingEdgeColor = new Color(0f, 0.5f, 1f, 0.5f);
     [FoldoutGroup("Gizmos")] public Color gizmoSightRayVisible = Color.red;
     [FoldoutGroup("Gizmos")] public Color gizmoSightRayBlocked = Color.gray;
     [FoldoutGroup("Gizmos")] public Color gizmoPatrolPointColor = Color.cyan;
@@ -661,6 +913,15 @@ public class StealthGameController : SerializedMonoBehaviour
                     Handles.color = visible ? gizmoSightRayVisible : gizmoSightRayBlocked;
                     Handles.DrawAAPolyLine(3f, eyePos, target);
                 }
+            }
+
+            if (gizmoDrawHearing && g.canHear && g.agent != null)
+            {
+                var pos = g.agent.transform.position;
+                Handles.color = gizmoHearingColor;
+                Handles.DrawSolidDisc(pos, Vector3.up, g.hearingDistance);
+                Handles.color = gizmoHearingEdgeColor;
+                Handles.DrawWireDisc(pos, Vector3.up, g.hearingDistance);
             }
 
             if (gizmoDrawPatrol && g.patrolPoints != null && g.patrolPoints.Count > 0)
