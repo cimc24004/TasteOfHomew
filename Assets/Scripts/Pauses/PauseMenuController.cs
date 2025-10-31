@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 // using NUnit.Framework; // 不要なusing
 
 /// <summary>
@@ -15,7 +16,8 @@ public class PauseMenuController : MonoBehaviour
     [Header("Settings")]
     [Tooltip("タイトルシーンの名前")]
     [SerializeField] private string titleSceneName = "Title"; // Inspectorでタイトルシーン名を設定
-
+    [SerializeField]
+    private Volume mosaicVolume;
     public static bool IsPaused { get; private set; } = false;
 
     private PlayerDataHub playerDataHub;
@@ -91,6 +93,7 @@ public class PauseMenuController : MonoBehaviour
 
     public void ResumeGame()
     {
+        mosaicVolume.enabled = false;
         Time.timeScale = 1f;
         IsPaused = false;
         uiController.HidePauseMenu();
@@ -101,6 +104,7 @@ public class PauseMenuController : MonoBehaviour
 
     private void PauseGame()
     {
+        mosaicVolume.enabled = true;
         Time.timeScale = 0f;
         IsPaused = true;
         uiController.ShowPauseMenu();
