@@ -21,18 +21,18 @@ public class PauseMenuController : MonoBehaviour
     private PlayerDataHub playerDataHub;
     private InputAction pauseAction; // ポーズ用のアクションをキャッシュする変数
     private GameStateController gameStateController;
-
+    private ConfigController configController;
     void Start()
     {
         playerDataHub = PlayerDataHub.instance;
         gameStateController = GameStateController.instance;
-
+        configController = ConfigController.Instance;
         // タイポ修正: CurrentplayerInput -> CurrentPlayerStatus.playerInput (以前のコードを参照)
-        if (playerDataHub?.CurrentplayerInput != null) 
+        if (playerDataHub?.CurrentplayerInput != null)
         {
             // タイポ修正: playerInput -> playerInput
             pauseAction = playerDataHub.CurrentplayerInput.actions.FindAction("ESC");
-            
+
             if (pauseAction != null)
             {
                 pauseAction.performed += OnTogglePause;
@@ -46,6 +46,7 @@ public class PauseMenuController : MonoBehaviour
         {
             Debug.LogError("PauseMenuController: PlayerDataHub または PlayerInput が見つかりません。");
         }
+        
     }
 
     void OnDestroy()

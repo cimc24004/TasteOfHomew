@@ -7,7 +7,7 @@ public class PlayerStatus : Singleton<PlayerStatus>
     public Transform playerHead;
     public GameObject CameraRoot;
     public CrossHairController crossHairController;
-    private CMFPSController cMFPSController;
+    public CMFPSController cMFPSController;
     public FootStepController playerFootStepController;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

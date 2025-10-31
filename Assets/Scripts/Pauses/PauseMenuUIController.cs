@@ -18,7 +18,7 @@ public class PauseMenuUIController : MonoBehaviour
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button backToTitleButton;
     [SerializeField] private Button backToPauseButton; // 設定画面から戻るボタン
-
+    private ConfigController configController;
     void Start()
     {
         // ボタンにリスナーを登録
@@ -30,6 +30,7 @@ public class PauseMenuUIController : MonoBehaviour
         // 最初は非表示にしておく
         pauseMenuPanel.SetActive(false);
         configPanel.SetActive(false);
+        configController = ConfigController.Instance;
     }
 
     // --- PauseMenuControllerから呼び出されるメソッド ---
@@ -70,6 +71,7 @@ public class PauseMenuUIController : MonoBehaviour
     {
         // 設定パネルを非表示にし、ポーズメニューを再表示する
         configPanel.SetActive(false);
-        pauseMenuPanel.SetActive(true); 
+        pauseMenuPanel.SetActive(true);
+        configController.RevertPendingSettings();
     }
 }

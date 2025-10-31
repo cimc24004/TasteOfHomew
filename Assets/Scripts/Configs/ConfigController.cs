@@ -1,14 +1,11 @@
 using UnityEngine;
-using UnityEngine.Audio; // AudioMixerを使うため
-using UnityEngine.Rendering.Universal; // URPの設定（今回はQualitySettingsを使用）
-
-/// <summary>
-/// ゲームの設定値を管理し、保存・読み込み・適用を行う。
-/// ConfigMenuUIControllerと連携して動作する。
-/// </summary>
-using UnityEngine;
 using UnityEngine.Audio;
-using System.IO; // JsonUtilityを使うため（JsonUtilityはCoreに含まれます）
+using System.IO;
+using UnityEngine.Rendering.Universal; // URPアセットを操作するために必要
+using Unity.Cinemachine;
+using Sirenix.OdinInspector;
+using Cysharp.Threading.Tasks; // Cinemachineの仮想カメラを操作するために必要
+
 /// <summary>
 /// すべてのゲーム設定を保持するシリアライズ可能なクラス。
 /// このクラスのインスタンスがJSONに変換されて保存されます。
@@ -53,7 +50,7 @@ public class GameSettings
 
         mouseSensitivity = 1.0f;
         invertCameraY = false;
-        fov = 60f;
+        fov = 70f;
     }
 
     /// <summary>
@@ -82,8 +79,10 @@ public class GameSettings
 /// <summary>
 /// ゲーム設定の管理（ロード、保存、適用）を行う。
 /// シングルトンとして機能し、他のスクリプトから設定値（CurrentSettings）を読み取れるようにする。
+/// ★注意: Edit > Project Settings > Script Execution Order で、
+/// このスクリプトを「-100」など、Default Time より前に設定してください。
 /// </summary>
-public class ConfigController : MonoBehaviour
+public class ConfigController : SerializedMonoBehaviour
 {
     public static ConfigController Instance { get; private set; }
 
@@ -92,7 +91,14 @@ public class ConfigController : MonoBehaviour
 
     [Header("Game System References")]
     [SerializeField] private AudioMixer masterMixer;
-    [SerializeField] private Camera mainCamera; // FOV適用のため
+    
+    [Header("URP")]
+    [Tooltip("プロジェクトのURP設定アセット（URP_High, URP_Mediumなど）")]
+    [SerializeField] private UniversalRenderPipelineAsset urpAsset; 
+
+    [Header("Cinemachine")]
+    [Tooltip("プレイヤーのFOVを制御するCinemachineカメラ (Cinemachine 3+)")]
+    [SerializeField] private CinemachineCamera playerVirtualCamera; 
 
     // PlayerPrefsに保存するための単一キー
     private const string PREFS_KEY = "GameSettingsJSON";
@@ -105,7 +111,7 @@ public class ConfigController : MonoBehaviour
     /// <summary>
     /// UIで変更中だが、まだ「適用」されていない一時的な設定
     /// </summary>
-    private GameSettings pendingSettings;
+    [SerializeField] private GameSettings pendingSettings;
 
     void Awake()
     {
@@ -114,13 +120,27 @@ public class ConfigController : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // ★変更点: LoadSettings() のみを呼び出す
             LoadSettings();
         }
         else
         {
             Destroy(gameObject);
         }
+        
     }
+
+    // ▼▼▼▼▼ 修正点: Start() を新設 ▼▼▼▼▼
+    async void Start()
+    {
+        await UniTask.Yield();
+        // 全てのAwake()が完了したこのタイミングで、
+        // 読み込み済みの CurrentSettings をゲームに「適用(Push)」する。
+        // これで PlayerDataHub.instance などが null ではなくなる。
+        ApplyAllSettings(CurrentSettings);
+    }
+    // ▲▲▲▲▲ 修正点 ▲▲▲▲▲
 
     /// <summary>
     /// PlayerPrefsからJSONを読み込み、設定をロードする
@@ -141,9 +161,8 @@ public class ConfigController : MonoBehaviour
         {
             CurrentSettings = JsonUtility.FromJson<GameSettings>(json);
         }
-
-        // 読み込んだ設定をゲームに適用
-        ApplyAllSettings(CurrentSettings);
+        
+        // ★変更点: ここで ApplyAllSettings() を「呼ばない」
     }
 
     /// <summary>
@@ -177,26 +196,53 @@ public class ConfigController : MonoBehaviour
             Screen.SetResolution(res.width, res.height, settings.fullscreenMode, res.refreshRate);
         }
 
-        // VSync
+        // VSync (これはQualitySettingsでOK)
         QualitySettings.vSyncCount = settings.vsync ? 1 : 0;
 
-        // シャドウ (Project Settings > Quality で設定したレベルに対応させる想定)
-        // 例: 0=Low(Disable), 1=Medium, 2=High
-        // ここではシャドウ解像度を例として変更します
-        UnityEngine.ShadowResolution[] shadowRes = { UnityEngine.ShadowResolution.Low, UnityEngine.ShadowResolution.Medium, UnityEngine.ShadowResolution.High };
-        QualitySettings.shadowResolution = shadowRes[Mathf.Clamp(settings.shadowQuality, 0, shadowRes.Length - 1)];
-
-        // テクスチャ (0: High, 1: Medium, 2: Low)
+        // テクスチャ (これもQualitySettingsでOK)
         QualitySettings.globalTextureMipmapLimit = settings.textureQuality; // 0=フル, 1=1/2, 2=1/4...
 
+        // --- URP設定 ---
+        if (urpAsset == null)
+        {
+            Debug.LogWarning("URP Asset が ConfigController に設定されていません。グラフィック設定（AA, Shadow）は適用されません。");
+            return;
+        }
+
         // アンチエイリアス (0: 0x, 1: 2x, 2: 4x, 3: 8x)
-        int[] aaValues = { 0, 2, 4, 8 };
-        QualitySettings.antiAliasing = aaValues[Mathf.Clamp(settings.antiAliasing, 0, aaValues.Length - 1)];
+        // URPのMSAAは 1=Off, 2, 4, 8
+        int[] aaValues = { 1, 2, 4, 8 }; 
+        urpAsset.msaaSampleCount = aaValues[Mathf.Clamp(settings.antiAliasing, 0, aaValues.Length - 1)];
+
+        // シャドウ品質 (0: Low, 1: Medium, 2: High)
+        // ※これは一例です。URPアセットのどの項目を変更するかはプロジェクトによります
+        switch (settings.shadowQuality)
+        {
+            case 0: // Low
+                urpAsset.mainLightShadowmapResolution = 1024;
+                urpAsset.shadowDistance = 50f;
+                urpAsset.shadowCascadeCount = 1; // カスケード数も変更する例
+                break;
+            case 1: // Medium
+                urpAsset.mainLightShadowmapResolution = 2048;
+                urpAsset.shadowDistance = 100f;
+                urpAsset.shadowCascadeCount = 2;
+                break;
+            case 2: // High
+                urpAsset.mainLightShadowmapResolution = 4096;
+                urpAsset.shadowDistance = 150f;
+                urpAsset.shadowCascadeCount = 4;
+                break;
+        }
     }
 
     private void ApplyAudio(GameSettings settings)
     {
-        if (masterMixer == null) return;
+        if (masterMixer == null) 
+        {
+             Debug.LogWarning("AudioMixer が ConfigController に設定されていません。");
+            return;
+        }
         
         // ※ AudioMixer側で "MasterVolumeParam", "MusicVolumeParam", "SFXVolumeParam" 
         //    という名前の変数をExposeしておく必要があります。
@@ -207,19 +253,39 @@ public class ConfigController : MonoBehaviour
     
     private void ApplyGameplay(GameSettings settings)
     {
-        // FOV
-        if (mainCamera != null)
+        // Start() で呼ばれるため、PlayerDataHub.instance が存在するはず
+        if(PlayerDataHub.instance != null)
         {
-            mainCamera.fieldOfView = settings.fov;
+            // PlayerDataHubから最新のカメラを取得
+            if (PlayerDataHub.instance.CurrentCMFPSController != null)
+            {
+                playerVirtualCamera = PlayerDataHub.instance.CurrentCMFPSController.cmCamera;
+            }
+        }
+        
+        // FOV
+        if (playerVirtualCamera != null)
+        {
+            // Cinemachine 3+: Lens は値型(struct)なので一度取得して変更してから再代入する
+            var lens = playerVirtualCamera.Lens;
+            lens.FieldOfView = settings.fov;
+            playerVirtualCamera.Lens = lens;
+        }
+        else
+        {
+            // Start() の時点でもカメラが見つからない場合
+            Debug.LogWarning("PlayerVirtualCamera が ConfigController に設定されていないか、PlayerDataHubから取得できませんでした。FOVは適用されません。");
         }
 
         // マウス感度やカメラ反転は、Playerの入力スクリプト側で
         // ConfigController.Instance.CurrentSettings.mouseSensitivity などを参照して利用します。
+        // このスクリプト(ConfigController)側で直接適用する処理はありません。
     }
 
     // ボリューム(0-1)をデシベル(-80 to 0)に変換
     private float ConvertToDecibel(float volume)
     {
+        // 0になると-infinityになるため、極小値でクランプ
         return Mathf.Log10(Mathf.Max(volume, 0.0001f)) * 20f;
     }
 
@@ -228,6 +294,7 @@ public class ConfigController : MonoBehaviour
     {
         for (int i = 0; i < Screen.resolutions.Length; i++)
         {
+            // リフレッシュレートまで完全に一致するものを探す
             if (Screen.resolutions[i].width == currentRes.width &&
                 Screen.resolutions[i].height == currentRes.height &&
                 Screen.resolutions[i].refreshRate == currentRes.refreshRate)
@@ -235,7 +302,18 @@ public class ConfigController : MonoBehaviour
                 return i;
             }
         }
-        return Screen.resolutions.Length - 1; // 見つからなければ最後（最大）のものをデフォルトとする
+        
+        // 見つからなければ、幅と高さが一致する最初のエントリを探す（リフレッシュレート違い）
+        for (int i = 0; i < Screen.resolutions.Length; i++)
+        {
+             if (Screen.resolutions[i].width == currentRes.width &&
+                 Screen.resolutions[i].height == currentRes.height)
+             {
+                return i;
+             }
+        }
+        
+        return Screen.resolutions.Length - 1; // それでも見つからなければ最後（最大）のものをデフォルトとする
     }
 
 
