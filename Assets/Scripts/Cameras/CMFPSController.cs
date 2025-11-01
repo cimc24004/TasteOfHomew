@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// CM3 の FPS リグ操作用コントローラ。
@@ -61,6 +62,12 @@ public class CMFPSController : Singleton<CMFPSController>
     /// </summary>
     void Update()
     {
+        if (Gamepad.current == null) return;
+
+        Vector2 rs = Gamepad.current.rightStick.ReadValue();
+        float rt = Gamepad.current.rightTrigger.ReadValue();
+
+        Debug.Log($"RightStick: {rs}, RT: {rt}");
         // 視点がロックされている間は、inputProvider自体が無効なので処理不要
         if (IsLocked) return;
         

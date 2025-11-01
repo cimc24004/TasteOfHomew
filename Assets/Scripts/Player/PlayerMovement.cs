@@ -67,14 +67,16 @@ public class PlayerMovement : SerializedMonoBehaviour
         if (playerStatus == null) return;
         playerFootStepController.CurrentState = MovementState.Idle;
         playerStatus.crossHairController.enabled = false;
-        playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 0;
+        if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
+            playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 0;
     }
     void OnEnable()
     {
         if(playerStatus == null)  playerStatus = PlayerStatus.instance;
         if (playerStatus == null) return;
+        if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
             playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 1;
-            playerStatus.crossHairController.enabled = true;
+        playerStatus.crossHairController.enabled = true;
     }
     void Start()
     {
@@ -87,7 +89,7 @@ public class PlayerMovement : SerializedMonoBehaviour
         moveAction   = playerInput.actions.FindAction(string.IsNullOrEmpty(moveActionName) ? "Move" : moveActionName);
         sprintAction = playerInput.actions.FindAction(string.IsNullOrEmpty(sprintActionName) ? "Sprint" : sprintActionName);
         crouchAction = playerInput.actions.FindAction(string.IsNullOrEmpty(crouchActionName) ? "Crouch" : crouchActionName);
-
+        if (moveAction == null) Debug.LogError("moveActionがありません");
         if (cameraRoot)
         {
             var lp = cameraRoot.localPosition;
@@ -142,8 +144,9 @@ public class PlayerMovement : SerializedMonoBehaviour
         {
             moveSpd = speed;
         }
-
-        Vector3 move = (basisRight * input.x + basisFwd * input.y).normalized;
+        Debug.Log($"[PlayerMovement] Input Vector: {input}");
+        Vector3 moveDir = (basisRight * input.x + basisFwd * input.y);
+        Vector3 move = Vector3.ClampMagnitude(moveDir, 1.0f); // 最大値を1に制限
         controller.Move(move * moveSpd * Time.deltaTime);
 
         // ===== 重力 =====

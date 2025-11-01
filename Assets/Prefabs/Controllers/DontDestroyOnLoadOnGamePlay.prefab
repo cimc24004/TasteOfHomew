@@ -1002,7 +1002,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7054842861330042331}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
   m_Name: 
@@ -1663,6 +1663,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3611077916303751699}
   - component: {fileID: 6007134892875858846}
+  - component: {fileID: 4902170238963510259}
   m_Layer: 0
   m_Name: DontDestroyOnLoadOnGamePlay
   m_TagString: Untagged
@@ -1708,6 +1709,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DODontDestroyOnLoad
   destroyOnLoadScenes:
   - Start
+--- !u!114 &4902170238963510259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9202181419196135791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 256546e3bd2a7a3448204f853bf52eb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
 --- !u!1001 &3029279122314397468
 PrefabInstance:
   m_ObjectHideFlags: 0

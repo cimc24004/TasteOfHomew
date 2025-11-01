@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class SimpleKeyring : SerializedMonoBehaviour, IKeyring
 {
@@ -7,7 +8,7 @@ public class SimpleKeyring : SerializedMonoBehaviour, IKeyring
     [LabelText("初期所持鍵")] public string[] initialKeys;
 
     private readonly HashSet<string> _keys = new();
-
+    public AudioSource keygetSound;
     void OnEnable()
     {
         _keys.Clear();

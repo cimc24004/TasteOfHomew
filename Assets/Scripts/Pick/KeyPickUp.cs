@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine.Animations.Rigging;
 
 public class KeyPickup : SerializedMonoBehaviour, IInteractable
 {
@@ -30,7 +31,7 @@ public class KeyPickup : SerializedMonoBehaviour, IInteractable
         if (ring != null)
         {
             (ring as SimpleKeyring)?.AddKey(keyId); // SimpleKeyring向け
-            if (pickupClip && _audio) _audio.PlayOneShot(pickupClip);
+            (ring as SimpleKeyring).keygetSound.PlayOneShot(pickupClip);
             if (destroyOnPickup) Destroy(gameObject);
         }
         else

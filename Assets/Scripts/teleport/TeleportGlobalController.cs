@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 public class TeleportGlobalController : Singleton<TeleportGlobalController>
 {
@@ -21,13 +20,38 @@ public class TeleportGlobalController : Singleton<TeleportGlobalController>
     }
     private void Teleport(Transform _transform)
     {
-        playerStatus.transform.position = _transform.position;
+        Debug.Log("Teleport関数内です。");
+        // プレイヤーにアタッチされている CharacterController を取得
+        CharacterController cc = playerStatus.GetComponent<CharacterController>();
+
+        if (cc != null)
+        {
+            // ★★★ CharacterController がある場合のテレポート方法 ★★★
+            Debug.Log("CharacterControllerを無効化してテレポートします。");
+            cc.enabled = false; // 一時的に無効化
+            playerStatus.transform.position = _transform.position; // 位置を強制変更
+            cc.enabled = true;  // 再度有効化
+            Debug.Log("テレポート完了。");
+        }
+        else
+        {
+            // CharacterController がない場合（通常）
+            Debug.Log("transform.position を直接変更します。");
+            playerStatus.transform.position = _transform.position;
+        }
     }
     public void teleportTransformDataAdd(string keyName, Transform targetTransform)
     {
         if (!teleportTransformData.ContainsKey(keyName))
         {
             teleportTransformData.Add(keyName, targetTransform);
+        }else
+        {
+            // ★★★ 修正点 ★★★
+            // キーが既に存在する場合 (古いシーンのTransformが入っている) は、
+            // 新しいシーンのTransformで上書きする
+            Debug.Log($"キー '{keyName}' を新しいTransformで上書き更新します。");
+            teleportTransformData[keyName] = targetTransform;
         }
     }
     private void teleportByKeyCheck()
@@ -51,6 +75,7 @@ public class TeleportGlobalController : Singleton<TeleportGlobalController>
                 // teleportTransformDataにキーが存在するかチェックすると、より安全
                 if (teleportTransformData.ContainsKey(key))
                 {
+                    Debug.Log("テレポート成功手レポートします");
                     Teleport(teleportTransformData[key]);
                     // 元のDictionaryを変更しても、ループはコピーしたリストを
                     // 見ているのでエラーにならない

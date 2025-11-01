@@ -43,7 +43,7 @@ public class GameStateController : Singleton<GameStateController>
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         Debug.Log("GameplayModeGameplayModeGameplayModeGameplayModeGameplayMode");
-        EventSystem.current.sendNavigationEvents = true;
+        EventSystem.current.sendNavigationEvents = false;
     }
 
     public void MenuOnGamePlayMode(bool visibleCursor)
@@ -61,7 +61,7 @@ public class GameStateController : Singleton<GameStateController>
             Cursor.visible = true;
         }
         
-        EventSystem.current.sendNavigationEvents = false;
+        EventSystem.current.sendNavigationEvents = true;
     }
 
     public void ReadEventMode(bool visibleCursor)
