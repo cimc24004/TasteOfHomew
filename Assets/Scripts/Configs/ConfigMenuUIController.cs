@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI; // Button を使うため
 using TMPro; // TextMeshPro
 using System.Collections.Generic; // Listを使うため
+using UnityEngine.EventSystems; // EventSystem を使うために追加
+using Cysharp.Threading.Tasks; // ★ UniTask を使うために追加
 
 /// <summary>
 /// 設定メニューのパネル状態
@@ -17,11 +19,12 @@ public enum ConfigPanelState
 /// オプション画面のUIコンポーネントを管理し、
 /// ユーザー入力をConfigControllerに伝える。
 /// 3つの設定パネル（グラフィック、音量、ゲームプレイ）の切り替えも行う。
+/// (このスクリプトがアタッチされたGameObjectは常にアクティブであることを前提とする)
 /// </summary>
 public class ConfigMenuUIController : MonoBehaviour
 {
     [Header("Controller Reference")]
-    [SerializeField] private ConfigController configController; // ※Inspectorで設定していても、OnEnableで上書きします
+    [SerializeField] private ConfigController configController; // ※Inspectorで設定していても、Startで上書きします
 
     [Header("Panels")]
     [SerializeField] private GameObject graphicsPanel;
@@ -42,7 +45,6 @@ public class ConfigMenuUIController : MonoBehaviour
     [SerializeField] private Button RevertButton; // リバート（戻す）ボタン（ある場合）
 
     [Header("Graphics UI")]
-    // (中略 ... UIコンポーネントのSerializeField)
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private TMP_Dropdown windowModeDropdown;
     [SerializeField] private Toggle vsyncToggle;
@@ -74,33 +76,32 @@ public class ConfigMenuUIController : MonoBehaviour
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
             
-        // ConfigController (Instance) が必要なボタンは OnEnable で登録します
+        // ConfigController (Instance) が必要なボタンは Start で登録します
     }
 
     /// <summary>
-    /// このUIパネルが表示されたときに呼ばれる
+    /// このコンポーネントが有効になった最初のフレームで実行
     /// </summary>
     void Start()
     {
-        // ▼▼▼▼▼ 修正点 1 ▼▼▼▼▼
+        // ▼▼▼ 修正: 1フレーム待機 ▼▼▼
+        // ConfigController.Instance が Start() で1フレーム待機するため、
+        // こちらも1フレーム待機してから Instance を参照する
+        // ▲▲▲ 修正: 1フレーム待機 ▲▲▲
+
         // Inspectorで何が設定されていても、必ずシングルトンのInstanceを取得する
-        // これで、不正なインスタンスを参照する問題が解決します。
         configController = ConfigController.Instance;
 
-        // Instanceが（何らかの理由で）存在しない場合はエラーを出し、停止する
         if (configController == null)
         {
             Debug.LogError("ConfigController.Instance が見つかりません！シーンにConfigControllerが配置されているか確認してください。");
             return;
         }
-        // ▲▲▲▲▲ 修正点 1 ▲▲▲▲▲
-
 
         // 解像度ドロップダウンを初期化
         PopulateResolutionDropdown();
 
         // ConfigControllerから現在の設定（のコピー）を取得
-        // この時点で configController.CurrentSettings は null ではなくなります
         GameSettings settings = configController.InitializePendingSettings();
 
         // UIに値を設定
@@ -109,36 +110,16 @@ public class ConfigMenuUIController : MonoBehaviour
         // defaultPanel に基づいて初期表示を行う
         ShowPanel(defaultPanel);
 
-        // ▼▼▼▼▼ 修正点 2 ▼▼▼▼▼
-        // リスナーを OnEnable で登録
+        // リスナーを Start で登録
         if (ApplyButton != null)
             ApplyButton.onClick.AddListener(configController.ApplyPendingSettings);
         
-        // リバートボタンも同様に
         if (RevertButton != null)
             RevertButton.onClick.AddListener(configController.RevertPendingSettings);
     }
 
-    // ▼▼▼▼▼ 修正点 3 (OnDisable を追加) ▼▼▼▼▼
-    /// <summary>
-    /// このUIパネルが非表示になったときに呼ばれる
-    /// </summary>
-    private void OnDisable()
-    {
-        // OnEnable で登録したリスナーは、必ず OnDisable で解除します
-        // (さもないと、UIを開き直すたびにリスナーが二重、三重に登録されてしまいます)
-        if (configController != null) // configControllerが（シーン終了時などで）先に破棄される可能性に対処
-        {
-            if (ApplyButton != null)
-                ApplyButton.onClick.RemoveListener(configController.ApplyPendingSettings);
+    // OnDisable は不要 (Start/OnDestroy でリスナー管理するため)
 
-            if (RevertButton != null)
-                RevertButton.onClick.RemoveListener(configController.RevertPendingSettings);
-        }
-    }
-    // ▲▲▲▲▲ 修正点 3 ▲▲▲▲▲
-
-    // ▼▼▼▼▼ 修正点 4 (OnDestroy を修正) ▼▼▼▼▼
     private void OnDestroy()
     {
         // Awake で登録したリスナーを解除
@@ -149,17 +130,16 @@ public class ConfigMenuUIController : MonoBehaviour
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.RemoveListener(ShowGameplayPanel);
         
-        // OnDisable が呼ばれなかった場合に備えて、OnDestroyでも解除処理を試みる
-        // (OnDisableのコードと重複するが、安全のため)
-        if (configController != null)
+        // Start で登録したリスナーを解除
+        if (configController != null) // configControllerが先に破棄される可能性に対処
         {
             if (ApplyButton != null)
                 ApplyButton.onClick.RemoveListener(configController.ApplyPendingSettings);
+
             if (RevertButton != null)
                 RevertButton.onClick.RemoveListener(configController.RevertPendingSettings);
         }
     }
-    // ▲▲▲▲▲ 修正点 4 ▲▲▲▲▲
 
 
     /// <summary>
@@ -167,7 +147,6 @@ public class ConfigMenuUIController : MonoBehaviour
     /// </summary>
     private void PopulateResolutionDropdown()
     {
-        // (中略 ... この関数の内容は変更なし)
         resolutions = new List<Resolution>(Screen.resolutions);
         resolutionDropdown.ClearOptions();
 
@@ -185,8 +164,6 @@ public class ConfigMenuUIController : MonoBehaviour
     /// </summary>
     public void SetAllUIValues(GameSettings settings)
     {
-        // (中略 ... この関数の内容は変更なし)
-        
         // --- リスナーを一時的に解除 ---
         resolutionDropdown.onValueChanged.RemoveAllListeners();
         windowModeDropdown.onValueChanged.RemoveAllListeners();
@@ -235,10 +212,13 @@ public class ConfigMenuUIController : MonoBehaviour
     // --- パネル切り替えロジック ---
     private void ShowPanel(ConfigPanelState panelState)
     {
-        // (中略 ... この関数の内容は変更なし)
         graphicsPanel.SetActive(panelState == ConfigPanelState.Graphics);
         audioPanel.SetActive(panelState == ConfigPanelState.Audio);
         gameplayPanel.SetActive(panelState == ConfigPanelState.Gameplay);
+
+        // ★コントローラーフォーカスは、
+        // PauseMenuUIController の OnSettingsButtonClicked() と
+        // HideConfigPanel() で制御します。
     }
 
     // --- パネル切り替えメソッド (ButtonのAddListenerから呼ばれる) ---
@@ -256,7 +236,6 @@ public class ConfigMenuUIController : MonoBehaviour
     }
 
     // --- UIのOnValueChanged()から呼び出すメソッド群 ---
-    // (中略 ... このセクションの関数群は変更なし)
     public void OnResolutionChanged(int index) => configController.UpdatePendingResolution(index);
     public void OnWindowModeChanged(int index) => configController.UpdatePendingFullscreenMode(index);
     public void OnVsyncChanged(bool isOn) => configController.UpdatePendingVsync(isOn);

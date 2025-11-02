@@ -34,7 +34,7 @@ public class DialogueController : Singleton<DialogueController>
     public bool useUnscaledTime = true;
 
     [Title("Input Actions (名前)")]
-    public string advanceActionName = "Submit";
+    public string advanceActionName = "Click";
     public string skipActionName = "Skip";
     public string cancelActionName = "Cancel";
 
@@ -548,7 +548,6 @@ public class DialogueController : Singleton<DialogueController>
     /// <param name="duration">表示時間（秒）</param>
     public void ShowBriefMessage(DialogueUIRefs uiRefs, string speaker, string body, float duration)
     {
-        Debug.Log("_randomDialogueCo-----------2--------------------");
         // 以前のコルーチンが動いていたら、まず停止させる
         if (_briefMessageCoroutine != null)
         {
@@ -578,8 +577,6 @@ public class DialogueController : Singleton<DialogueController>
         bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
         if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(hasSpeaker);
         if(uiToUse.speakerText) uiToUse.speakerText.text = speaker;
-        Debug.Log($"-----------3----------body: {body}----------");
-        Debug.Log($"-----------5----------uitoUse.bodytext: {uiToUse.bodyText}----------");
         // --- 3. 待機処理 ---
         if (duration > 0)
         {

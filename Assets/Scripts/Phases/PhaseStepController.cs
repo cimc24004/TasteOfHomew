@@ -369,6 +369,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
         int newPi = FindPhaseIndex(phase);
         if (newPi < 0) { Debug.LogWarning($"[PhaseStepController] Phase '{phase}' not found in list."); return false; }
 
+        // === 同一フェーズ内の処理 (ここは変更なし) ===
         if (Equals(phase, CurrentPhase))
         {
             if (!TryResolveFirstStepIndex(newPi, firstStepKey, out var si2))
@@ -382,13 +383,17 @@ public class PhaseStepController : Singleton<PhaseStepController>
                     return false;
                 }
             }
+            // ★ 修正：同一フェーズ内のステップ切り替えでは、SwitchStepByIndex が Exit も Enter も担当する
             return SwitchStepByIndex(newPi, si2);
         }
+        // === ここまで ===
 
         var oldPhase = CurrentPhase;
-        var oldStep  = CurrentStepKey;
+        var oldStep = CurrentStepKey;
+        var oldPhaseIndex = CurrentPhaseIndex; // ★ 古いインデックスを保持
 
-        if (invokeOldExit && TryGetStep(CurrentPhaseIndex, CurrentStepIndex, out var oldStepData))
+        // ★ 修正：古いインデックス (oldPhaseIndex) で Exit を実行
+        if (invokeOldExit && TryGetStep(oldPhaseIndex, CurrentStepIndex, out var oldStepData))
         {
             onStepExited?.Invoke(oldStep);
             SetActiveList(oldStepData.objectsToShow, false, this.gameObject);
@@ -396,7 +401,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
         if (invokeOldExit && phases.Count > 0)
             onPhaseExited?.Invoke(oldPhase);
 
-        CurrentPhase = phases[newPi].phase;
+        // CurrentPhase = phases[newPi].phase; // ★★★ 更新を後回しにするため、この行をコメントアウト（または削除） ★★★
 
         if (hardExclusiveShowAcrossPhases) HideAllObjects();
 
@@ -405,10 +410,24 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
         await UniTask.Yield();
 
-        onPhaseEntered?.Invoke(CurrentPhase);
-        onPhaseChanged?.Invoke(oldPhase, CurrentPhase);
+        // ★★★
+        // 修正：SwitchStepByIndex を先に呼び出す。
+        // この時点では CurrentPhase はまだ古いフェーズ (Absence) のまま。
+        // ★★★
+        bool switchSuccess = SwitchStepByIndex(newPi, si);
 
-        return SwitchStepByIndex(newPi, si);
+        // ★★★
+        // 修正：SwitchStepByIndex が成功した場合のみ、CurrentPhase を更新し、
+        // Phase イベントを発火する
+        // ★★★
+        if (switchSuccess)
+        {
+            CurrentPhase = phases[newPi].phase; // ★ ここで CurrentPhase を更新
+            onPhaseEntered?.Invoke(CurrentPhase);
+            onPhaseChanged?.Invoke(oldPhase, CurrentPhase);
+        }
+
+        return switchSuccess;
     }
     public void SwitchPhase(GameFlowController.Phase phase, string firstStepKey = null, bool invokeOldExit = true)
         => SwitchPhaseAsync(phase, firstStepKey, invokeOldExit).Forget();
@@ -493,17 +512,37 @@ public class PhaseStepController : Singleton<PhaseStepController>
         if (stepIndex < 0 || stepIndex >= phase.steps.Count) return false;
 
         var newStep = phase.steps[stepIndex];
-        if (string.Equals(newStep.key, CurrentStepKey, StringComparison.Ordinal) &&
-            phaseIndex == CurrentPhaseIndex)
-            return false;
-
         var oldStepKey = CurrentStepKey;
+        var oldPhaseIndex = CurrentPhaseIndex; // ★ 古いフェーズのインデックス (Absence など) を取得
 
-        if (TryGetStep(CurrentPhaseIndex, CurrentStepIndex, out var oldStep))
+        // ★ 修正：比較対象を CurrentPhaseIndex (古いフェーズ) にする
+        if (string.Equals(newStep.key, oldStepKey, StringComparison.Ordinal) &&
+            phaseIndex == oldPhaseIndex)
         {
-            onStepExited?.Invoke(oldStepKey);
-            SetActiveList(oldStep.objectsToShow, false, this.gameObject);
+            // (Outside, "1") と (Absence, "1") の比較：
+            // newStep.key = "1"
+            // oldStepKey = "1"
+            // phaseIndex = Index(Outside)
+            // oldPhaseIndex = Index(Absence)
+            // -> ("1" == "1") && (Index(Outside) == Index(Absence))
+            // -> (true) && (false) = false
+            // よって、if 文は実行されず、正しくステップが切り替わる
+            return false;
         }
+
+        // ★ 修正：古いステップの Exit 処理
+        // SwitchPhaseAsync が既に Exit を実行しているので、ここでは
+        //「同一フェーズ内の移動」の場合のみ Exit を実行する
+        if (phaseIndex == oldPhaseIndex)
+        {
+            if (TryGetStep(oldPhaseIndex, FindStepIndex(oldPhaseIndex, oldStepKey), out var oldStep))
+            {
+                onStepExited?.Invoke(oldStepKey);
+                SetActiveList(oldStep.objectsToShow, false, this.gameObject);
+            }
+        }
+
+        // === 以下、変更なし ===
 
         CurrentStepKey = newStep.key;
 
@@ -519,7 +558,6 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
         return true;
     }
-
     private void HideAllObjects()
     {
         foreach (var ph in phases)

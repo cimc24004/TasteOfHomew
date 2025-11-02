@@ -21,7 +21,7 @@ public class SceneManagerController : MonoBehaviour
     public CanvasGroup fadeCanvasGroup;
     public float fadeDuration = 0.5f;
     [Tooltip("シーンロード後、TimelineのAnimatorを探しに行くまでの待機時間")]
-    public float checkDelay = 0.1f;
+    public float checkDelay = 2f;
 
     [Header("シーン履歴")]
     [Tooltip("ロードしたシーンの履歴（最新が末尾）")]

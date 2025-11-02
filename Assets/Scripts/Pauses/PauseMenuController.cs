@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 // using NUnit.Framework; // 不要なusing
-
+using UnityEngine.EventSystems;
 /// <summary>
 /// ゲームのポーズ/再開状態を管理し、シーン遷移を行う。
 /// 入力イベント（ESCキー）を購読して実行される。

@@ -9,10 +9,8 @@ public class ControlChangeLogger : MonoBehaviour
     Dictionary<InputControl, float> lastValues = new Dictionary<InputControl, float>();
     void Start()
     {
-        Debug.Log("=== ControlChangeLogger Start ===");
         foreach (var d in InputSystem.devices)
         {
-            Debug.Log($"Device: {d.displayName} (layout={d.layout}) path={d.path}");
             foreach (var c in d.allControls)
             {
                 lastValues[c] = GetControlValue(c);
@@ -29,7 +27,6 @@ public class ControlChangeLogger : MonoBehaviour
             float prev = lastValues[c];
             if (Mathf.Abs(v - prev) > 0.02f) // 変化閾値（調整可）
             {
-                Debug.Log($"ControlChanged: device='{c.device.displayName}' layout='{c.device.layout}' controlPath='{c.path}' name='{c.name}' value={v}");
                 lastValues[c] = v;
             }
         }
