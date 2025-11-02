@@ -5,11 +5,11 @@ using UnityEngine.Rendering.Universal; // URPアセットを操作するため�
 using Unity.Cinemachine;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks; // Cinemachineの仮想カメラを操作するために必要
-using UnityEngine.EventSystems; // ★★★ EventSystem を使うために追加 ★★★
+using UnityEngine.EventSystems; // ★ EventSystem を使うために追加
 
 /// <summary>
 /// すべてのゲーム設定を保持するシリアライズ可能なクラス。
-/// (GameSettings クラスは省略 ... 変更なし)
+/// このクラスのインスタンスがJSONに変換されて保存されます。
 /// </summary>
 [System.Serializable]
 public class GameSettings
@@ -42,7 +42,7 @@ public class GameSettings
         fullscreenMode = FullScreenMode.FullScreenWindow;
         vsync = true;
         shadowQuality = 1; // Medium
-        textureQuality = 0; // High
+        textureQuality = 1; // High
         antiAliasing = 1; // 2x
 
         masterVolume = 0.8f;
@@ -79,6 +79,9 @@ public class GameSettings
 
 /// <summary>
 /// ゲーム設定の管理（ロード、保存、適用）を行う。
+/// シングルトンとして機能し、他のスクリプトから設定値（CurrentSettings）を読み取れるようにする。
+/// ★注意: Edit > Project Settings > Script Execution Order で、
+/// このスクリプトを「-100」など、Default Time より前に設定してください。
 /// </summary>
 public class ConfigController : SerializedMonoBehaviour
 {
@@ -89,17 +92,15 @@ public class ConfigController : SerializedMonoBehaviour
 
     [Header("Game System References")]
     [SerializeField] private AudioMixer masterMixer;
-
+    
     [Header("URP")]
     [Tooltip("プロジェクトのURP設定アセット（URP_High, URP_Mediumなど）")]
-    [SerializeField] private UniversalRenderPipelineAsset urpAsset;
+    [SerializeField] private UniversalRenderPipelineAsset urpAsset; 
 
     [Header("Cinemachine")]
     [Tooltip("プレイヤーのFOVを制御するCinemachineカメラ (Cinemachine 3+)")]
-    [SerializeField] private CinemachineCamera playerVirtualCamera;
+    [SerializeField] private CinemachineCamera playerVirtualCamera; 
 
-    // (中略 ... Awake, Start, Load/Save/ApplyAllSettings, ConvertToDecibel, GetCurrentResolutionIndex などは変更なし)
-    
     // PlayerPrefsに保存するための単一キー
     private const string PREFS_KEY = "GameSettingsJSON";
 
@@ -120,37 +121,40 @@ public class ConfigController : SerializedMonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // ★変更点: LoadSettings() のみを呼び出す
             LoadSettings();
         }
         else
         {
             Destroy(gameObject);
         }
+        
     }
 
     async void Start()
     {
         await UniTask.Yield();
+        // 全てのAwake()が完了したこのタイミングで、
+        // 読み込み済みの CurrentSettings をゲームに「適用(Push)」する。
+        // これで PlayerDataHub.instance などが null ではなくなる。
         ApplyAllSettings(CurrentSettings);
     }
-    
     
     // ▼▼▼▼▼ ★★★ ここを修正 ★★★ ▼▼▼▼▼
     /// <summary>
     /// 設定画面が（PauseMenuUIControllerによって）開かれたときに呼び出される
     /// </summary>
-    /// <param name="firstSelected">設定画面で最初にフォーカスするGameObject</param>
-    public void OnOpenConfig(GameObject firstSelected)
+    public void OnOpenConfig() // 引数を削除
     {
         Debug.Log("ConfigController: 設定画面が開かれました。");
-        // 必要であれば、ここでアクションマップの切り替えなどを行う
         
-        // ★ご指摘の通り、フォーカス設定をここで行う
-        if (firstSelected != null)
+        // ★ConfigMenuUIControllerに、デフォルトパネルの表示とフォーカス設定を指示する
+        if (uiController != null)
         {
-            EventSystem.current.SetSelectedGameObject(firstSelected);
+            uiController.ShowDefaultPanelAndSetFocus();
         }
-    }
+    } 
 
     /// <summary>
     /// 設定画面が（PauseMenuUIControllerによって）閉じられたときに呼び出される
@@ -159,16 +163,14 @@ public class ConfigController : SerializedMonoBehaviour
     public void OnCloseConfig(GameObject returnSelected)
     {
         Debug.Log("ConfigController: 設定画面が閉じられました。");
-        // 必要であれば、ここでアクションマップの切り替えなどを行う
         
         // ★閉じる際のフォーカスもここで制御
         if (returnSelected != null)
         {
             EventSystem.current.SetSelectedGameObject(returnSelected);
         }
-    }
+    } 
     // ▲▲▲▲▲ ★★★ ここを修正 ★★★ ▲▲▲▲▲
-    
     
     /// <summary>
     /// PlayerPrefsからJSONを読み込み、設定をロードする
@@ -180,6 +182,8 @@ public class ConfigController : SerializedMonoBehaviour
         if (string.IsNullOrEmpty(json))
         {
             CurrentSettings = new GameSettings();
+            
+            // 初回起動時、現在の解像度をデフォルトとして設定
             Resolution currentRes = Screen.currentResolution;
             CurrentSettings.resolutionIndex = GetCurrentResolutionIndex(currentRes);
         }
@@ -187,6 +191,8 @@ public class ConfigController : SerializedMonoBehaviour
         {
             CurrentSettings = JsonUtility.FromJson<GameSettings>(json);
         }
+        
+        // ★変更点: ここで ApplyAllSettings() を「呼ばない」
     }
 
     /// <summary>
@@ -219,24 +225,36 @@ public class ConfigController : SerializedMonoBehaviour
             Resolution res = Screen.resolutions[settings.resolutionIndex];
             Screen.SetResolution(res.width, res.height, settings.fullscreenMode, res.refreshRate);
         }
+
+        // VSync (これはQualitySettingsでOK)
         QualitySettings.vSyncCount = settings.vsync ? 1 : 0;
-        QualitySettings.globalTextureMipmapLimit = settings.textureQuality;
+
+        // テクスチャ (これもQualitySettingsでOK)
+        QualitySettings.globalTextureMipmapLimit = settings.textureQuality; // 0=フル, 1=1/2, 2=1/4...
+
+        // --- URP設定 ---
         if (urpAsset == null)
         {
-            Debug.LogWarning("URP Asset が ConfigController に設定されていません。");
+            Debug.LogWarning("URP Asset が ConfigController に設定されていません。グラフィック設定（AA, Shadow）は適用されません。");
             return;
         }
-        int[] aaValues = { 1, 2, 4, 8 };
+
+        // アンチエイリアス (0: 0x, 1: 2x, 2: 4x, 3: 8x)
+        // URPのMSAAは 1=Off, 2, 4, 8
+        int[] aaValues = { 1, 2, 4, 8 }; 
         urpAsset.msaaSampleCount = aaValues[Mathf.Clamp(settings.antiAliasing, 0, aaValues.Length - 1)];
+
+        // シャドウ品質 (0: Low, 1: Medium, 2: High)
+        // ※これは一例です。URPアセットのどの項目を変更するかはプロジェクトによります
         switch (settings.shadowQuality)
         {
             case 0: // Low
                 urpAsset.mainLightShadowmapResolution = 1024;
                 urpAsset.shadowDistance = 50f;
-                urpAsset.shadowCascadeCount = 1; 
+                urpAsset.shadowCascadeCount = 1; // カスケード数も変更する例
                 break;
             case 1: // Medium
-                urpAsset.mainLightShadowmapResolution = 2028; // (タイポ修正: 2048)
+                urpAsset.mainLightShadowmapResolution = 2048;
                 urpAsset.shadowDistance = 100f;
                 urpAsset.shadowCascadeCount = 2;
                 break;
@@ -255,6 +273,9 @@ public class ConfigController : SerializedMonoBehaviour
              Debug.LogWarning("AudioMixer が ConfigController に設定されていません。");
             return;
         }
+        
+        // ※ AudioMixer側で "MasterVolumeParam", "MusicVolumeParam", "SFXVolumeParam" 
+        //     という名前の変数をExposeしておく必要があります。
         masterMixer.SetFloat("MasterVolumeParam", ConvertToDecibel(settings.masterVolume));
         masterMixer.SetFloat("MusicVolumeParam", ConvertToDecibel(settings.musicVolume));
         masterMixer.SetFloat("SFXVolumeParam", ConvertToDecibel(settings.sfxVolume));
@@ -262,29 +283,39 @@ public class ConfigController : SerializedMonoBehaviour
     
     private void ApplyGameplay(GameSettings settings)
     {
+        // Start() で呼ばれるため、PlayerDataHub.instance が存在するはず
         if(PlayerDataHub.instance != null)
         {
+            // PlayerDataHubから最新のカメラを取得
             if (PlayerDataHub.instance.CurrentCMFPSController != null)
             {
                 playerVirtualCamera = PlayerDataHub.instance.CurrentCMFPSController.cmCamera;
             }
         }
         
+        // FOV
         if (playerVirtualCamera != null)
         {
+            // Cinemachine 3+: Lens は値型(struct)なので一度取得して変更してから再代入する
             var lens = playerVirtualCamera.Lens;
             lens.FieldOfView = settings.fov;
             playerVirtualCamera.Lens = lens;
         }
         else
         {
-            Debug.LogWarning("PlayerVirtualCamera が ConfigController に設定されていませんでした。");
+            // Start() の時点でもカメラが見つからない場合
+            Debug.LogWarning("PlayerVirtualCamera が ConfigController に設定されていないか、PlayerDataHubから取得できませんでした。FOVは適用されません。");
         }
+
+        // マウス感度やカメラ反転は、Playerの入力スクリプト側で
+        // ConfigController.Instance.CurrentSettings.mouseSensitivity などを参照して利用します。
+        // このスクリプト(ConfigController)側で直接適用する処理はありません。
     }
 
     // ボリューム(0-1)をデシベル(-80 to 0)に変換
     private float ConvertToDecibel(float volume)
     {
+        // 0になると-infinityになるため、極小値でクランプ
         return Mathf.Log10(Mathf.Max(volume, 0.0001f)) * 20f;
     }
 
@@ -293,6 +324,7 @@ public class ConfigController : SerializedMonoBehaviour
     {
         for (int i = 0; i < Screen.resolutions.Length; i++)
         {
+            // リフレッシュレートまで完全に一致するものを探す
             if (Screen.resolutions[i].width == currentRes.width &&
                 Screen.resolutions[i].height == currentRes.height &&
                 Screen.resolutions[i].refreshRate == currentRes.refreshRate)
@@ -300,26 +332,37 @@ public class ConfigController : SerializedMonoBehaviour
                 return i;
             }
         }
+        
+        // 見つからなければ、幅と高さが一致する最初のエントリを探す（リフレッシュレート違い）
         for (int i = 0; i < Screen.resolutions.Length; i++)
         {
-            if (Screen.resolutions[i].width == currentRes.width &&
-                Screen.resolutions[i].height == currentRes.height)
-            {
+             if (Screen.resolutions[i].width == currentRes.width &&
+                 Screen.resolutions[i].height == currentRes.height)
+             {
                 return i;
-            }
+             }
         }
-        return Screen.resolutions.Length - 1; 
+        
+        return Screen.resolutions.Length - 1; // それでも見つからなければ最後（最大）のものをデフォルトとする
     }
 
 
     // --- UIControllerから呼び出されるメソッド群 ---
 
+    /// <summary>
+    /// UIを開いたときに呼ばれ、現在の設定を「変更中」のpendingSettingsにコピーする
+    /// </summary>
+    /// <returns>UIに表示するためのpendingSettings</returns>
     public GameSettings InitializePendingSettings()
     {
+        // CurrentSettingsの完全なコピーを作成
         pendingSettings = new GameSettings(CurrentSettings);
         return pendingSettings;
     }
 
+    /// <summary>
+    /// [適用]ボタン。pendingSettingsをCurrentSettingsに上書きし、適用・保存する
+    /// </summary>
     public void ApplyPendingSettings()
     {
         CurrentSettings = new GameSettings(pendingSettings);
@@ -327,15 +370,39 @@ public class ConfigController : SerializedMonoBehaviour
         SaveSettings();
     }
 
+    /// <summary>
+    /// [リバート]ボタン。pendingSettingsを破棄し、CurrentSettingsをUIに再反映させる
+    /// </summary>
     public void RevertPendingSettings()
     {
+        // pendingを現在の設定に戻す
         pendingSettings = new GameSettings(CurrentSettings);
         
+        // UIにも反映
         if (uiController != null)
         {
             uiController.SetAllUIValues(pendingSettings);
         }
     }
+
+    // ▼▼▼ ★★★ この関数を新しく追加 ★★★ ▼▼▼
+    /// <summary>
+    /// [リセット] (Rキー)。pendingSettingsを「工場出荷時」のデフォルト設定に戻す
+    /// </summary>
+    public void ResetToDefaults()
+    {
+        // 1. デフォルト設定を new GameSettings() で作成
+        pendingSettings = new GameSettings();
+        
+        // 2. UIにも反映
+        if (uiController != null)
+        {
+            uiController.SetAllUIValues(pendingSettings);
+        }
+        
+        Debug.Log("設定をデフォルトにリセットしました (まだ適用されていません)。");
+    }
+    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
 
     // --- UIからの値変更（PendingSettingsを更新するだけ） ---
 

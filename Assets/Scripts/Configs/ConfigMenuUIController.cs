@@ -1,9 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI; // Button を使うため
-using TMPro; // TextMeshPro
-using System.Collections.Generic; // Listを使うため
-using UnityEngine.EventSystems; // EventSystem を使うために追加
-using Cysharp.Threading.Tasks; // ★ UniTask を使うために追加
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
+using Cysharp.Threading.Tasks;
+using UnityEngine.InputSystem; 
 
 /// <summary>
 /// 設定メニューのパネル状態
@@ -19,31 +20,37 @@ public enum ConfigPanelState
 /// オプション画面のUIコンポーネントを管理し、
 /// ユーザー入力をConfigControllerに伝える。
 /// 3つの設定パネル（グラフィック、音量、ゲームプレイ）の切り替えも行う。
-/// (このスクリプトがアタッチされたGameObjectは常にアクティブであることを前提とする)
 /// </summary>
 public class ConfigMenuUIController : MonoBehaviour
 {
+    // ▼▼▼ ★★★ PauseMenuUIController への参照を追加 ★★★ ▼▼▼
+    [Header("Parent UI Controller")]
+    [Tooltip("このConfigパネルを開いた親のUI (PauseMenuUIController)")]
+    [SerializeField] private PauseMenuUIController pauseMenuUIController;
+    // ▲▲▲ ★★★ 追加 ★★★ ▲▲▲
+
     [Header("Controller Reference")]
-    [SerializeField] private ConfigController configController; // ※Inspectorで設定していても、Startで上書きします
+    [SerializeField] private ConfigController configController; 
 
     [Header("Panels")]
     [SerializeField] private GameObject graphicsPanel;
     [SerializeField] private GameObject audioPanel;
     [SerializeField] private GameObject gameplayPanel;
 
+    [Header("First Focus Elements")]
+    [SerializeField] private SelectableRow firstGraphicsElement; 
+    [SerializeField] private SelectableRow firstAudioElement;    
+    [SerializeField] private SelectableRow firstGameplayElement; 
+
     [Tooltip("このUIが有効になったときに、最初に表示するパネル")]
     [SerializeField] private ConfigPanelState defaultPanel = ConfigPanelState.Graphics;
 
     [Header("Tab Buttons")]
-    [Tooltip("グラフィックパネルを表示するボタン")]
     [SerializeField] private Button graphicsTabButton;
-    [Tooltip("音量パネルを表示するボタン")]
     [SerializeField] private Button audioTabButton;
-    [Tooltip("ゲームプレイパネルを表示するボタン")]
     [SerializeField] private Button gameplayTabButton;
-    [SerializeField] private Button ApplyButton; // 適用ボタン
-    [SerializeField] private Button RevertButton; // リバート（戻す）ボタン（ある場合）
-
+    
+    // [Header("Graphics UI")] ... (省略なし)
     [Header("Graphics UI")]
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private TMP_Dropdown windowModeDropdown;
@@ -64,84 +71,126 @@ public class ConfigMenuUIController : MonoBehaviour
 
 
     private List<Resolution> resolutions;
+    private ColorBlock normalTabColors;
+    private ColorBlock activeTabColors;
+    private PlayerInput playerInput; 
+    private ConfigPanelState currentPanelState; 
 
     private void Awake()
     {
-        // パネル切り替えボタンにリスナーを登録
-        // これらはUIController自身を参照するためAwakeでOK
         if (graphicsTabButton != null)
             graphicsTabButton.onClick.AddListener(ShowGraphicsPanel);
         if (audioTabButton != null)
             audioTabButton.onClick.AddListener(ShowAudioPanel);
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
-            
-        // ConfigController (Instance) が必要なボタンは Start で登録します
     }
 
-    /// <summary>
-    /// このコンポーネントが有効になった最初のフレームで実行
-    /// </summary>
-    void Start()
+    private void OnEnable()
     {
-        // ▼▼▼ 修正: 1フレーム待機 ▼▼▼
-        // ConfigController.Instance が Start() で1フレーム待機するため、
-        // こちらも1フレーム待機してから Instance を参照する
-        // ▲▲▲ 修正: 1フレーム待機 ▲▲▲
+        // playerInput が (Start()で) 取得済みの場合にのみ実行
+        SubscribeInputEvents();
+    }
 
-        // Inspectorで何が設定されていても、必ずシングルトンのInstanceを取得する
+    private void OnDisable()
+    {
+        // OnDisableではイベントを「解除」する
+        UnsubscribeInputEvents();
+    }
+
+
+    async void Start() 
+    {
+        await UniTask.Yield(); 
+
         configController = ConfigController.Instance;
 
         if (configController == null)
         {
-            Debug.LogError("ConfigController.Instance が見つかりません！シーンにConfigControllerが配置されているか確認してください。");
+            Debug.LogError("ConfigController.Instance が見つかりません！");
             return;
         }
 
-        // 解像度ドロップダウンを初期化
-        PopulateResolutionDropdown();
+        // ▼▼▼ ★★★ PauseMenuUIController が設定されているか確認 ★★★ ▼▼▼
+        if (pauseMenuUIController == null)
+        {
+            Debug.LogError("pauseMenuUIController が " + gameObject.name + " に設定されていません！「適用して戻る」が機能しません。");
+        }
+        // ▲▲▲ ★★★ 追加 ★★★ ▲▲▲
 
-        // ConfigControllerから現在の設定（のコピー）を取得
-        GameSettings settings = configController.InitializePendingSettings();
-
-        // UIに値を設定
-        SetAllUIValues(settings);
-
-        // defaultPanel に基づいて初期表示を行う
-        ShowPanel(defaultPanel);
-
-        // リスナーを Start で登録
-        if (ApplyButton != null)
-            ApplyButton.onClick.AddListener(configController.ApplyPendingSettings);
+        if (PlayerDataHub.instance == null || PlayerDataHub.instance.CurrentplayerInput == null)
+        {
+            Debug.LogError("PlayerInput が PlayerDataHub から取得できません。", this);
+        }
+        else
+        {
+            // playerInput をフィールドにキャッシュする
+            this.playerInput = PlayerDataHub.instance.CurrentplayerInput;
+            
+            // ★重要★: Start() で取得した直後に、最初のイベント購読を行う
+            SubscribeInputEvents();
+        }
         
-        if (RevertButton != null)
-            RevertButton.onClick.AddListener(configController.RevertPendingSettings);
-    }
+        if (graphicsTabButton != null)
+        {
+            normalTabColors = graphicsTabButton.colors;
+            activeTabColors = normalTabColors;
+            activeTabColors.normalColor = normalTabColors.selectedColor; 
+        }
 
-    // OnDisable は不要 (Start/OnDestroy でリスナー管理するため)
+        PopulateResolutionDropdown();
+        GameSettings settings = configController.InitializePendingSettings();
+        SetAllUIValues(settings);
+    }
 
     private void OnDestroy()
     {
-        // Awake で登録したリスナーを解除
         if (graphicsTabButton != null)
             graphicsTabButton.onClick.RemoveListener(ShowGraphicsPanel);
         if (audioTabButton != null)
-            audioTabButton.onClick.RemoveListener(ShowAudioPanel);
+            audioTabButton.onClick.AddListener(ShowAudioPanel);
         if (gameplayTabButton != null)
-            gameplayTabButton.onClick.RemoveListener(ShowGameplayPanel);
-        
-        // Start で登録したリスナーを解除
-        if (configController != null) // configControllerが先に破棄される可能性に対処
+            gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
+    }
+    
+    /// <summary>
+    /// InputSystem のイベントを購読する
+    /// </summary>
+    private void SubscribeInputEvents()
+    {
+        // playerInput が (Start()で) 取得できていない場合は何もしない
+        if (playerInput == null || playerInput.actions == null)
         {
-            if (ApplyButton != null)
-                ApplyButton.onClick.RemoveListener(configController.ApplyPendingSettings);
-
-            if (RevertButton != null)
-                RevertButton.onClick.RemoveListener(configController.RevertPendingSettings);
+            return;
         }
+
+        // 念のため、多重登録を防ぐために一度解除してから登録する
+        UnsubscribeInputEvents(); 
+
+        playerInput.actions["RightClick"].performed += HandleApply;
+        playerInput.actions["R"].performed += HandleRevert;
+        playerInput.actions["E"].performed += HandleNextTab;
+        playerInput.actions["Q"].performed += HandlePrevTab;
+        
+        Debug.Log("[ConfigMenuUI] InputSystem イベントを購読しました。");
     }
 
+    /// <summary>
+    /// InputSystem のイベント購読を解除する
+    /// </summary>
+    private void UnsubscribeInputEvents()
+    {
+        if (playerInput == null || playerInput.actions == null)
+        {
+            return;
+        }
 
+        playerInput.actions["RightClick"].performed -= HandleApply;
+        playerInput.actions["R"].performed -= HandleRevert;
+        playerInput.actions["E"].performed -= HandleNextTab;
+        playerInput.actions["Q"].performed -= HandlePrevTab;
+    }
+    
     /// <summary>
     /// 解像度ドロップダウンのリストをOSから取得して設定する
     /// </summary>
@@ -149,7 +198,6 @@ public class ConfigMenuUIController : MonoBehaviour
     {
         resolutions = new List<Resolution>(Screen.resolutions);
         resolutionDropdown.ClearOptions();
-
         List<string> options = new List<string>();
         foreach (var res in resolutions)
         {
@@ -164,7 +212,6 @@ public class ConfigMenuUIController : MonoBehaviour
     /// </summary>
     public void SetAllUIValues(GameSettings settings)
     {
-        // --- リスナーを一時的に解除 ---
         resolutionDropdown.onValueChanged.RemoveAllListeners();
         windowModeDropdown.onValueChanged.RemoveAllListeners();
         vsyncToggle.onValueChanged.RemoveAllListeners();
@@ -177,8 +224,6 @@ public class ConfigMenuUIController : MonoBehaviour
         mouseSensitivitySlider.onValueChanged.RemoveAllListeners();
         invertYToggle.onValueChanged.RemoveAllListeners();
         fovSlider.onValueChanged.RemoveAllListeners();
-
-        // --- 値をUIにセット ---
         resolutionDropdown.value = settings.resolutionIndex;
         resolutionDropdown.RefreshShownValue(); 
         windowModeDropdown.value = (int)settings.fullscreenMode;
@@ -192,8 +237,6 @@ public class ConfigMenuUIController : MonoBehaviour
         mouseSensitivitySlider.value = settings.mouseSensitivity;
         invertYToggle.isOn = settings.invertCameraY;
         fovSlider.value = settings.fov;
-
-        // --- リスナーを再登録 ---
         resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
         windowModeDropdown.onValueChanged.AddListener(OnWindowModeChanged);
         vsyncToggle.onValueChanged.AddListener(OnVsyncChanged);
@@ -209,16 +252,58 @@ public class ConfigMenuUIController : MonoBehaviour
     }
 
 
-    // --- パネル切り替えロジック ---
-    private void ShowPanel(ConfigPanelState panelState)
+    /// <summary>
+    /// ConfigControllerから呼び出され、デフォルトのパネルを表示してフォーカスを当てる
+    /// </summary>
+    public void ShowDefaultPanelAndSetFocus()
     {
+        ShowPanel(defaultPanel);
+    }
+
+
+    // --- パネル切り替えロジック ---
+    private async void ShowPanel(ConfigPanelState panelState)
+    {
+        this.currentPanelState = panelState; 
         graphicsPanel.SetActive(panelState == ConfigPanelState.Graphics);
         audioPanel.SetActive(panelState == ConfigPanelState.Audio);
         gameplayPanel.SetActive(panelState == ConfigPanelState.Gameplay);
 
-        // ★コントローラーフォーカスは、
-        // PauseMenuUIController の OnSettingsButtonClicked() と
-        // HideConfigPanel() で制御します。
+        if (graphicsTabButton != null)
+        {
+            graphicsTabButton.colors = (panelState == ConfigPanelState.Graphics) ? activeTabColors : normalTabColors;
+        }
+        if (audioTabButton != null)
+        {
+            audioTabButton.colors = (panelState == ConfigPanelState.Audio) ? activeTabColors : normalTabColors;
+        }
+        if (gameplayTabButton != null)
+        {
+            gameplayTabButton.colors = (panelState == ConfigPanelState.Gameplay) ? activeTabColors : normalTabColors;
+        }
+        
+        if(EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        await UniTask.Yield(); 
+
+        switch (panelState)
+        {
+            case ConfigPanelState.Graphics:
+                if (firstGraphicsElement != null)
+                    firstGraphicsElement.SelectChildElement();
+                break;
+            case ConfigPanelState.Audio:
+                if (firstAudioElement != null)
+                    firstAudioElement.SelectChildElement();
+                break;
+            case ConfigPanelState.Gameplay:
+                if (firstGameplayElement != null)
+                    firstGameplayElement.SelectChildElement();
+                break;
+        }
     }
 
     // --- パネル切り替えメソッド (ButtonのAddListenerから呼ばれる) ---
@@ -235,6 +320,86 @@ public class ConfigMenuUIController : MonoBehaviour
         ShowPanel(ConfigPanelState.Gameplay);
     }
 
+    // --- InputSystemのハンドラ関数 ---
+
+    /// <summary>
+    /// "RightClick" アクションが実行された (Apply and Return)
+    /// </summary>
+    private void HandleApply(InputAction.CallbackContext context)
+    {
+        if (configController != null)
+        {
+            Debug.Log("Input Action 'RightClick' -> ApplyPendingSettings and Return");
+            // 1. 設定を適用
+            configController.ApplyPendingSettings();
+            
+            // ▼▼▼ ★★★ 2. ポーズメニューに戻る ★★★ ▼▼▼
+            if (pauseMenuUIController != null)
+            {
+                // true を渡すことで、「設定を適用した」ことを伝える
+                pauseMenuUIController.HideConfigPanel(true);
+            }
+            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
+        }
+    }
+
+    /// <summary>
+    /// "R" アクションが実行された (Reset to Default)
+    /// </summary>
+    private void HandleRevert(InputAction.CallbackContext context)
+    {
+        if (configController != null)
+        {
+            Debug.Log("Input Action 'R' -> ResetToDefaults");
+            // ▼▼▼ ★★★ 呼び出す関数を変更 ★★★ ▼▼▼
+            // configController.RevertPendingSettings();
+            configController.ResetToDefaults();
+            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
+        }
+    }
+
+    /// <summary>
+    /// "E" アクションが実行された (Next Tab)
+    /// </summary>
+    private void HandleNextTab(InputAction.CallbackContext context)
+    {
+        Debug.Log("Input Action 'E' -> Next Tab");
+        
+        if (currentPanelState == ConfigPanelState.Graphics)
+        {
+            ShowPanel(ConfigPanelState.Audio);
+        }
+        else if (currentPanelState == ConfigPanelState.Audio)
+        {
+            ShowPanel(ConfigPanelState.Gameplay);
+        }
+        else if (currentPanelState == ConfigPanelState.Gameplay)
+        {
+            ShowPanel(ConfigPanelState.Graphics);
+        }
+    }
+
+    /// <summary>
+    /// "Q" アクションが実行された (Previous Tab)
+    /// </summary>
+    private void HandlePrevTab(InputAction.CallbackContext context)
+    {
+        Debug.Log("Input Action 'Q' -> Previous Tab");
+
+        if (currentPanelState == ConfigPanelState.Graphics)
+        {
+            ShowPanel(ConfigPanelState.Gameplay);
+        }
+        else if (currentPanelState == ConfigPanelState.Audio)
+        {
+            ShowPanel(ConfigPanelState.Graphics);
+        }
+        else if (currentPanelState == ConfigPanelState.Gameplay)
+        {
+            ShowPanel(ConfigPanelState.Audio);
+        }
+    }
+    
     // --- UIのOnValueChanged()から呼び出すメソッド群 ---
     public void OnResolutionChanged(int index) => configController.UpdatePendingResolution(index);
     public void OnWindowModeChanged(int index) => configController.UpdatePendingFullscreenMode(index);

@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // ★ EventSystem を使うために追加
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -20,10 +20,6 @@ public class PauseMenuUIController : MonoBehaviour
     [SerializeField] private Button backToTitleButton;
     [SerializeField] private Button backToPauseButton; // 設定画面から戻るボタン
     
-    [Header("Config Panel Focus")]
-    [Tooltip("設定パネルを開いたときに最初にフォーカスするUI要素（例：Graphicsタブボタン）")]
-    [SerializeField] private GameObject firstConfigElement; 
-    
     private ConfigController configController;
 
     void Start()
@@ -32,7 +28,11 @@ public class PauseMenuUIController : MonoBehaviour
         resumeButton.onClick.AddListener(OnResumeButtonClicked);
         settingsButton.onClick.AddListener(OnSettingsButtonClicked);
         backToTitleButton.onClick.AddListener(OnBackToTitleButtonClicked);
-        backToPauseButton.onClick.AddListener(HideConfigPanel);
+        
+        // ▼▼▼ ★★★ 修正箇所 (ラムダ式で引数 false を渡す) ★★★ ▼▼▼
+        // backToPauseButton.onClick.AddListener(HideConfigPanel);
+        backToPauseButton.onClick.AddListener(() => HideConfigPanel(false)); // false = 設定を適用しない
+        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         // 最初は非表示にしておく
         pauseMenuPanel.SetActive(false);
@@ -45,7 +45,7 @@ public class PauseMenuUIController : MonoBehaviour
 
     public void ShowPauseMenu()
     {
-        // 最初に選択させる (これはポーズメニュー自身の制御なのでここ)
+        //最初に選択させる
         EventSystem.current.SetSelectedGameObject(this.resumeButton.gameObject);
         pauseMenuPanel.SetActive(true);
         configPanel.SetActive(false); // 設定が開いていたら閉じる
@@ -53,14 +53,19 @@ public class PauseMenuUIController : MonoBehaviour
 
     public void HidePauseMenu()
     {
+        // もし設定パネルが開いている状態でポーズ解除（ESCキーなど）された場合
         if (configPanel.activeSelf)
         {
+            // 「閉じた」イベントを呼ぶ
             if (configController != null)
             {
-                // ★ 引数(null) を渡して呼ぶ
-                configController.OnCloseConfig(null); 
+                configController.OnCloseConfig(null); // 引数はnullのまま
             }
-            configController.RevertPendingSettings();
+            // ▼▼▼ ★★★ 修正箇所 (false を渡す) ★★★ ▼▼▼
+            // 変更を破棄する
+            // configController.RevertPendingSettings();
+            HideConfigPanel(false); // false = 設定を適用しない
+            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
         }
 
         pauseMenuPanel.SetActive(false);
@@ -80,14 +85,11 @@ public class PauseMenuUIController : MonoBehaviour
         pauseMenuPanel.SetActive(false);
         configPanel.SetActive(true);
         
-        // ▼▼▼ ★★★ ここを修正 ★★★ ▼▼▼
-        // 1. ConfigControllerに「開いた」ことを通知し、フォーカス対象を渡す
+        // (変更なし)
         if (configController != null)
         {
-            configController.OnOpenConfig(firstConfigElement);
+            configController.OnOpenConfig();
         }
-        // 2. このスクリプトでのフォーカス設定は削除
-        // ▲▲▲ ★★★ ここを修正 ★★★ ▲▲▲
     }
 
     private void OnBackToTitleButtonClicked()
@@ -95,22 +97,30 @@ public class PauseMenuUIController : MonoBehaviour
         pauseController.BackToTitle();
     }
 
-    // 設定画面からポーズメニューに戻るためのpublicメソッド
-    public void HideConfigPanel()
+    // ▼▼▼ ★★★ 修正箇所 (引数を追加) ★★★ ▼▼▼
+    /// <summary>
+    /// 設定画面からポーズメニューに戻る
+    /// </summary>
+    /// <param name="settingsWereApplied">trueの場合、設定を適用する（リバートしない）</param>
+    public void HideConfigPanel(bool settingsWereApplied)
     {
-        // ▼▼▼ ★★★ ここを修正 ★★★ ▼▼▼
         // 1. ConfigControllerに「閉じた」ことを通知し、戻り先のフォーカス対象を渡す
         if (configController != null)
         {
             configController.OnCloseConfig(settingsButton.gameObject);
         }
-        // ▲▲▲ ★★★ ここを修正 ★★★ ▲▲▲
 
         // 設定パネルを非表示にし、ポーズメニューを再表示する
         configPanel.SetActive(false);
         pauseMenuPanel.SetActive(true);
-        configController.RevertPendingSettings();
 
-        // 3. このスクリプトでのフォーカス設定は削除
+        // 2. 「適用」ボタンが押された *以外* の場合、変更を破棄(リバート)する
+        if (!settingsWereApplied && configController != null) // configControllerのnullチェック追加
+        {
+            configController.RevertPendingSettings();
+        }
+
+        // 3. コントローラーフォーカスは ConfigController の OnCloseConfig で制御される
     }
+    // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 }
