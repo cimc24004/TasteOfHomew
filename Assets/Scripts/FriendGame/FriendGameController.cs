@@ -5,6 +5,7 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine.Events;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class FriendGameController : Singleton<FriendGameController>
 {
@@ -199,6 +200,7 @@ public class FriendGameController : Singleton<FriendGameController>
 
         _gameOverDelayTween = DOVirtual.DelayedCall(gameOverDelay, () =>
         {
+            EventSystem.current.SetSelectedGameObject(RetryButton.gameObject);
             GameOver();
         });
     }
@@ -229,6 +231,7 @@ public class FriendGameController : Singleton<FriendGameController>
         Debug.Log("シューーーリョオウウ");
         friendGameAdvert.gameObject.SetActive(true);
         AdvertCanvasGroup.alpha = 0;
+        EventSystem.current.SetSelectedGameObject(null);
         AdvertCanvasGroup.DOFade(1, 0.5f).SetEase(Ease.Linear).OnComplete(() =>
         {
             friendGameAdvert.FriendGameAdvertAudioSource.Play();

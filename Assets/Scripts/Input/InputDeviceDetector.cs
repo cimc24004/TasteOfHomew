@@ -17,8 +17,8 @@ public class InputDeviceDetector : MonoBehaviour
     public event Action<DeviceType> OnDeviceChanged;
 
     [Header("Control Scheme Names")]
-    [SerializeField] private string keyboardMouseSchemeName = "Keyboard&Mouse";
-    [SerializeField] private string gamepadSchemeName = "Gamepad";
+    [SerializeField] public string keyboardMouseSchemeName = "Keyboard&Mouse";
+    [SerializeField] public string gamepadSchemeName = "Gamepad";
 
     private PlayerInput playerInput;
 

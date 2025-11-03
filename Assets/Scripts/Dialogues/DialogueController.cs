@@ -14,6 +14,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems; 
+using System.Text.RegularExpressions; // ▼▼▼ ★★★ (ここから追加) 正規表現を使うために必要 ★★★ ▼▼▼
 
 [DisallowMultipleComponent]
 public class DialogueController : Singleton<DialogueController>
@@ -80,12 +81,20 @@ public class DialogueController : Singleton<DialogueController>
     private int _nextRunId = 1;
     private const int MaxGotoHops = 64;
     private const char _stepSep = '#';
+    private InputDeviceDetector inputDeviceDetector;
+    // ▼▼▼ ★★★ (ここから追加) 変数置換用の正規表現 ★★★ ▼▼▼
+    /// <summary>
+    /// #{FunctionName("Argument")} 形式のプレースホルダーを検出する正規表現
+    /// </summary>
+    private static readonly Regex placeholderRegex = new Regex(@"\#\{(\w+)\(""([^""]*)""\)\}", RegexOptions.Compiled);
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
     void OnValidate() { RebuildLookup(); }
 
     void Start()
     {
         RebuildLookup();
+        inputDeviceDetector = InputDeviceDetector.Instance;
         SceneManager.sceneLoaded += SceneLoaded;
         Init();
         if (!dialogueRaycaster)
@@ -256,7 +265,6 @@ public class DialogueController : Singleton<DialogueController>
     public void SetFlag(string key, bool val) => flags[key] = val;
 
     // ===== Core =====
-// ===== Core =====
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
@@ -290,8 +298,6 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
             
-            // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
-
             // --- ステップのプロパティを事前チェック ---
             bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
             bool hasBody = !string.IsNullOrWhiteSpace(step.text);
@@ -304,21 +310,20 @@ public class DialogueController : Singleton<DialogueController>
                 
                 if (hasSpeaker)
                 {
-                    // このステップに話者が設定されている場合
                     if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
-                    _currentUIRefs.speakerText.text = step.speaker;
+                    
+                    // ▼▼▼ ★★★ (ここから修正) テキストをパースする ★★★ ▼▼▼
+                    _currentUIRefs.speakerText.text = ParseDialogueText(step.speaker);
+                    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+                    
                     _currentUIRefs.speakerText.enabled = true;
                 }
                 else if (!hasBody && hasChoices)
                 {
-                    // このステップが「選択肢のみ」（本文なし）の場合
-                    // → 前のステップの話者名を表示したままにする (何もしない)
+                    // (話者名を維持)
                 }
                 else
                 {
-                    // このステップに話者がなく、かつ選択肢のみでもない場合
-                    // (例: 本文だけ、またはフラグだけのステップ)
-                    // → 話者ボックスを隠す
                     if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
                     _currentUIRefs.speakerText.text = "";
                     _currentUIRefs.speakerText.enabled = false;
@@ -326,17 +331,16 @@ public class DialogueController : Singleton<DialogueController>
             }
 
             // --- 本文(Body)のロジック ---
+            
+            // ▼▼▼ ★★★ (ここから修正) テキストをパースする ★★★ ▼▼▼
+            string parsedBodyText = ParseDialogueText(step.text);
+            
             if (hasBody)
             {
-                // このステップに本文がある場合
-                // → TypeTextAsync を呼び出す (内部でボックスが表示される)
-                await TypeTextAsync(runId, step.text, token);
+                await TypeTextAsync(runId, parsedBodyText, token);
             }
             else if (hasChoices)
             {
-                // このステップに本文がなく、選択肢だけがある場合
-                // → TypeTextAsync を呼ばない (前のステップの本文が消えない)
-                // (念のため、ボックスが非表示になっていたら表示する)
                 if (_currentUIRefs.dialogueBox && !_currentUIRefs.dialogueBox.activeSelf)
                 {
                     _currentUIRefs.dialogueBox.SetActive(true);
@@ -344,18 +348,15 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
-                // このステップに本文も選択肢もない場合
-                // (例: フラグ操作のみのステップ、または空のステップ)
-                // → TypeTextAsync に空の文字列を渡し、ボックスを非表示にする
-                await TypeTextAsync(runId, step.text, token);
+                await TypeTextAsync(runId, parsedBodyText, token);
             }
+            // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
             ThrowIfStale(runId);
             
             // --- 選択肢 / 次へのロジック ---
             if (hasChoices)
             {
-                // (元のロジックと変更なし)
                 string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
                 ThrowIfStale(runId);
                 if (gotoRaw == null) return;
@@ -374,15 +375,13 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
-                // (元のロジックと変更なし)
                 if (step.autoNext) await DelaySmartAsync(step.autoNextDelay, token);
                 else await WaitAdvanceAsync(runId, token);
                 ThrowIfStale(runId);
             }
-
-            // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
         }
     }
+
     private bool CheckConditions(List<FlagCondition> conds)
     {
         if (conds == null || conds.Count == 0) return true;
@@ -459,10 +458,7 @@ public class DialogueController : Singleton<DialogueController>
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
         
-        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
-        // ダブルクリックでスキップしたかを判定するフラグ
         bool skippedByDoubleClick = false;
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
         if (len > 0)
         {
@@ -487,11 +483,7 @@ public class DialogueController : Singleton<DialogueController>
                     {
                         if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full;
                         lastClickTime = now;
-                        
-                        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
-                        skippedByDoubleClick = true; // スキップしたことを記録
-                        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
-                        
+                        skippedByDoubleClick = true; 
                         break;
                     }
                     lastClickTime = now;
@@ -509,31 +501,22 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
         }
 
-        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
-        // ループ終了後（テキストが全部表示された後）
         if (skippedByDoubleClick)
         {
-            // もしダブルクリックでスキップされていたら、
-            // 0.5秒のクールダウンを入れ、次の WaitAdvanceAsync が即座に反応するのを防ぐ
             await DelaySmartAsync(0.5f, token);
         }
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
-    }    
+    }
+    
     // ===== Wait / Delay =====
-// ===== Wait / Delay =====
     private async UniTask WaitAdvanceAsync(int runId, CancellationToken token)
     {
-        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
-        
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
 
         // (1) クールダウン処理:
-        // もしこの時点で advanceAction が押されっぱなしなら (テキストスキップの入力)、
-        // ユーザーが一度ボタンを離すまで待機する
         if (!_pauseAdvanceInput && advanceAction != null)
         {
-            while (advanceAction.IsPressed()) // 押されている間
+            while (advanceAction.IsPressed()) 
             {
                 token.ThrowIfCancellationRequested();
                 ThrowIfStale(runId);
@@ -551,12 +534,11 @@ public class DialogueController : Singleton<DialogueController>
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
             
-            // ユーザーが「新しく」ボタンを押した瞬間 (triggered) を待つ
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.triggered)
             {
                 inputPressed = true;
                 lastClickTime = Now;
-                break; // 押し込みを検知したので、(3) の「リリース待ち」に移行
+                break; 
             }
             
             await UniTask.Yield(PlayerLoopTiming.Update, token);
@@ -564,26 +546,22 @@ public class DialogueController : Singleton<DialogueController>
         }
 
         // (3) 「リリース」を待機
-        // (inputPressed が true の場合のみ、ここに到達する)
         while (inputPressed)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
 
-            // ユーザーがボタンを「離した」瞬間 (WasReleasedThisFrame) を待つ
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.WasReleasedThisFrame())
             {
                 return; // ★ここで初めて次のステップに進む
             }
 
-            // (もしキャンセルされたら、ここで while ループを抜ける)
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
             
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
     }
     private async UniTask DelaySmartAsync(float seconds, CancellationToken token)
     {
@@ -592,18 +570,15 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     // ===== Choices =====
-    // ▼▼▼ ★★★ ここを修正 ★★★ ▼▼▼
     private async UniTask<string> ShowChoicesAndWaitAsync(int runId, List<DialogueChoice> choices, CancellationToken token)
     {
         ClearChoices();
         ThrowIfStale(runId);
         
-        // ▼▼▼ ★★★ (ここから追加) 1秒待機 ★★★ ▼▼▼
         // useUnscaledTime フラグを考慮して1秒待機する
         var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
-        await UniTask.Delay(TimeSpan.FromSeconds(0.5f), delayType, PlayerLoopTiming.Update, token);
+        await UniTask.Delay(TimeSpan.FromSeconds(1.0f), delayType, PlayerLoopTiming.Update, token);
         ThrowIfStale(runId); // 待機したのでStaleチェック
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
         var usable = new List<(DialogueChoice, Button)>();
         foreach (var ch in choices)
@@ -618,7 +593,6 @@ public class DialogueController : Singleton<DialogueController>
         
         if (usable.Count == 0) return null; // 有効な選択肢がなければ終了
 
-        // 最初のボタンを EventSystem で選択状態にし、コントローラー操作を可能にする
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(usable[0].Item2.gameObject);
@@ -636,12 +610,6 @@ public class DialogueController : Singleton<DialogueController>
             });
         }
         
-        // ▼▼▼ ★★★ (1フレーム待機を削除) ★★★ ▼▼▼
-        // (1秒待機を先頭に追加したため、この1フレーム待機は不要)
-        // await UniTask.Yield(PlayerLoopTiming.Update, token);
-        // ThrowIfStale(runId); 
-        // ▲▲▲ ★★★ (削除) ★★★ ▲▲▲
-
         while (!clicked)
         {
             token.ThrowIfCancellationRequested();
@@ -654,7 +622,6 @@ public class DialogueController : Singleton<DialogueController>
         ClearChoices();
         return result;
     }
-    // ▲▲▲ ★★★ 修正ここまで ★★★ ▲▲▲
 
     private void ClearChoices()
     {
@@ -682,13 +649,8 @@ public class DialogueController : Singleton<DialogueController>
     /// <summary>
     /// 一つのメッセージを指定されたUIで、指定された時間だけ表示し、自動で消去します。
     /// </summary>
-    /// <param name="uiRefs">使用するUIの参照。nullの場合はデフォルトUIが使用されます。</param>
-    /// <param name="speaker">話者名</param>
-    /// <param name="body">本文</param>
-    /// <param name="duration">表示時間（秒）</param>
     public void ShowBriefMessage(DialogueUIRefs uiRefs, string speaker, string body, float duration)
     {
-        // 以前のコルーチンが動いていたら、まず停止させる
         if (_briefMessageCoroutine != null)
         {
             StopCoroutine(_briefMessageCoroutine);
@@ -698,18 +660,15 @@ public class DialogueController : Singleton<DialogueController>
 
     private IEnumerator BriefMessageRoutine(DialogueUIRefs customUiRef, string speaker, string body, float duration)
     {
-        // 使用するUIを決定する (指定がなければデフォルトUIにフォールバック)
         DialogueUIRefs uiToUse = customUiRef ?? new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
                                                                     defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
 
-        // --- 1. UIの存在チェック ---
         if (uiToUse == null)
         {
             Debug.LogError("[DialogueController] CRITICAL ERROR: 表示に使用できるUIがありません。'Default UI Refs'が設定されているか確認してください。");
             _briefMessageCoroutine = null;
-            yield break; // UIがないので処理を中断
+            yield break; 
         }
-        // --- 2. 表示処理 ---
         bool hasBody = !string.IsNullOrWhiteSpace(body);
         uiToUse.bodyText.text = body;
         uiToUse.dialogueBox.SetActive(hasBody);
@@ -717,18 +676,15 @@ public class DialogueController : Singleton<DialogueController>
         bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
         if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(hasSpeaker);
         if(uiToUse.speakerText) uiToUse.speakerText.text = speaker;
-        // --- 3. 待機処理 ---
         if (duration > 0)
         {
             yield return new WaitForSeconds(duration);
         }
         else
         {
-            // durationが0以下の場合は、一瞬だけ表示して消す
             yield return null;
         }
 
-        // --- 4. 非表示処理 ---
         uiToUse.dialogueBox.SetActive(false);
         if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(false);
         
@@ -749,8 +705,6 @@ public class DialogueController : Singleton<DialogueController>
         var ds = DataShareController.instance;
         if (ds == null) return;
 
-        // DataShareControllerのEndingShareDictionaryからフラグを読み込む
-        // 既存のキーは上書きされ、新しいキーは追加されます。
         foreach (var kv in ds.EndingShareDictionary)
         {
             if (!string.IsNullOrWhiteSpace(kv.Key))
@@ -760,4 +714,140 @@ public class DialogueController : Singleton<DialogueController>
             }
         }
     }
+    
+    // ▼▼▼ ★★★ (ここから追加) テキスト置換システム ★★★ ▼▼▼
+
+    /// <summary>
+    /// ダイアログテキスト内の #{...} プレースホルダーを解析し、
+    /// 対応するメソッドの戻り値に置き換えます。
+    /// </summary>
+/// <summary>
+    /// ダイアログテキスト内の #{...} プレースホルダーを解析し、
+    /// 対応するメソッドの戻り値に置き換えます。
+    /// </summary>
+    private string ParseDialogueText(string rawText)
+    {
+        // プレースホルダーがなければ、余計な処理をせずそのまま返す
+        if (string.IsNullOrEmpty(rawText) || rawText.IndexOf("#{") == -1)
+        {
+            return rawText;
+        }
+
+        // Regex.Replace と MatchEvaluator (ラムダ式) を使って、
+        // 見つかったすべてのプレースホルダーを置換する
+        string processedText = placeholderRegex.Replace(rawText, (match) => 
+        {
+            // match.Groups[1] = 関数名 (例: "InputActionName")
+            // match.Groups[2] = 引数 (例: "FriendGame")
+            string functionName = match.Groups[1].Value;
+            string argument = match.Groups[2].Value;
+
+            // 関数名に応じて処理を分岐
+            if (functionName.Equals("InputActionName", StringComparison.OrdinalIgnoreCase))
+            {
+                return InputActionName(argument);
+            }
+            // --- 今後、他の #{...} を追加する場合は、ここに else if を追加 ---
+            // else if (functionName.Equals("PlayerName", StringComparison.OrdinalIgnoreCase))
+            // {
+            //     return GetPlayerName();
+            // }
+            else
+            {
+                // 不明な関数名の場合は、エラーが分かるように元のテキストをそのまま返す
+                Debug.LogWarning($"[DialogueController] 不明なプレースホルダー関数: {functionName}");
+                return match.Value; 
+            }
+        });
+
+        return processedText;
+    }
+/// <summary>
+    /// #{InputActionName("actionName")} に対応するメソッド。
+    /// InputDeviceDetector の現在のデバイスタイプに基づいた入力キー名を返します。
+    /// </summary>
+    /// <param name="actionName">Input Action Asset内のアクション名</param>
+    /// <returns>表示用のキー名文字列</returns>
+    private string InputActionName(string actionName)
+    {
+        if (playerInput == null) 
+        {
+            Debug.LogWarning("[DialogueController] PlayerInput が null のため、InputActionName を取得できません。");
+            return "[入力設定なし]";
+        }
+            
+        var action = playerInput.actions.FindAction(actionName);
+        if (action == null) 
+        {
+            Debug.LogWarning($"[DialogueController] アクション '{actionName}' が見つかりません。");
+            return $"[不明なキー: {actionName}]";
+        }
+        
+        if (inputDeviceDetector == null)
+        {
+            Debug.LogWarning("[DialogueController] InputDeviceDetector が見つかりません。デフォルトのキー表示を使います。");
+            // フォールバックとして以前の動作
+            string fallbackName = action.GetBindingDisplayString();
+            int deviceNameStartIndexFB = fallbackName.LastIndexOf('[');
+            if (deviceNameStartIndexFB > 0)
+            {
+                fallbackName = fallbackName.Substring(0, deviceNameStartIndexFB).Trim();
+            }
+            return fallbackName; 
+        }
+
+        // 1. 現在のデバイスタイプから、Control Scheme の「名前」を取得
+        string targetSchemeName;
+        if (inputDeviceDetector.CurrentDeviceType == InputDeviceDetector.DeviceType.Gamepad)
+        {
+            // InputDeviceDetector の public フィールドから名前を取得
+            targetSchemeName = inputDeviceDetector.gamepadSchemeName;
+        }
+        else
+        {
+            // InputDeviceDetector の public フィールドから名前を取得
+            targetSchemeName = inputDeviceDetector.keyboardMouseSchemeName;
+        }
+        
+        if (string.IsNullOrEmpty(targetSchemeName))
+        {
+             Debug.LogError("[DialogueController] InputDeviceDetector に Scheme 名が設定されていません。");
+             return "[Scheme名未設定]";
+        }
+
+        // 2. アクションの全バインディングを検索
+        foreach (var binding in action.bindings)
+        {
+            // 3. バインディングが現在の Control Scheme グループに属しているか確認
+            //    (binding.groups は "Gamepad;Keyboard&Mouse" のようにセミコロン区切り)
+            if (binding.groups != null && binding.groups.Contains(targetSchemeName))
+            {
+                // 4. 見つかったバインディングの表示名を取得
+                // (例: "E [Keyboard]" や "Button South [Gamepad]")
+                string bindingName = binding.ToDisplayString();
+                
+                // 5. デバイス名 (例: "[Keyboard]") を手動で削除
+                int deviceNameStartIndex = bindingName.LastIndexOf('[');
+                if (deviceNameStartIndex > 0)
+                {
+                    bindingName = bindingName.Substring(0, deviceNameStartIndex).Trim();
+                }
+
+                // (オプション: 日本語へのマッピング)
+                // switch (bindingName.ToUpper())
+                // {
+                //     case "BUTTON SOUTH":
+                //         return "Aボタン";
+                // }
+                
+                // 6. 該当する最初のバインディング名を返す
+                return bindingName;
+            }
+        }
+        
+        // もし該当するSchemeのBindingが見つからなかった場合
+        return $"[キー未設定: {actionName}]";
+    }
+    
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 }

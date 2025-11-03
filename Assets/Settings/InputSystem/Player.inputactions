@@ -34,15 +34,6 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "ItemDump",
-                    "type": "Button",
-                    "id": "220ba504-2e94-4368-bab8-800d3f4b2bda",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Sprint",
                     "type": "Button",
                     "id": "a99b7ca3-e255-4c0f-9491-4afd0b86cfa8",
@@ -61,54 +52,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "HideAction",
-                    "type": "Button",
-                    "id": "4b3d88ae-b047-4019-9cf0-c79c7f332b2d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "ItemUse",
-                    "type": "Button",
-                    "id": "8f7e9ed6-8fb9-4776-a114-652caf196e96",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "ItemSelectWheel",
-                    "type": "Value",
-                    "id": "06cb3f4c-7dbe-47ad-a052-d0cb77ead9df",
-                    "expectedControlType": "Axis",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "ItemSelectNumber",
-                    "type": "Value",
-                    "id": "593b514a-b288-419d-a389-d19cafe9a480",
-                    "expectedControlType": "Vector2",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
                     "name": "LightSwitchAction",
                     "type": "Button",
                     "id": "34be0d0f-61a1-421b-9519-dd72b71da6b5",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "SubRaycastAction",
-                    "type": "Button",
-                    "id": "8c11abb6-239d-4c26-a25f-90769aab6b8a",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -312,39 +258,6 @@
                 },
                 {
                     "name": "",
-                    "id": "22c06fd3-2572-423b-8d38-4ac26c2a9bf6",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "HideAction",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "64d23f62-237e-48b9-bd21-383322a165af",
-                    "path": "<Mouse>/rightButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemUse",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "6b02c29e-6189-4c21-b585-6d7090844456",
-                    "path": "<Gamepad>/buttonWest",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Gamepad",
-                    "action": "ItemUse",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "ed811792-dcb6-457d-9f61-11ff1c4e2a2b",
                     "path": "<Mouse>/leftButton",
                     "interactions": "",
@@ -400,138 +313,6 @@
                 },
                 {
                     "name": "",
-                    "id": "7c584f54-4dc4-453a-abeb-49f164bbbf90",
-                    "path": "<Mouse>/scroll/y",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectWheel",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "be6b467d-b79c-4b0e-8f4f-fca282794368",
-                    "path": "<Gamepad>/dpad/right",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Gamepad",
-                    "action": "ItemSelectWheel",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "ff1416f2-d7fd-43ef-b3bc-e9a6e999abb6",
-                    "path": "<Keyboard>/1",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "64eda617-894f-49be-978d-f5e99b66fa8f",
-                    "path": "<Keyboard>/2",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "50707ba2-4f92-4e86-9ff1-b58e8ee3ca32",
-                    "path": "<Keyboard>/3",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "56783a88-7e93-4808-ba9d-6b47e924cc8c",
-                    "path": "<Keyboard>/4",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "0d5b4389-5ecf-4d37-8ddc-afda57128a30",
-                    "path": "<Keyboard>/5",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "16a4bab4-4071-4552-a78a-5c8ec3dbc832",
-                    "path": "<Keyboard>/6",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "66c0c391-7027-4fa9-931b-c5fd81ea299e",
-                    "path": "<Keyboard>/7",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "1fd02d08-7a96-42ce-b480-7a131b4957b8",
-                    "path": "<Keyboard>/8",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "2c8d9e4a-b208-4c42-a2a0-b83e742b416a",
-                    "path": "<Keyboard>/9",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "df9c2733-bbdd-4281-8d76-ddcce632adf8",
-                    "path": "<Keyboard>/0",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "ItemSelectNumber",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "6867269c-a349-4630-a7ab-b6633ef8bb2b",
                     "path": "<Keyboard>/f",
                     "interactions": "",
@@ -549,17 +330,6 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "LightSwitchAction",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "e204e055-884e-4b6e-9b39-569a2f14cb6c",
-                    "path": "<Keyboard>/e",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "SubRaycastAction",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -587,22 +357,22 @@
                 },
                 {
                     "name": "",
-                    "id": "d3ae818f-ff70-4511-9d3b-06e8b1615787",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "ItemDump",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "579a5c0a-8fb4-4b07-8779-5d41b20305f7",
                     "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
+                    "action": "FriendGameJump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "90395f9e-387e-43b4-ba8d-5fe87143ea83",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
                     "action": "FriendGameJump",
                     "isComposite": false,
                     "isPartOfComposite": false
