@@ -13,6 +13,7 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems; // ▼▼▼ ★★★ EventSystemを使うために必要 (既に追加されていますが確認) ★★★ ▼▼▼
 
 [DisallowMultipleComponent]
 public class DialogueController : Singleton<DialogueController>
@@ -24,6 +25,7 @@ public class DialogueController : Singleton<DialogueController>
 
     [Title("UI (Default)")]
     [Tooltip("デフォルトのUI参照。オーバーライドされなかった場合に使われる。")]
+    [SerializeField] // private のままだとインスペクターから設定できないので [SerializeField] を推奨
     private DefaultDialogueUIInfo defaultUIInfo;
 
     // 実行時に使用するUI参照を動的に保持する
@@ -156,29 +158,24 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     // ===== Public API =====
-    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
     public void StartDialogue(string groupKey, string sequenceId, int startStepId = 1, bool changeGameState = true)
         => StartDialogueAsync(groupKey, sequenceId, null, default, startStepId, changeGameState).Forget();
 
-    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
     public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, int startStepId = 1, bool changeGameState = true)
     {
         if (!groupAsset) { Debug.LogWarning("GroupAsset is null"); return; }
         StartDialogue(groupAsset.groupKey, sequenceId, startStepId, changeGameState);
     }
 
-    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
     public void StartDialogue(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1, bool changeGameState = true)
         => StartDialogueAsync(groupKey, sequenceId, overrideUIRefs, default, startStepId, changeGameState).Forget();
     
-    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
     public void StartDialogue(DialogueSequenceGroupAsset groupAsset, string sequenceId, DialogueUIRefs overrideUIRefs, int startStepId = 1, bool changeGameState = true)
     {
         if (!groupAsset) { Debug.LogWarning("GroupAsset is null"); return; }
         StartDialogue(groupAsset.groupKey, sequenceId, overrideUIRefs, startStepId, changeGameState);
     }
     
-    // ▼▼▼【変更点】'changeGameState' 引数を追加 ▼▼▼
     public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1, bool changeGameState = true)
     {
         StopCurrent();
@@ -219,7 +216,6 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
-            // ▼▼▼【変更点】'changeGameState' が true の場合のみ GameState を変更する ▼▼▼
             if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
@@ -231,7 +227,6 @@ public class DialogueController : Singleton<DialogueController>
                 CleanupUI();
                 onDialogueEnded?.Invoke();
                 if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Player);
-                // ▼▼▼【変更点】'changeGameState' が true の場合のみ GameState を元に戻す ▼▼▼
                 if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
             }
             _runCts?.Dispose(); _runCts = null;
@@ -477,6 +472,7 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     // ===== Choices =====
+    // ▼▼▼ ★★★ ここを修正 ★★★ ▼▼▼
     private async UniTask<string> ShowChoicesAndWaitAsync(int runId, List<DialogueChoice> choices, CancellationToken token)
     {
         ClearChoices();
@@ -491,7 +487,17 @@ public class DialogueController : Singleton<DialogueController>
             btn.gameObject.SetActive(true);
             usable.Add((ch, btn));
         }
-        if (usable.Count == 0) return null;
+        
+        if (usable.Count == 0) return null; // 有効な選択肢がなければ終了
+
+        // ▼▼▼ ★★★ ここから3行を追加 ★★★ ▼▼▼
+        // 最初のボタンを EventSystem で選択状態にし、コントローラー操作を可能にする
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(usable[0].Item2.gameObject);
+        }
+        // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
+
         string result = null; bool clicked = false;
         foreach (var (ch, btn) in usable)
         {
@@ -515,6 +521,7 @@ public class DialogueController : Singleton<DialogueController>
         ClearChoices();
         return result;
     }
+    // ▲▲▲ ★★★ 修正ここまで ★★★ ▲▲▲
 
     private void ClearChoices()
     {

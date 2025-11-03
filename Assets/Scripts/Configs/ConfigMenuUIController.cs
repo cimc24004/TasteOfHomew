@@ -3,8 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
-using Cysharp.Threading.Tasks;
-using UnityEngine.InputSystem; 
+using Cysharp.Threading.Tasks; // ★ UniTask.Yield のために必要
+using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 /// <summary>
 /// 設定メニューのパネル状態
@@ -21,17 +22,17 @@ public enum ConfigPanelState
 /// ユーザー入力をConfigControllerに伝える。
 /// 3つの設定パネル（グラフィック、音量、ゲームプレイ）の切り替えも行う。
 /// </summary>
-public class ConfigMenuUIController : MonoBehaviour
+public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
 {
-    // ▼▼▼ ★★★ PauseMenuUIController への参照を追加 ★★★ ▼▼▼
+    // ▼▼▼ ★★★ PauseMenuUIController への参照（これは任意でOK） ★★★ ▼▼▼
     [Header("Parent UI Controller")]
-    [Tooltip("このConfigパネルを開いた親のUI (PauseMenuUIController)")]
+    [Tooltip("このConfigパネルを開いた親のUI (PauseMenuUIController) ※任意")]
     [SerializeField] private PauseMenuUIController pauseMenuUIController;
-    // ▲▲▲ ★★★ 追加 ★★★ ▲▲▲
+    // ▲▲▲ ★★★ 変更 ★★★ ▲▲▲
 
     [Header("Controller Reference")]
-    [SerializeField] private ConfigController configController; 
-
+    [SerializeField] private ConfigController configController;
+    [SerializeField] private GameObject SettingCanvas;
     [Header("Panels")]
     [SerializeField] private GameObject graphicsPanel;
     [SerializeField] private GameObject audioPanel;
@@ -49,6 +50,14 @@ public class ConfigMenuUIController : MonoBehaviour
     [SerializeField] private Button graphicsTabButton;
     [SerializeField] private Button audioTabButton;
     [SerializeField] private Button gameplayTabButton;
+
+    // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+    [Header("Action Buttons")]
+    [Tooltip("設定を適用して閉じるボタン")]
+    [SerializeField] private Button ApplyButton;
+    [Tooltip("設定をデフォルトに戻すボタン")]
+    [SerializeField] private Button ResetButton;
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
     
     // [Header("Graphics UI")] ... (省略なし)
     [Header("Graphics UI")]
@@ -69,28 +78,13 @@ public class ConfigMenuUIController : MonoBehaviour
     [SerializeField] private Toggle invertYToggle;
     [SerializeField] private Slider fovSlider;
 
-
+    public UnityEvent HandleApplyEvent;
     private List<Resolution> resolutions;
     private ColorBlock normalTabColors;
     private ColorBlock activeTabColors;
     private PlayerInput playerInput; 
     private ConfigPanelState currentPanelState; 
 
-    private void Awake()
-    {
-        if (graphicsTabButton != null)
-            graphicsTabButton.onClick.AddListener(ShowGraphicsPanel);
-        if (audioTabButton != null)
-            audioTabButton.onClick.AddListener(ShowAudioPanel);
-        if (gameplayTabButton != null)
-            gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
-    }
-
-    private void OnEnable()
-    {
-        // playerInput が (Start()で) 取得済みの場合にのみ実行
-        SubscribeInputEvents();
-    }
 
     private void OnDisable()
     {
@@ -99,8 +93,26 @@ public class ConfigMenuUIController : MonoBehaviour
     }
 
 
-    async void Start() 
+    async void Start()
     {
+        // --- タブボタンのリスナー登録 ---
+        if (graphicsTabButton != null)
+            graphicsTabButton.onClick.AddListener(ShowGraphicsPanel);
+        if (audioTabButton != null)
+            audioTabButton.onClick.AddListener(ShowAudioPanel);
+        if (gameplayTabButton != null)
+            gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
+
+        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+        // --- アクションボタンのリスナー登録 ---
+        if (ApplyButton != null)
+            ApplyButton.onClick.AddListener(OnApplyButtonClicked);
+        if (ResetButton != null)
+            ResetButton.onClick.AddListener(OnResetButtonClicked);
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+
+        // playerInput が (Start()で) 取得済みの場合にのみ実行
+        SubscribeInputEvents();
         await UniTask.Yield(); 
 
         configController = ConfigController.Instance;
@@ -111,12 +123,9 @@ public class ConfigMenuUIController : MonoBehaviour
             return;
         }
 
-        // ▼▼▼ ★★★ PauseMenuUIController が設定されているか確認 ★★★ ▼▼▼
-        if (pauseMenuUIController == null)
-        {
-            Debug.LogError("pauseMenuUIController が " + gameObject.name + " に設定されていません！「適用して戻る」が機能しません。");
-        }
-        // ▲▲▲ ★★★ 追加 ★★★ ▲▲▲
+        // ▼▼▼ ★★★ pauseMenuUIController のエラーチェックを削除 ★★★ ▼▼▼
+        // (pauseMenuUIController が null でもエラーにしない)
+        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         if (PlayerDataHub.instance == null || PlayerDataHub.instance.CurrentplayerInput == null)
         {
@@ -148,9 +157,17 @@ public class ConfigMenuUIController : MonoBehaviour
         if (graphicsTabButton != null)
             graphicsTabButton.onClick.RemoveListener(ShowGraphicsPanel);
         if (audioTabButton != null)
-            audioTabButton.onClick.AddListener(ShowAudioPanel);
+            audioTabButton.onClick.RemoveListener(ShowAudioPanel);
         if (gameplayTabButton != null)
-            gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
+            gameplayTabButton.onClick.RemoveListener(ShowGameplayPanel);
+
+        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+        // --- アクションボタンのリスナー解除 ---
+        if (ApplyButton != null)
+            ApplyButton.onClick.RemoveListener(OnApplyButtonClicked);
+        if (ResetButton != null)
+            ResetButton.onClick.RemoveListener(OnResetButtonClicked);
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
     }
     
     /// <summary>
@@ -282,28 +299,7 @@ public class ConfigMenuUIController : MonoBehaviour
             gameplayTabButton.colors = (panelState == ConfigPanelState.Gameplay) ? activeTabColors : normalTabColors;
         }
         
-        if(EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-        }
-
-        await UniTask.Yield(); 
-
-        switch (panelState)
-        {
-            case ConfigPanelState.Graphics:
-                if (firstGraphicsElement != null)
-                    firstGraphicsElement.SelectChildElement();
-                break;
-            case ConfigPanelState.Audio:
-                if (firstAudioElement != null)
-                    firstAudioElement.SelectChildElement();
-                break;
-            case ConfigPanelState.Gameplay:
-                if (firstGameplayElement != null)
-                    firstGameplayElement.SelectChildElement();
-                break;
-        }
+        await SetFocusToCurrentPanelFirstElement();
     }
 
     // --- パネル切り替えメソッド (ButtonのAddListenerから呼ばれる) ---
@@ -320,6 +316,51 @@ public class ConfigMenuUIController : MonoBehaviour
         ShowPanel(ConfigPanelState.Gameplay);
     }
 
+    // --- ボタンクリック用ハンドラ ---
+
+    /// <summary>
+    /// ApplyButton がクリックされた (HandleApply と同じ動作)
+    /// </summary>
+    public void OnApplyButtonClicked()
+    {
+        // ボタンクリックの場合、Canvas非表示チェックは不要 (押せないため)
+        if (configController != null)
+        {
+            Debug.Log("Button 'Apply' -> ApplyPendingSettings and Return");
+            // 1. 設定を適用
+            configController.ApplyPendingSettings();
+            
+            // 2. 画面を閉じる
+            if (pauseMenuUIController != null)
+            {
+                // 親 (PauseMenu) が設定されていれば、そこ経S経由で閉じる
+                pauseMenuUIController.HideConfigPanel(true);
+            }
+            // 3. 閉じるイベントを発行
+            HandleApplyEvent.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// ResetButton がクリックされた (HandleRevert と同じ動作)
+    /// </summary>
+    // ▼▼▼ ★★★ (ここから修正) async void に変更 ★★★ ▼▼▼
+    public async void OnResetButtonClicked()
+    {
+        // ボタンクリックの場合、Canvas非表示チェックは不要 (押せないため)
+        if (configController != null)
+        {
+            Debug.Log("Button 'Reset' -> ResetToDefaults");
+            // 1. 設定をデフォルトに戻す (これにより SetAllUIValues が呼ばれる)
+            configController.ResetToDefaults();
+
+            // 2. UIが更新された後、フォーカスを現在のパネルの先頭に戻す
+            await SetFocusToCurrentPanelFirstElement();
+        }
+    }
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
+
     // --- InputSystemのハンドラ関数 ---
 
     /// <summary>
@@ -327,18 +368,24 @@ public class ConfigMenuUIController : MonoBehaviour
     /// </summary>
     private void HandleApply(InputAction.CallbackContext context)
     {
+        // ▼▼▼ ★★★ 修正箇所 ★★★ ▼▼▼
+        // SettingCanvasが非表示なら、何もせず処理を終了する
+        if (SettingCanvas == null || !SettingCanvas.activeInHierarchy) return;
+        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
+
         if (configController != null)
         {
             Debug.Log("Input Action 'RightClick' -> ApplyPendingSettings and Return");
             // 1. 設定を適用
             configController.ApplyPendingSettings();
             
-            // ▼▼▼ ★★★ 2. ポーズメニューに戻る ★★★ ▼▼▼
+            // ▼▼▼ ★★★ 2. 画面を閉じる (ロジック修正) ★★★ ▼▼▼
             if (pauseMenuUIController != null)
             {
-                // true を渡すことで、「設定を適用した」ことを伝える
+                // 親 (PauseMenu) が設定されていれば、そこ経由で閉じる
                 pauseMenuUIController.HideConfigPanel(true);
             }
+            HandleApplyEvent.Invoke();
             // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
         }
     }
@@ -346,23 +393,32 @@ public class ConfigMenuUIController : MonoBehaviour
     /// <summary>
     /// "R" アクションが実行された (Reset to Default)
     /// </summary>
-    private void HandleRevert(InputAction.CallbackContext context)
+    // ▼▼▼ ★★★ (ここから修正) async void に変更 ★★★ ▼▼▼
+    private async void HandleRevert(InputAction.CallbackContext context)
     {
+        // SettingCanvasが非表示なら、何もせず処理を終了する
+        if (SettingCanvas == null || !SettingCanvas.activeInHierarchy) return;
+
         if (configController != null)
         {
             Debug.Log("Input Action 'R' -> ResetToDefaults");
-            // ▼▼▼ ★★★ 呼び出す関数を変更 ★★★ ▼▼▼
-            // configController.RevertPendingSettings();
+            // 1. 設定をデフォルトに戻す
             configController.ResetToDefaults();
-            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
+            
+            // 2. UIが更新された後、フォーカスを現在のパネルの先頭に戻す
+            await SetFocusToCurrentPanelFirstElement();
         }
     }
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     /// <summary>
     /// "E" アクションが実行された (Next Tab)
     /// </summary>
     private void HandleNextTab(InputAction.CallbackContext context)
     {
+        // SettingCanvasが非表示なら、何もせず処理を終了する
+        if (SettingCanvas == null || !SettingCanvas.activeInHierarchy) return;
+
         Debug.Log("Input Action 'E' -> Next Tab");
         
         if (currentPanelState == ConfigPanelState.Graphics)
@@ -384,6 +440,9 @@ public class ConfigMenuUIController : MonoBehaviour
     /// </summary>
     private void HandlePrevTab(InputAction.CallbackContext context)
     {
+        // SettingCanvasが非表示なら、何もせず処理を終了する
+        if (SettingCanvas == null || !SettingCanvas.activeInHierarchy) return;
+
         Debug.Log("Input Action 'Q' -> Previous Tab");
 
         if (currentPanelState == ConfigPanelState.Graphics)
@@ -399,7 +458,53 @@ public class ConfigMenuUIController : MonoBehaviour
             ShowPanel(ConfigPanelState.Audio);
         }
     }
-    
+
+    // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+    /// <summary>
+    /// 現在開いているパネルの最初の要素にフォーカスを当てる (1フレーム待機付き)
+    /// </summary>
+    private async UniTask SetFocusToCurrentPanelFirstElement()
+    {
+        // 選択を一旦クリア
+        if(EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        // 1フレーム待機 (UI更新やEventSystemのクリアを待つ)
+        await UniTask.Yield(); 
+
+        // 待機中にオブジェクトが破棄された可能性を考慮
+        if (this == null) return;
+
+        // 現在のパネル状態に応じてフォーカスを設定
+        switch (currentPanelState)
+        {
+            case ConfigPanelState.Graphics:
+                if (firstGraphicsElement != null)
+                    firstGraphicsElement.SelectChildElement();
+                break;
+            case ConfigPanelState.Audio:
+                if (firstAudioElement != null)
+                    firstAudioElement.SelectChildElement();
+                break;
+            case ConfigPanelState.Gameplay:
+                if (firstGameplayElement != null)
+                    firstGameplayElement.SelectChildElement();
+                break;
+        }
+    }
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+
+    public void OpenSettingCanvas()
+    {
+        configController.OnOpenConfig();
+        SettingCanvas.gameObject.SetActive(true);
+    }
+    public void CloseSettingCanvas()
+    {
+        SettingCanvas.gameObject.SetActive(false);
+    }
     // --- UIのOnValueChanged()から呼び出すメソッド群 ---
     public void OnResolutionChanged(int index) => configController.UpdatePendingResolution(index);
     public void OnWindowModeChanged(int index) => configController.UpdatePendingFullscreenMode(index);

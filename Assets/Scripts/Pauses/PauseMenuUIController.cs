@@ -67,7 +67,7 @@ public class PauseMenuUIController : MonoBehaviour
             HideConfigPanel(false); // false = 設定を適用しない
             // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
         }
-
+        EventSystem.current.SetSelectedGameObject(null);
         pauseMenuPanel.SetActive(false);
         configPanel.SetActive(false);
     }

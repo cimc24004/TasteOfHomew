@@ -18,7 +18,6 @@ public class PlayerDataHub : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {

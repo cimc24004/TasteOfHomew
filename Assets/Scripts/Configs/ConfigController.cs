@@ -120,8 +120,6 @@ public class ConfigController : SerializedMonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
-
             // ★変更点: LoadSettings() のみを呼び出す
             LoadSettings();
         }
