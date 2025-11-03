@@ -209,6 +209,7 @@ public class FriendGameController : Singleton<FriendGameController>
     [Button("GameClear")]
     public void GameClear()
     {
+        EventSystem.current.SetSelectedGameObject(NextStageButton.gameObject);
         gameStateController.MenuOnGamePlayMode(true);
         gameClearUI.SetActive(true);
         friendGamePlayerController.Stop();

@@ -289,7 +289,11 @@ public class ReaderController : Singleton<ReaderController>
         {
             _page--;
             RefreshPage();
-            PlaySE(_now.turnSE);
+            
+            // ▼▼▼ ★★★ 修正 ★★★ ▼▼▼
+            // _turnSEOverride が設定されていればそちらを優先する
+            PlaySE(_turnSEOverride ? _turnSEOverride : _now.turnSE);
+            // ▲▲▲ ★★★ 修正 ★★★ ▲▲▲
         }
     }
 

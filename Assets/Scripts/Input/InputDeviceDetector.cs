@@ -30,7 +30,7 @@ public class InputDeviceDetector : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        // DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()

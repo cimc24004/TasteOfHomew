@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [System.Serializable]
@@ -137,6 +138,7 @@ public class EndController : MonoBehaviour
     }
     public void WaitForPlayerClick()
     {
+        EventSystem.current.SetSelectedGameObject(ClickedJudgeButton.gameObject);
         this.WaitForPlayerInputClick = true;
     }
 }

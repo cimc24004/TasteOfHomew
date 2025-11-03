@@ -42,7 +42,7 @@ public class GameSettings
         fullscreenMode = FullScreenMode.FullScreenWindow;
         vsync = true;
         shadowQuality = 1; // Medium
-        textureQuality = 1; // High
+        textureQuality = 2; // High
         antiAliasing = 1; // 2x
 
         masterVolume = 0.8f;

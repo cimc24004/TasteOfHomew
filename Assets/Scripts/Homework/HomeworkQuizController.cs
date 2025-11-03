@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 public class HomeworkQuizController : MonoBehaviour
@@ -228,7 +229,8 @@ public class HomeworkQuizController : MonoBehaviour
             if (!btn.gameObject.activeSelf) btn.gameObject.SetActive(true);
             btn.interactable = true;
             if (btn.targetGraphic) btn.targetGraphic.raycastTarget = true;
-
+            if(i == 0) 
+                EventSystem.current.SetSelectedGameObject(btn.gameObject);
             var label = btn.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label) label.text = q.choices[i];
 
@@ -236,7 +238,6 @@ public class HomeworkQuizController : MonoBehaviour
             btn.onClick.AddListener(() => OnClickChoice(idx, btn));
             spawned.Add(btn);
         }
-
         choicesRoot.SetAsLastSibling();
     }
 
