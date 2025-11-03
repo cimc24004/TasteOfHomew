@@ -8,9 +8,8 @@ using UnityEngine.InputSystem; // InputSystem のために追加
 /// 汎用の選択SEを再生するシングルトン。
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
-public class UISelectSoundManager : MonoBehaviour
+public class UISelectSoundManager : Singleton<UISelectSoundManager>
 {
-    public static UISelectSoundManager Instance { get; private set; }
 
     [Header("Audio Settings")]
     [Tooltip("UI要素を選択した時（ハイライト時）に鳴らすSE")]
@@ -31,54 +30,22 @@ public class UISelectSoundManager : MonoBehaviour
     private InputAction submitAction;
     // ---
     private InputAction clickAction;
-    void Awake()
-    {
-        // シングルトン設定
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-
-        // AudioSource を取得
-        audioSource = GetComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.loop = false;
-    }
-
     void Start()
     {
         // ★ 起動時は lastSelectedObject を必ず null にしておく
         lastSelectedObject = null;
+        // DontDestroyOnLoad(gameObject);
+        audioSource = GetComponent<AudioSource>();
 
         // PlayerInput から "Submit" アクションを取得
-        if (PlayerDataHub.instance != null && PlayerDataHub.instance.CurrentplayerInput != null)
-        {
-            playerInput = PlayerDataHub.instance.CurrentplayerInput;
-            
-            submitAction = playerInput.actions.FindAction("Submit"); 
-            clickAction = playerInput.actions.FindAction("Click");
+        playerInput = PlayerDataHub.instance.CurrentplayerInput;
+        
+        submitAction = playerInput.actions.FindAction("Submit"); 
+        clickAction = playerInput.actions.FindAction("Click");
 
-            if (submitAction != null)
-            {
-                submitAction.performed += OnSubmitPressed;
-            }
-            if (clickAction != null)
-            {
-                clickAction.performed += OnSubmitPressed;
-            }
-        }
-    }
 
-    void OnDestroy()
-    {
-        // 購読解除
-        if (submitAction != null)
-        {
-            submitAction.performed -= OnSubmitPressed;
-        }
+        submitAction.performed += OnSubmitPressed;
+        clickAction.performed += OnSubmitPressed;
     }
 
     void Update()
@@ -125,10 +92,7 @@ public class UISelectSoundManager : MonoBehaviour
     /// </summary>
     public void PlaySound(AudioClip clip)
     {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.PlayOneShot(selectSound);
-        }
+        audioSource.PlayOneShot(clip);
     }
     public void SelectPlaySound()
     {

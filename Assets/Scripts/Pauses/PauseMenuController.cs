@@ -8,14 +8,14 @@ using UnityEngine.EventSystems;
 /// ゲームのポーズ/再開状態を管理し、シーン遷移を行う。
 /// 入力イベント（ESCキー）を購読して実行される。
 /// </summary>
-public class PauseMenuController : MonoBehaviour
+public class PauseMenuController : Singleton<PauseMenuController>
 {
     [Header("UI Controller Reference")]
     [SerializeField] private PauseMenuUIController uiController;
 
     [Header("Settings")]
     [Tooltip("タイトルシーンの名前")]
-    [SerializeField] private string titleSceneName = "Title"; // Inspectorでタイトルシーン名を設定
+    [SerializeField] private string titleSceneName = "Start"; // Inspectorでタイトルシーン名を設定
     [SerializeField]
     private Volume mosaicVolume;
     public static bool IsPaused { get; private set; } = false;
@@ -24,6 +24,7 @@ public class PauseMenuController : MonoBehaviour
     private InputAction pauseAction; // ポーズ用のアクションをキャッシュする変数
     private GameStateController gameStateController;
     private ConfigController configController;
+    public bool PauseMenuOpenPermit = true;
     void Start()
     {
         playerDataHub = PlayerDataHub.instance;
@@ -61,6 +62,7 @@ public class PauseMenuController : MonoBehaviour
 
     private void OnTogglePause(InputAction.CallbackContext context)
     {
+        if (!PauseMenuOpenPermit) return;
         // ポーズ解除のロジックを復元
         if (IsPaused)
         {

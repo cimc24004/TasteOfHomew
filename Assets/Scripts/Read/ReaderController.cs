@@ -4,6 +4,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.InputSystem; // ▼▼▼ ★★★ InputSystem を使うために追加 ★★★ ▼▼▼
+using UnityEngine.EventSystems; // (EventSystem も必要ですが、今回は不要)
 
 [DisallowMultipleComponent]
 public class ReaderController : Singleton<ReaderController>
@@ -47,6 +49,13 @@ public class ReaderController : Singleton<ReaderController>
     private static readonly System.Collections.Generic.HashSet<string> _readFlags = new();
     private GameStateController gameStateController;
 
+    // ▼▼▼ ★★★ (ここから修正) InputSystem用 ★★★ ▼▼▼
+    private PlayerInput playerInput;
+    private InputAction nextAction;     // 'E'
+    private InputAction prevAction;     // 'Q'
+    private InputAction closeAction;    // 'RightClick' (新規追加)
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
     // ページ情報
     public int TotalPages => _now?.pages != null ? _now.pages.Count : 0;
     public int CurrentPage1 => _now == null ? 0 : (_page + 1);
@@ -59,6 +68,14 @@ public class ReaderController : Singleton<ReaderController>
     [Title("ページ番号表示")]
     [SerializeField] private GameObject pageNumberRoot;
     private AudioClip _turnSEOverride;
+
+    // ▼▼▼ ★★★ (ここから追加) OnEnable ★★★ ▼▼▼
+    void OnEnable()
+    {
+        // Start() で playerInput が取得済みの場合、イベントを購読
+        SubscribeInputEvents();
+    }
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
     void Start()
     {
@@ -73,17 +90,147 @@ public class ReaderController : Singleton<ReaderController>
 
         _audio = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
         _audio.playOnAwake = false;
+        
+        // ▼▼▼ ★★★ (ここから修正) InputSystemの初期化 ★★★ ▼▼▼
+        if (PlayerDataHub.instance != null && PlayerDataHub.instance.CurrentplayerInput != null)
+        {
+            this.playerInput = PlayerDataHub.instance.CurrentplayerInput;
+            // Start() での最初の購読
+            SubscribeInputEvents(); 
+        }
+        else
+        {
+            Debug.LogWarning("[ReaderController] PlayerInput が PlayerDataHub から取得できません。", this);
+        }
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
     }
 
     void OnDisable()
     {
         if (_now != null) Close();
+        
+        // ▼▼▼ ★★★ (ここから修正) イベント解除 ★★★ ▼▼▼
+        // OnDisableではイベントを「解除」する
+        UnsubscribeInputEvents();
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
     }
+    
+    // ▼▼▼ ★★★ (ここから修正) InputSystem関連メソッド ★★★ ▼▼▼
+    
+    /// <summary>
+    /// InputSystem のイベントを購読する
+    /// </summary>
+    private void SubscribeInputEvents()
+    {
+        // playerInput が (Start()で) 取得できていない場合は何もしない
+        if (playerInput == null || playerInput.actions == null)
+        {
+            return;
+        }
+
+        // 念のため、多重登録を防ぐために一度解除してから登録する
+        UnsubscribeInputEvents(); 
+
+        // ConfigController と同じ 'E' と 'Q' のアクション名を使う
+        nextAction = playerInput.actions.FindAction("E");
+        prevAction = playerInput.actions.FindAction("Q");
+        // "RightClick" アクションを取得
+        closeAction = playerInput.actions.FindAction("RightClick");
+
+        if (nextAction != null)
+        {
+            nextAction.performed += HandleNextPage;
+        }
+        else
+        {
+            Debug.LogWarning("[ReaderController] 'E' アクションが見つかりません。");
+        }
+        
+        if (prevAction != null)
+        {
+            prevAction.performed += HandlePrevPage;
+        }
+        else
+        {
+            Debug.LogWarning("[ReaderController] 'Q' アクションが見つかりません。");
+        }
+        
+        // (新規追加)
+        if (closeAction != null)
+        {
+            closeAction.performed += HandleClose;
+        }
+        else
+        {
+            Debug.LogWarning("[ReaderController] 'RightClick' アクションが見つかりません。");
+        }
+    }
+
+    /// <summary>
+    /// InputSystem のイベント購読を解除する
+    /// </summary>
+    private void UnsubscribeInputEvents()
+    {
+        if (nextAction != null)
+        {
+            nextAction.performed -= HandleNextPage;
+        }
+        if (prevAction != null)
+        {
+            prevAction.performed -= HandlePrevPage;
+        }
+        // (新規追加)
+        if (closeAction != null)
+        {
+            closeAction.performed -= HandleClose;
+        }
+    }
+    
+    /// <summary>
+    /// "E" アクションが実行された (Next Page)
+    /// </summary>
+    private void HandleNextPage(InputAction.CallbackContext context)
+    {
+        // リーダーが開かれていない (_now == null) 場合は何もしない
+        if (_now == null) return;
+
+        // 既存のページ送り処理を呼ぶ
+        TryNextPage();
+    }
+
+    /// <summary>
+    /// "Q" アクションが実行された (Previous Page)
+    /// </summary>
+    private void HandlePrevPage(InputAction.CallbackContext context)
+    {
+        // リーダーが開かれていない (_now == null) 場合は何もしない
+        if (_now == null) return;
+
+        // 既存のページ送り処理を呼ぶ
+        PrevPage();
+    }
+    
+    // (新規追加)
+    /// <summary>
+    /// "RightClick" アクションが実行された (Close Reader)
+    /// </summary>
+    private void HandleClose(InputAction.CallbackContext context)
+    {
+        // リーダーが開かれていない (_now == null) 場合は何もしない
+        if (_now == null) return;
+        
+        // 閉じる処理を呼ぶ
+        Close();
+    }
+    
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
 
     [Button("Open(Test)")]
     public void Open(ReadableAsset asset, int startPage1 = -1, AudioClip overrideTurnSE = null)
     {
         if (!asset) return;
+        EventSystem.current.SetSelectedGameObject(null);
         gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
         _now = asset;
 
@@ -105,6 +252,7 @@ public class ReaderController : Singleton<ReaderController>
     public void Close()
     {
         if (_now == null) return;
+        EventSystem.current.SetSelectedGameObject(null);
         gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
         PlaySE(_now.closeSE);
         SetActive(false);

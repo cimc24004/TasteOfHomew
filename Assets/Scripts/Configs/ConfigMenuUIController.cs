@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks; // ★ UniTask.Yield のために必要
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
+using System; // ★ Enum.GetNames を使うために追加
 
 /// <summary>
 /// 設定メニューのパネル状態
@@ -70,8 +71,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
 
     [Header("Audio UI")]
     [SerializeField] private Slider masterVolumeSlider;
-    [SerializeField] private Slider musicVolumeSlider;
-    [SerializeField] private Slider sfxVolumeSlider;
 
     [Header("Gameplay UI")]
     [SerializeField] private Slider mouseSensitivitySlider;
@@ -79,7 +78,14 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     [SerializeField] private Slider fovSlider;
 
     public UnityEvent HandleApplyEvent;
+    
+    // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+    // 全解像度リスト（ConfigControllerとインデックスを合わせるため）
     private List<Resolution> resolutions;
+    // フィルタリングされた解像度の「元のインデックス」をマッピングするリスト
+    private List<int> resolutionOptionIndexMap = new List<int>();
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
     private ColorBlock normalTabColors;
     private ColorBlock activeTabColors;
     private PlayerInput playerInput; 
@@ -103,13 +109,11 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.AddListener(ShowGameplayPanel);
 
-        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
         // --- アクションボタンのリスナー登録 ---
         if (ApplyButton != null)
             ApplyButton.onClick.AddListener(OnApplyButtonClicked);
         if (ResetButton != null)
             ResetButton.onClick.AddListener(OnResetButtonClicked);
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
         // playerInput が (Start()で) 取得済みの場合にのみ実行
         SubscribeInputEvents();
@@ -122,10 +126,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             Debug.LogError("ConfigController.Instance が見つかりません！");
             return;
         }
-
-        // ▼▼▼ ★★★ pauseMenuUIController のエラーチェックを削除 ★★★ ▼▼▼
-        // (pauseMenuUIController が null でもエラーにしない)
-        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         if (PlayerDataHub.instance == null || PlayerDataHub.instance.CurrentplayerInput == null)
         {
@@ -147,7 +147,11 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             activeTabColors.normalColor = normalTabColors.selectedColor; 
         }
 
-        PopulateResolutionDropdown();
+        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+        PopulateResolutionDropdown(); // 解像度リストをフィルタリング
+        PopulateWindowModeDropdown(); // ウィンドウモードリストを生成
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
         GameSettings settings = configController.InitializePendingSettings();
         SetAllUIValues(settings);
     }
@@ -160,14 +164,11 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             audioTabButton.onClick.RemoveListener(ShowAudioPanel);
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.RemoveListener(ShowGameplayPanel);
-
-        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
-        // --- アクションボタンのリスナー解除 ---
+        
         if (ApplyButton != null)
             ApplyButton.onClick.RemoveListener(OnApplyButtonClicked);
         if (ResetButton != null)
             ResetButton.onClick.RemoveListener(OnResetButtonClicked);
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
     }
     
     /// <summary>
@@ -208,21 +209,85 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         playerInput.actions["Q"].performed -= HandlePrevTab;
     }
     
+    // ▼▼▼ ★★★ (ここから修正) 16:9フィルター機能を追加 ★★★ ▼▼▼
     /// <summary>
-    /// 解像度ドロップダウンのリストをOSから取得して設定する
+    /// 解像度ドロップダウンのリストをOSから取得し、16:9のみにフィルタリングする
     /// </summary>
     private void PopulateResolutionDropdown()
     {
+        // 1. 元のリストをすべて取得
         resolutions = new List<Resolution>(Screen.resolutions);
         resolutionDropdown.ClearOptions();
+
         List<string> options = new List<string>();
-        foreach (var res in resolutions)
+        resolutionOptionIndexMap.Clear(); // マッピングをクリア
+        
+        // 16:9 のアスペクト比 (1.777...)
+        const float targetRatio = 16f / 9f;
+        const float epsilon = 0.01f; // 浮動小数点数の比較のための許容誤差
+
+        // 2. 元のリストをループし、16:9だけを絞り込む
+        for (int i = 0; i < resolutions.Count; i++) // インデックス(i)を取得するためにforを使用
         {
-            string option = $"{res.width} x {res.height} @ {res.refreshRate} Hz";
-            options.Add(option);
+            var res = resolutions[i];
+            
+            // 幅や高さが0の場合は除外 (不正なデータ)
+            if (res.width == 0 || res.height == 0) continue; 
+            
+            float currentRatio = (float)res.width / (float)res.height;
+            
+            // 3. アスペクト比が 16:9 に近いかチェック
+            if (Mathf.Abs(currentRatio - targetRatio) < epsilon)
+            {
+                // ConfigControllerのロジックに合わせてリフレッシュレートも表示
+                string option = $"{res.width} x {res.height}";
+                options.Add(option);
+                
+                // ★重要★: ドロップダウンのN番目が、元のリストの「i」番目であることを記録
+                resolutionOptionIndexMap.Add(i); 
+            }
         }
+        
+        // 4. (安全策) 16:9の解像度が1つも見つからなかった場合
+        if (options.Count == 0)
+        {
+             Debug.LogWarning("16:9 の解像度が見つかりませんでした。すべての解像度を表示します。");
+             for (int i = 0; i < resolutions.Count; i++)
+             {
+                var res = resolutions[i];
+                string option = $"{res.width} x {res.height} @ {res.refreshRateRatio.value:F0} Hz";
+                options.Add(option);
+                resolutionOptionIndexMap.Add(i); // この場合、indexは 1:1 になる
+             }
+        }
+
         resolutionDropdown.AddOptions(options);
     }
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
+    // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+    /// <summary>
+    /// ウィンドウモードのドロップダウンリストを初期化する
+    /// </summary>
+    private void PopulateWindowModeDropdown()
+    {
+        if (windowModeDropdown == null) return;
+        
+        windowModeDropdown.ClearOptions();
+        
+        // Enumは (0, 1, 2, 3) の順番が保証されています。
+        // ユーザーフレンドリーな名前に手動でマッピングします。
+        List<string> options = new List<string>
+        {
+            "フルスクリーン", // (FullScreenMode)0 = ExclusiveFullScreen
+            "ボーダーレス",   // (FullScreenMode)1 = FullScreenWindow
+            "最大化ウィンドウ",       // (FullScreenMode)2 = MaximizedWindow
+            "ウィンドウモード"        // (FullScreenMode)3 = Windowed
+        };
+        
+        windowModeDropdown.AddOptions(options);
+    }
+    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
     /// <summary>
     /// ConfigControllerからロードした設定値をすべてのUIに反映させる
@@ -236,12 +301,27 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         textureDropdown.onValueChanged.RemoveAllListeners();
         antiAliasingDropdown.onValueChanged.RemoveAllListeners();
         masterVolumeSlider.onValueChanged.RemoveAllListeners();
-        musicVolumeSlider.onValueChanged.RemoveAllListeners();
-        sfxVolumeSlider.onValueChanged.RemoveAllListeners();
         mouseSensitivitySlider.onValueChanged.RemoveAllListeners();
         invertYToggle.onValueChanged.RemoveAllListeners();
         fovSlider.onValueChanged.RemoveAllListeners();
-        resolutionDropdown.value = settings.resolutionIndex;
+
+        // ▼▼▼ ★★★ (ここから修正) インデックスの逆引き ★★★ ▼▼▼
+        // 1. 保存されている「元のインデックス」(settings.resolutionIndex) を取得
+        int originalIndexToFind = settings.resolutionIndex;
+        // 2. マップリスト (resolutionOptionIndexMap) から、そのインデックスが
+        //    ドロップダウンの何番目にあるかを逆引きする
+        int dropdownIndex = resolutionOptionIndexMap.IndexOf(originalIndexToFind);
+
+        // 3. もし見つからなければ (例: モニタが変更された)、リストの先頭(0)にする
+        if (dropdownIndex < 0)
+        {
+            dropdownIndex = 0; 
+            Debug.LogWarning("保存された解像度インデックスが現在の16:9リストに見つかりません。デフォルト(0)に設定します。");
+        }
+        
+        resolutionDropdown.value = dropdownIndex;
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+        
         resolutionDropdown.RefreshShownValue(); 
         windowModeDropdown.value = (int)settings.fullscreenMode;
         vsyncToggle.isOn = settings.vsync;
@@ -249,11 +329,12 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         textureDropdown.value = settings.textureQuality;
         antiAliasingDropdown.value = settings.antiAliasing;
         masterVolumeSlider.value = settings.masterVolume;
-        musicVolumeSlider.value = settings.musicVolume;
-        sfxVolumeSlider.value = settings.sfxVolume;
+        // musicVolumeSlider.value = settings.musicVolume;
+        // sfxVolumeSlider.value = settings.sfxVolume;
         mouseSensitivitySlider.value = settings.mouseSensitivity;
         invertYToggle.isOn = settings.invertCameraY;
         fovSlider.value = settings.fov;
+        
         resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
         windowModeDropdown.onValueChanged.AddListener(OnWindowModeChanged);
         vsyncToggle.onValueChanged.AddListener(OnVsyncChanged);
@@ -261,8 +342,8 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         textureDropdown.onValueChanged.AddListener(OnTexturesChanged);
         antiAliasingDropdown.onValueChanged.AddListener(OnAntiAliasingChanged);
         masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
-        musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
-        sfxVolumeSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
+        // musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+        // sfxVolumeSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
         mouseSensitivitySlider.onValueChanged.AddListener(OnMouseSensitivityChanged);
         invertYToggle.onValueChanged.AddListener(OnInvertYChanged);
         fovSlider.onValueChanged.AddListener(OnFOVChanged);
@@ -344,7 +425,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     /// <summary>
     /// ResetButton がクリックされた (HandleRevert と同じ動作)
     /// </summary>
-    // ▼▼▼ ★★★ (ここから修正) async void に変更 ★★★ ▼▼▼
     public async void OnResetButtonClicked()
     {
         // ボタンクリックの場合、Canvas非表示チェックは不要 (押せないため)
@@ -358,7 +438,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             await SetFocusToCurrentPanelFirstElement();
         }
     }
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
 
     // --- InputSystemのハンドラ関数 ---
@@ -368,10 +447,8 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     /// </summary>
     private void HandleApply(InputAction.CallbackContext context)
     {
-        // ▼▼▼ ★★★ 修正箇所 ★★★ ▼▼▼
         // SettingCanvasが非表示なら、何もせず処理を終了する
         if (SettingCanvas == null || !SettingCanvas.activeInHierarchy) return;
-        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         if (configController != null)
         {
@@ -379,21 +456,18 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             // 1. 設定を適用
             configController.ApplyPendingSettings();
             
-            // ▼▼▼ ★★★ 2. 画面を閉じる (ロジック修正) ★★★ ▼▼▼
             if (pauseMenuUIController != null)
             {
                 // 親 (PauseMenu) が設定されていれば、そこ経由で閉じる
                 pauseMenuUIController.HideConfigPanel(true);
             }
             HandleApplyEvent.Invoke();
-            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
         }
     }
 
     /// <summary>
     /// "R" アクションが実行された (Reset to Default)
     /// </summary>
-    // ▼▼▼ ★★★ (ここから修正) async void に変更 ★★★ ▼▼▼
     private async void HandleRevert(InputAction.CallbackContext context)
     {
         // SettingCanvasが非表示なら、何もせず処理を終了する
@@ -409,7 +483,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             await SetFocusToCurrentPanelFirstElement();
         }
     }
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     /// <summary>
     /// "E" アクションが実行された (Next Tab)
@@ -458,8 +531,7 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             ShowPanel(ConfigPanelState.Audio);
         }
     }
-
-    // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+    
     /// <summary>
     /// 現在開いているパネルの最初の要素にフォーカスを当てる (1フレーム待機付き)
     /// </summary>
@@ -494,7 +566,7 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
                 break;
         }
     }
-    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+    
 
     public void OpenSettingCanvas()
     {
@@ -505,16 +577,32 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     {
         SettingCanvas.gameObject.SetActive(false);
     }
+    
     // --- UIのOnValueChanged()から呼び出すメソッド群 ---
-    public void OnResolutionChanged(int index) => configController.UpdatePendingResolution(index);
+
+    // ▼▼▼ ★★★ (ここから修正) インデックスの変換 ★★★ ▼▼▼
+    public void OnResolutionChanged(int dropdownIndex) 
+    {
+        if (dropdownIndex < 0 || dropdownIndex >= resolutionOptionIndexMap.Count)
+        {
+            Debug.LogError($"不正なドロップダウンインデックス {dropdownIndex} が渡されました。");
+            return; 
+        }
+        
+        // ★ ドロップダウンのインデックスを、Screen.resolutions のインデックスに変換
+        int originalIndex = resolutionOptionIndexMap[dropdownIndex];
+        configController.UpdatePendingResolution(originalIndex);
+    }
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
     public void OnWindowModeChanged(int index) => configController.UpdatePendingFullscreenMode(index);
     public void OnVsyncChanged(bool isOn) => configController.UpdatePendingVsync(isOn);
     public void OnShadowsChanged(int index) => configController.UpdatePendingShadows(index);
     public void OnTexturesChanged(int index) => configController.UpdatePendingTextures(index);
     public void OnAntiAliasingChanged(int index) => configController.UpdatePendingAntiAliasing(index);
     public void OnMasterVolumeChanged(float value) => configController.UpdatePendingMasterVolume(value);
-    public void OnMusicVolumeChanged(float value) => configController.UpdatePendingMusicVolume(value);
-    public void OnSFXVolumeChanged(float value) => configController.UpdatePendingSFXVolume(value);
+    // public void OnMusicVolumeChanged(float value) => configController.UpdatePendingMusicVolume(value);
+    // public void OnSFXVolumeChanged(float value) => configController.UpdatePendingSFXVolume(value);
     public void OnMouseSensitivityChanged(float value) => configController.UpdatePendingMouseSensitivity(value);
     public void OnInvertYChanged(bool isOn) => configController.UpdatePendingInvertY(isOn);
     public void OnFOVChanged(float value)

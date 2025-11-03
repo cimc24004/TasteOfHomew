@@ -18,7 +18,6 @@ public class PauseMenuUIController : MonoBehaviour
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button backToTitleButton;
-    [SerializeField] private Button backToPauseButton; // 設定画面から戻るボタン
     
     private ConfigController configController;
 
@@ -31,7 +30,6 @@ public class PauseMenuUIController : MonoBehaviour
         
         // ▼▼▼ ★★★ 修正箇所 (ラムダ式で引数 false を渡す) ★★★ ▼▼▼
         // backToPauseButton.onClick.AddListener(HideConfigPanel);
-        backToPauseButton.onClick.AddListener(() => HideConfigPanel(false)); // false = 設定を適用しない
         // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         // 最初は非表示にしておく

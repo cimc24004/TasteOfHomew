@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using Sirenix.OdinInspector;
-using UnityEngine.SceneManagement; // Odin使わないなら消してOK
+using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems; // Odin使わないなら消してOK
 
 [AddComponentMenu("UI/GameOverController")]
 public class GameOverController : Singleton<GameOverController>
@@ -85,7 +86,6 @@ public class GameOverController : Singleton<GameOverController>
         playerMovement.enabled = false;
         gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
         _fadeTween?.Kill();
-
         gameOverRoot.SetActive(true);
         canvasGroup.alpha = 0f;
         canvasGroup.blocksRaycasts = false;
@@ -99,6 +99,7 @@ public class GameOverController : Singleton<GameOverController>
             {
                 canvasGroup.blocksRaycasts = true;
                 canvasGroup.interactable = true;
+                EventSystem.current.SetSelectedGameObject(restartButton.gameObject);
             });
     }
 

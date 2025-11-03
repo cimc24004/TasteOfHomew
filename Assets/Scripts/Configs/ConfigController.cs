@@ -24,8 +24,8 @@ public class GameSettings
 
     [Header("Audio")]
     public float masterVolume;
-    public float musicVolume;
-    public float sfxVolume;
+    // public float musicVolume;
+    // public float sfxVolume;
 
     [Header("Gameplay")]
     public float mouseSensitivity;
@@ -46,8 +46,8 @@ public class GameSettings
         antiAliasing = 1; // 2x
 
         masterVolume = 0.8f;
-        musicVolume = 0.8f;
-        sfxVolume = 0.8f;
+        // musicVolume = 0.8f;
+        // sfxVolume = 0.8f;
 
         mouseSensitivity = 1.0f;
         invertCameraY = false;
@@ -67,8 +67,8 @@ public class GameSettings
         antiAliasing = other.antiAliasing;
 
         masterVolume = other.masterVolume;
-        musicVolume = other.musicVolume;
-        sfxVolume = other.sfxVolume;
+        // musicVolume = other.musicVolume;
+        // sfxVolume = other.sfxVolume;
 
         mouseSensitivity = other.mouseSensitivity;
         invertCameraY = other.invertCameraY;
@@ -221,7 +221,8 @@ public class ConfigController : SerializedMonoBehaviour
         if (settings.resolutionIndex >= 0 && settings.resolutionIndex < Screen.resolutions.Length)
         {
             Resolution res = Screen.resolutions[settings.resolutionIndex];
-            Screen.SetResolution(res.width, res.height, settings.fullscreenMode, res.refreshRate);
+            // Screen.SetResolution(res.width, res.height, settings.fullscreenMode, res.refreshRate);
+            Screen.SetResolution(res.width, res.height, settings.fullscreenMode, res.refreshRateRatio);
         }
 
         // VSync (これはQualitySettingsでOK)
@@ -247,17 +248,20 @@ public class ConfigController : SerializedMonoBehaviour
         switch (settings.shadowQuality)
         {
             case 0: // Low
-                urpAsset.mainLightShadowmapResolution = 1024;
+                urpAsset.additionalLightsShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierLow;
+                urpAsset.mainLightShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierLow;
                 urpAsset.shadowDistance = 50f;
                 urpAsset.shadowCascadeCount = 1; // カスケード数も変更する例
                 break;
             case 1: // Medium
-                urpAsset.mainLightShadowmapResolution = 2048;
+                urpAsset.additionalLightsShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierMedium;
+                urpAsset.mainLightShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierMedium;
                 urpAsset.shadowDistance = 100f;
                 urpAsset.shadowCascadeCount = 2;
                 break;
             case 2: // High
-                urpAsset.mainLightShadowmapResolution = 4096;
+                urpAsset.additionalLightsShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierHigh;
+                urpAsset.mainLightShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierHigh;
                 urpAsset.shadowDistance = 150f;
                 urpAsset.shadowCascadeCount = 4;
                 break;
@@ -274,9 +278,7 @@ public class ConfigController : SerializedMonoBehaviour
         
         // ※ AudioMixer側で "MasterVolumeParam", "MusicVolumeParam", "SFXVolumeParam" 
         //     という名前の変数をExposeしておく必要があります。
-        masterMixer.SetFloat("MasterVolumeParam", ConvertToDecibel(settings.masterVolume));
-        masterMixer.SetFloat("MusicVolumeParam", ConvertToDecibel(settings.musicVolume));
-        masterMixer.SetFloat("SFXVolumeParam", ConvertToDecibel(settings.sfxVolume));
+        masterMixer.SetFloat("MasterVolume", ConvertToDecibel(settings.masterVolume));
     }
     
     private void ApplyGameplay(GameSettings settings)
@@ -325,7 +327,7 @@ public class ConfigController : SerializedMonoBehaviour
             // リフレッシュレートまで完全に一致するものを探す
             if (Screen.resolutions[i].width == currentRes.width &&
                 Screen.resolutions[i].height == currentRes.height &&
-                Screen.resolutions[i].refreshRate == currentRes.refreshRate)
+                Screen.resolutions[i].refreshRateRatio.Equals(currentRes.refreshRateRatio))
             {
                 return i;
             }
@@ -414,8 +416,8 @@ public class ConfigController : SerializedMonoBehaviour
 
     // Audio
     public void UpdatePendingMasterVolume(float value) { pendingSettings.masterVolume = value; }
-    public void UpdatePendingMusicVolume(float value) { pendingSettings.musicVolume = value; }
-    public void UpdatePendingSFXVolume(float value) { pendingSettings.sfxVolume = value; }
+    // public void UpdatePendingMusicVolume(float value) { pendingSettings.musicVolume = value; }
+    // public void UpdatePendingSFXVolume(float value) { pendingSettings.sfxVolume = value; }
 
     // Gameplay
     public void UpdatePendingMouseSensitivity(float value) { pendingSettings.mouseSensitivity = value; }

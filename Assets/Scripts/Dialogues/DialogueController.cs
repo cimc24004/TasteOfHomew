@@ -13,7 +13,7 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.EventSystems; // ▼▼▼ ★★★ EventSystemを使うために必要 (既に追加されていますが確認) ★★★ ▼▼▼
+using UnityEngine.EventSystems; 
 
 [DisallowMultipleComponent]
 public class DialogueController : Singleton<DialogueController>
@@ -25,7 +25,7 @@ public class DialogueController : Singleton<DialogueController>
 
     [Title("UI (Default)")]
     [Tooltip("デフォルトのUI参照。オーバーライドされなかった場合に使われる。")]
-    [SerializeField] // private のままだとインスペクターから設定できないので [SerializeField] を推奨
+    [SerializeField]
     private DefaultDialogueUIInfo defaultUIInfo;
 
     // 実行時に使用するUI参照を動的に保持する
@@ -72,6 +72,8 @@ public class DialogueController : Singleton<DialogueController>
     private InputAction advanceAction, skipAction, cancelAction;
     private CancellationTokenSource _runCts;
     private GameStateController gameStateController;
+    private PauseMenuController pauseMenuController; // PauseMenuControllerへの参照
+
     private float lastClickTime = -999f;
     private float Now => useUnscaledTime ? Time.unscaledTime : Time.time;
     private int _runId = 0;
@@ -99,9 +101,10 @@ public class DialogueController : Singleton<DialogueController>
     private void Init()
     {
         CleanupUI();
-        MergeFlagsFromDataShare(); // ← 【追加】DataShareからフラグを読み込む
+        MergeFlagsFromDataShare(); 
         uiSwitcher = UISwitcher.instance ?? uiSwitcher;
         gameStateController = GameStateController.instance ?? gameStateController;
+        pauseMenuController = PauseMenuController.instance; 
         playerInput = PlayerDataHub.instance.CurrentplayerInput;
         var currentSceneUIRefs = DefaultDialogueUIInfo.instance;
         if (currentSceneUIRefs != null)
@@ -112,9 +115,6 @@ public class DialogueController : Singleton<DialogueController>
         }
         else
         {
-            // 新しいシーンにUIが見つからない場合は警告を出します。
-            // インスペクターで設定した初期の参照がまだ有効な場合（最初のシーンなど）は
-            // そのまま使いますが、シーン遷移後はnullになる可能性が高いです。
             if (defaultUIInfo == null) {
                 Debug.LogWarning("[DialogueController] 新しいシーンで DialogueUIRefs が見つかりませんでした。UIが表示されない可能性があります。");
             }
@@ -178,7 +178,7 @@ public class DialogueController : Singleton<DialogueController>
     
     public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1, bool changeGameState = true)
     {
-        StopCurrent();
+        StopCurrent(); // (StopCurrent内で PauseMenuOpenPermit = true が呼ばれる)
         int runId = _nextRunId++; _runId = runId;
 
         if (overrideUIRefs != null)
@@ -187,8 +187,6 @@ public class DialogueController : Singleton<DialogueController>
         }
         else
         {
-            // Init()ですでにデフォルトUIが設定されているので、このelseブロック自体が不要な場合もありますが、
-            // 安全のため、毎度デフォルト参照で更新するのは良い方法です。
             _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
                                                 defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
         }
@@ -216,6 +214,10 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
             if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Dialogue);
             onDialogueStarted?.Invoke();
+            
+            if (pauseMenuController != null)
+                pauseMenuController.PauseMenuOpenPermit = false;
+
             if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
             await RunSequenceAsync(runId, groupKey, sequenceId, token, 0, startIndex);
         }
@@ -226,12 +228,16 @@ public class DialogueController : Singleton<DialogueController>
             {
                 CleanupUI();
                 onDialogueEnded?.Invoke();
+                
+                if (pauseMenuController != null)
+                    pauseMenuController.PauseMenuOpenPermit = true;
+
                 if (switchUIOnStartAndEnd && uiSwitcher) uiSwitcher.SwitchTo(UISwitcher.UIKind.Player);
                 if (changeGameState && gameStateController) gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
             }
             _runCts?.Dispose(); _runCts = null;
             _currentUIRefs = new DialogueUIRefs(defaultUIInfo.speakerBox, defaultUIInfo.speakerText, defaultUIInfo.dialogueBox,
-                                            defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
+                                                defaultUIInfo.bodyText, defaultUIInfo.choicesRoot, defaultUIInfo.choiceButtonPrefab);
         }
     }
 
@@ -239,6 +245,10 @@ public class DialogueController : Singleton<DialogueController>
     {
         _runId = _nextRunId++;
         if (_runCts != null && !_runCts.IsCancellationRequested) _runCts.Cancel();
+        
+        if (pauseMenuController != null)
+            pauseMenuController.PauseMenuOpenPermit = true;
+
         CleanupUI();
     }
 
@@ -246,6 +256,7 @@ public class DialogueController : Singleton<DialogueController>
     public void SetFlag(string key, bool val) => flags[key] = val;
 
     // ===== Core =====
+// ===== Core =====
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
@@ -279,30 +290,72 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
             
+            // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+
+            // --- ステップのプロパティを事前チェック ---
+            bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
+            bool hasBody = !string.IsNullOrWhiteSpace(step.text);
+            bool hasChoices = step.choices != null && step.choices.Count > 0;
+
+            // --- スピーカー(話者)のロジック ---
             if (_currentUIRefs.speakerText)
             {
                 ThrowIfStale(runId);
-                bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
-                if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(hasSpeaker);
+                
                 if (hasSpeaker)
                 {
+                    // このステップに話者が設定されている場合
+                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
                     _currentUIRefs.speakerText.text = step.speaker;
                     _currentUIRefs.speakerText.enabled = true;
                 }
+                else if (!hasBody && hasChoices)
+                {
+                    // このステップが「選択肢のみ」（本文なし）の場合
+                    // → 前のステップの話者名を表示したままにする (何もしない)
+                }
                 else
                 {
+                    // このステップに話者がなく、かつ選択肢のみでもない場合
+                    // (例: 本文だけ、またはフラグだけのステップ)
+                    // → 話者ボックスを隠す
+                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
                     _currentUIRefs.speakerText.text = "";
                     _currentUIRefs.speakerText.enabled = false;
                 }
             }
-            bool hasBody = !string.IsNullOrWhiteSpace(step.text);
-            if (_currentUIRefs.dialogueBox) _currentUIRefs.dialogueBox.SetActive(hasBody);
 
-            await TypeTextAsync(runId, step.text, token);
+            // --- 本文(Body)のロジック ---
+            if (hasBody)
+            {
+                // このステップに本文がある場合
+                // → TypeTextAsync を呼び出す (内部でボックスが表示される)
+                await TypeTextAsync(runId, step.text, token);
+            }
+            else if (hasChoices)
+            {
+                // このステップに本文がなく、選択肢だけがある場合
+                // → TypeTextAsync を呼ばない (前のステップの本文が消えない)
+                // (念のため、ボックスが非表示になっていたら表示する)
+                if (_currentUIRefs.dialogueBox && !_currentUIRefs.dialogueBox.activeSelf)
+                {
+                    _currentUIRefs.dialogueBox.SetActive(true);
+                }
+            }
+            else
+            {
+                // このステップに本文も選択肢もない場合
+                // (例: フラグ操作のみのステップ、または空のステップ)
+                // → TypeTextAsync に空の文字列を渡し、ボックスを非表示にする
+                await TypeTextAsync(runId, step.text, token);
+            }
+
             ThrowIfStale(runId);
             
-            if (step.choices != null && step.choices.Count > 0)
+            // --- 選択肢 / 次へのロジック ---
+            if (hasChoices)
             {
+                // (元のロジックと変更なし)
                 string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
                 ThrowIfStale(runId);
                 if (gotoRaw == null) return;
@@ -321,13 +374,15 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
+                // (元のロジックと変更なし)
                 if (step.autoNext) await DelaySmartAsync(step.autoNextDelay, token);
                 else await WaitAdvanceAsync(runId, token);
                 ThrowIfStale(runId);
             }
+
+            // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
         }
     }
-
     private bool CheckConditions(List<FlagCondition> conds)
     {
         if (conds == null || conds.Count == 0) return true;
@@ -403,6 +458,12 @@ public class DialogueController : Singleton<DialogueController>
         int idx = 0;
         float secPerChar = 1f / Mathf.Max(1f, charsPerSecond);
         float acc = 0f;
+        
+        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+        // ダブルクリックでスキップしたかを判定するフラグ
+        bool skippedByDoubleClick = false;
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+
         if (len > 0)
         {
             idx = 1;
@@ -426,6 +487,11 @@ public class DialogueController : Singleton<DialogueController>
                     {
                         if (_currentUIRefs.bodyText) _currentUIRefs.bodyText.text = full;
                         lastClickTime = now;
+                        
+                        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+                        skippedByDoubleClick = true; // スキップしたことを記録
+                        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+                        
                         break;
                     }
                     lastClickTime = now;
@@ -442,29 +508,83 @@ public class DialogueController : Singleton<DialogueController>
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
-    }
-    
+
+        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+        // ループ終了後（テキストが全部表示された後）
+        if (skippedByDoubleClick)
+        {
+            // もしダブルクリックでスキップされていたら、
+            // 0.5秒のクールダウンを入れ、次の WaitAdvanceAsync が即座に反応するのを防ぐ
+            await DelaySmartAsync(0.5f, token);
+        }
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+    }    
     // ===== Wait / Delay =====
+// ===== Wait / Delay =====
     private async UniTask WaitAdvanceAsync(int runId, CancellationToken token)
     {
+        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+        
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
+
+        // (1) クールダウン処理:
+        // もしこの時点で advanceAction が押されっぱなしなら (テキストスキップの入力)、
+        // ユーザーが一度ボタンを離すまで待機する
+        if (!_pauseAdvanceInput && advanceAction != null)
+        {
+            while (advanceAction.IsPressed()) // 押されている間
+            {
+                token.ThrowIfCancellationRequested();
+                ThrowIfStale(runId);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+        
+        // (2) 新しい「押し込み」を待機
+        bool inputPressed = false;
         while (true)
         {
             token.ThrowIfCancellationRequested();
             ThrowIfStale(runId);
+            
             if (cancelAction != null && cancelAction.triggered)
             { StopCurrent(); return; }
+            
+            // ユーザーが「新しく」ボタンを押した瞬間 (triggered) を待つ
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.triggered)
             {
+                inputPressed = true;
                 lastClickTime = Now;
-                return;
+                break; // 押し込みを検知したので、(3) の「リリース待ち」に移行
             }
+            
             await UniTask.Yield(PlayerLoopTiming.Update, token);
             ThrowIfStale(runId);
         }
-    }
 
+        // (3) 「リリース」を待機
+        // (inputPressed が true の場合のみ、ここに到達する)
+        while (inputPressed)
+        {
+            token.ThrowIfCancellationRequested();
+            ThrowIfStale(runId);
+
+            // ユーザーがボタンを「離した」瞬間 (WasReleasedThisFrame) を待つ
+            if (!_pauseAdvanceInput && advanceAction != null && advanceAction.WasReleasedThisFrame())
+            {
+                return; // ★ここで初めて次のステップに進む
+            }
+
+            // (もしキャンセルされたら、ここで while ループを抜ける)
+            if (cancelAction != null && cancelAction.triggered)
+            { StopCurrent(); return; }
+            
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            ThrowIfStale(runId);
+        }
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+    }
     private async UniTask DelaySmartAsync(float seconds, CancellationToken token)
     {
         var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
@@ -477,6 +597,14 @@ public class DialogueController : Singleton<DialogueController>
     {
         ClearChoices();
         ThrowIfStale(runId);
+        
+        // ▼▼▼ ★★★ (ここから追加) 1秒待機 ★★★ ▼▼▼
+        // useUnscaledTime フラグを考慮して1秒待機する
+        var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
+        await UniTask.Delay(TimeSpan.FromSeconds(0.5f), delayType, PlayerLoopTiming.Update, token);
+        ThrowIfStale(runId); // 待機したのでStaleチェック
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+
         var usable = new List<(DialogueChoice, Button)>();
         foreach (var ch in choices)
         {
@@ -490,13 +618,11 @@ public class DialogueController : Singleton<DialogueController>
         
         if (usable.Count == 0) return null; // 有効な選択肢がなければ終了
 
-        // ▼▼▼ ★★★ ここから3行を追加 ★★★ ▼▼▼
         // 最初のボタンを EventSystem で選択状態にし、コントローラー操作を可能にする
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(usable[0].Item2.gameObject);
         }
-        // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
 
         string result = null; bool clicked = false;
         foreach (var (ch, btn) in usable)
@@ -509,6 +635,13 @@ public class DialogueController : Singleton<DialogueController>
                 clicked = true;
             });
         }
+        
+        // ▼▼▼ ★★★ (1フレーム待機を削除) ★★★ ▼▼▼
+        // (1秒待機を先頭に追加したため、この1フレーム待機は不要)
+        // await UniTask.Yield(PlayerLoopTiming.Update, token);
+        // ThrowIfStale(runId); 
+        // ▲▲▲ ★★★ (削除) ★★★ ▲▲▲
+
         while (!clicked)
         {
             token.ThrowIfCancellationRequested();
