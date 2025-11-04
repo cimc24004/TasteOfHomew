@@ -577,7 +577,7 @@ public class DialogueController : Singleton<DialogueController>
         
         // useUnscaledTime フラグを考慮して1秒待機する
         var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
-        await UniTask.Delay(TimeSpan.FromSeconds(1.0f), delayType, PlayerLoopTiming.Update, token);
+        await UniTask.Delay(TimeSpan.FromSeconds(0.1f), delayType, PlayerLoopTiming.Update, token);
         ThrowIfStale(runId); // 待機したのでStaleチェック
 
         var usable = new List<(DialogueChoice, Button)>();
@@ -595,6 +595,7 @@ public class DialogueController : Singleton<DialogueController>
 
         if (EventSystem.current != null)
         {
+            await UniTask.Delay(TimeSpan.FromSeconds(0.5f), delayType, PlayerLoopTiming.Update, token);
             EventSystem.current.SetSelectedGameObject(usable[0].Item2.gameObject);
         }
 
