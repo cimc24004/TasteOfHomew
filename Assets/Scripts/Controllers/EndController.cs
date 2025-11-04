@@ -53,6 +53,7 @@ public class EndController : MonoBehaviour
             {
                 EndingTimelinePlayback.Resume();
                 WaitForPlayerInputClick = false;
+                EventSystem.current.SetSelectedGameObject(null);
             }
         });
     }
@@ -125,14 +126,54 @@ public class EndController : MonoBehaviour
     }
     public void EndingNameSet()
     {
+        EventSystem.current.SetSelectedGameObject(null);
         var candidates = new List<KeyUnityEvent>();
         for (int i = 0; i < keyEvents.Count; i++)
         {
             var ke = keyEvents[i];
+            if (string.IsNullOrEmpty(ke.key)) continue;
+
             bool val = dataShareController.GetFlag(ke.key);
-            if (val)
+            if (!val) continue;
+            
+            // 注意: 名前を表示するだけなので、CheckKeysと違って
+            // 「invokeOnlyOnce」や「invoked」はチェックしない
+            candidates.Add(ke);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.LogWarning("[EndController] EndingNameSet: 表示すべき True のエンディングフラグが見つかりません。");
+            return; // trueのフラグが1つもなかった
+        }
+
+        // 最高 priority を選ぶ（同点は keyEvents の並びが早い方を優先）
+        KeyUnityEvent winner = null;
+        int bestPriority = int.MinValue;
+
+        // リストの順番＝Inspectorの並び順を優先に使う
+        for (int i = 0; i < keyEvents.Count; i++)
+        {
+            var ke = keyEvents[i];
+            if (!candidates.Contains(ke)) continue; // true 候補に含まれていなければスキップ
+
+            if (ke.priority > bestPriority)
             {
-                EndingNameTextUI.SetText(ke.EndingName);
+                bestPriority = ke.priority;
+                winner = ke;
+            }
+        }
+
+        // 最終的な勝者のエンディング名を設定
+        if (winner != null)
+        {
+            if (EndingNameTextUI != null)
+            {
+                EndingNameTextUI.SetText(winner.EndingName);
+            }
+            else
+            {
+                Debug.LogWarning("[EndController] EndingNameTextUI がアタッチされていません。");
             }
         }
     }
