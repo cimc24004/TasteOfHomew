@@ -28,12 +28,12 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     // ▼▼▼ ★★★ PauseMenuUIController への参照（これは任意でOK） ★★★ ▼▼▼
     [Header("Parent UI Controller")]
     [Tooltip("このConfigパネルを開いた親のUI (PauseMenuUIController) ※任意")]
-    [SerializeField] private PauseMenuUIController pauseMenuUIController;
+    private PauseMenuUIController pauseMenuUIController;
     // ▲▲▲ ★★★ 変更 ★★★ ▲▲▲
 
     [Header("Controller Reference")]
     [SerializeField] private ConfigController configController;
-    [SerializeField] private GameObject SettingCanvas;
+    [SerializeField] public GameObject SettingCanvas;
     [Header("Panels")]
     [SerializeField] private GameObject graphicsPanel;
     [SerializeField] private GameObject audioPanel;
@@ -119,11 +119,14 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         SubscribeInputEvents();
         await UniTask.Yield(); 
 
-        configController = ConfigController.Instance;
-
+        configController = ConfigController.instance;
+        if(PauseMenuController.instance != null)
+        {
+            pauseMenuUIController = PauseMenuController.instance.uiController;
+        }
         if (configController == null)
         {
-            Debug.LogError("ConfigController.Instance が見つかりません！");
+            Debug.LogError("ConfigController.instance が見つかりません！");
             return;
         }
 
@@ -412,9 +415,8 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             configController.ApplyPendingSettings();
             
             // 2. 画面を閉じる
-            if (pauseMenuUIController != null)
-            {
-                // 親 (PauseMenu) が設定されていれば、そこ経S経由で閉じる
+            // 親 (PauseMenu) が設定されていれば、そこ経S経由で閉じる
+            if(pauseMenuUIController != null){
                 pauseMenuUIController.HideConfigPanel(true);
             }
             // 3. 閉じるイベントを発行

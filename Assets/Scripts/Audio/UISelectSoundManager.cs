@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.EventSystems; // EventSystem を使うために必要
 using UnityEngine.UI;         // Selectable を使うために必要
-using UnityEngine.InputSystem; // InputSystem のために追加
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement; // InputSystem のために追加
 
 /// <summary>
 /// EventSystem を監視し、UIの「選択 (Select)」が変更されたら
@@ -47,7 +48,11 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
         submitAction.performed += OnSubmitPressed;
         clickAction.performed += OnSubmitPressed;
     }
+    void OnDestroy()
+    {
+        Debug.Log("削除されます UISelectSoundManager" + SceneManager.GetActiveScene().name + "");
 
+    }
     void Update()
     {
         if (EventSystem.current == null)

@@ -39,10 +39,10 @@ public class GameSettings
     {
         // デフォルト値
         resolutionIndex = -1; // -1は「現在の解像度」を示すために使う（後で設定）
-        fullscreenMode = FullScreenMode.FullScreenWindow;
+        fullscreenMode = FullScreenMode.ExclusiveFullScreen;
         vsync = true;
-        shadowQuality = 1; // Medium
-        textureQuality = 2; // High
+        shadowQuality = 0; // High
+        textureQuality = 0; // High
         antiAliasing = 1; // 2x
 
         masterVolume = 0.8f;
@@ -85,10 +85,10 @@ public class GameSettings
 /// </summary>
 public class ConfigController : SerializedMonoBehaviour
 {
-    public static ConfigController Instance { get; private set; }
+    public static ConfigController instance { get; private set; }
 
     [Header("UI Controller")]
-    [SerializeField] private ConfigMenuUIController uiController;
+    [SerializeField] public ConfigMenuUIController uiController;
 
     [Header("Game System References")]
     [SerializeField] private AudioMixer masterMixer;
@@ -113,25 +113,22 @@ public class ConfigController : SerializedMonoBehaviour
     /// UIで変更中だが、まだ「適用」されていない一時的な設定
     /// </summary>
     [SerializeField] private GameSettings pendingSettings;
-
+    
     void Awake()
     {
-        // シングルトン設定
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
-            // ★変更点: LoadSettings() のみを呼び出す
-            LoadSettings();
+            instance = this;
         }
         else
         {
             Destroy(gameObject);
         }
-        
     }
 
     async void Start()
     {
+        LoadSettings();
         await UniTask.Yield();
         // 全てのAwake()が完了したこのタイミングで、
         // 読み込み済みの CurrentSettings をゲームに「適用(Push)」する。
@@ -174,24 +171,31 @@ public class ConfigController : SerializedMonoBehaviour
     /// PlayerPrefsからJSONを読み込み、設定をロードする
     /// </summary>
     private void LoadSettings()
-    {
-        string json = PlayerPrefs.GetString(PREFS_KEY, "");
+        {
+            string json = PlayerPrefs.GetString(PREFS_KEY, "");
 
-        if (string.IsNullOrEmpty(json))
-        {
-            CurrentSettings = new GameSettings();
+            if (string.IsNullOrEmpty(json))
+            {
+                CurrentSettings = new GameSettings();
+                
+                // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+                // Resolution currentRes = Screen.currentResolution; // ← 信頼できない
+                
+                // モニターがサポートする最大の解像度（リストの最後）を取得する
+                // (リストは低解像度->高解像度の順でソートされている前提)
+                Resolution currentRes = Screen.resolutions[Screen.resolutions.Length - 1]; 
+                // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
+                // 取得した最大解像度のインデックスをデフォルトとして設定
+                CurrentSettings.resolutionIndex = GetCurrentResolutionIndex(currentRes);
+            }
+            else
+            {
+                CurrentSettings = JsonUtility.FromJson<GameSettings>(json);
+            }
             
-            // 初回起動時、現在の解像度をデフォルトとして設定
-            Resolution currentRes = Screen.currentResolution;
-            CurrentSettings.resolutionIndex = GetCurrentResolutionIndex(currentRes);
+            // ★変更点: ここで ApplyAllSettings() を「呼ばない」
         }
-        else
-        {
-            CurrentSettings = JsonUtility.FromJson<GameSettings>(json);
-        }
-        
-        // ★変更点: ここで ApplyAllSettings() を「呼ばない」
-    }
 
     /// <summary>
     /// 現在の設定をJSONとしてPlayerPrefsに保存する
@@ -308,7 +312,7 @@ public class ConfigController : SerializedMonoBehaviour
         }
 
         // マウス感度やカメラ反転は、Playerの入力スクリプト側で
-        // ConfigController.Instance.CurrentSettings.mouseSensitivity などを参照して利用します。
+        // ConfigController.instance.CurrentSettings.mouseSensitivity などを参照して利用します。
         // このスクリプト(ConfigController)側で直接適用する処理はありません。
     }
 
@@ -389,12 +393,22 @@ public class ConfigController : SerializedMonoBehaviour
     /// <summary>
     /// [リセット] (Rキー)。pendingSettingsを「工場出荷時」のデフォルト設定に戻す
     /// </summary>
+/// <summary>
+    /// [リセット] (Rキー)。pendingSettingsを「工場出荷時」のデフォルト設定に戻す
+    /// </summary>
     public void ResetToDefaults()
     {
         // 1. デフォルト設定を new GameSettings() で作成
         pendingSettings = new GameSettings();
         
-        // 2. UIにも反映
+        // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
+        // 2. 解像度だけ「現在のモニター解像度」で上書きする
+        //    (LoadSettings と同じ初回起動時の動作)
+        Resolution currentRes = Screen.currentResolution;
+        pendingSettings.resolutionIndex = GetCurrentResolutionIndex(currentRes);
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+        
+        // 3. UIにも反映
         if (uiController != null)
         {
             uiController.SetAllUIValues(pendingSettings);

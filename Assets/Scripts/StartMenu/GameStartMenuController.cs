@@ -27,7 +27,7 @@ public class GameStartMenuController : MonoBehaviour
         // --- 参照の取得 ---
         uIFlowManager = UIFlowManager.instance;
         sceneManagerController = SceneManagerController.Instance;
-        configController = ConfigController.Instance;
+        configController = ConfigController.instance;
         configMenuUIController = ConfigMenuUIController.instance;
 
         // --- メニューの初期状態を設定 ---

@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 public class PauseMenuController : Singleton<PauseMenuController>
 {
     [Header("UI Controller Reference")]
-    [SerializeField] private PauseMenuUIController uiController;
+    [SerializeField] public PauseMenuUIController uiController;
 
     [Header("Settings")]
     [Tooltip("タイトルシーンの名前")]
@@ -21,24 +21,26 @@ public class PauseMenuController : Singleton<PauseMenuController>
     public static bool IsPaused { get; private set; } = false;
 
     private PlayerDataHub playerDataHub;
-    private InputAction pauseAction; // ポーズ用のアクションをキャッシュする変数
+    [SerializeField]
+    private InputActionReference pauseAction; // ポーズ用のアクションをキャッシュする変数
     private GameStateController gameStateController;
-    private ConfigController configController;
     public bool PauseMenuOpenPermit = true;
     void Start()
     {
         playerDataHub = PlayerDataHub.instance;
         gameStateController = GameStateController.instance;
-        configController = ConfigController.Instance;
+        Debug.Log("PauseMenuController Start");
         // タイポ修正: CurrentplayerInput -> CurrentPlayerStatus.playerInput (以前のコードを参照)
         if (playerDataHub?.CurrentplayerInput != null)
         {
+            Debug.Log("PauseMenuController Start playerDataHub?.CurrentplayerInput != null");
             // タイポ修正: playerInput -> playerInput
-            pauseAction = playerDataHub.CurrentplayerInput.actions.FindAction("ESC");
-
+            // pauseAction = playerDataHub.CurrentplayerInput.actions.FindAction("ESC");
+            Debug.Log("PauseMenuController Start pauseAction: " + pauseAction);
             if (pauseAction != null)
             {
-                pauseAction.performed += OnTogglePause;
+                Debug.Log("pauseAction.performed += OnTogglePause");
+                // pauseAction.performed += OnTogglePause;
             }
             else
             {
@@ -56,21 +58,33 @@ public class PauseMenuController : Singleton<PauseMenuController>
     {
         if (pauseAction != null)
         {
-            pauseAction.performed -= OnTogglePause;
+            // pauseAction.performed -= OnTogglePause;
         }
     }
-
-    private void OnTogglePause(InputAction.CallbackContext context)
+    void Update()
     {
+        Debug.Log("pauseAction: " + pauseAction);
+        if (pauseAction.action.triggered)
+        {
+            Debug.Log("PauseAction.Triggered");
+            OnTogglePause();
+        }
+    }
+    private void OnTogglePause()
+    {
+        Debug.Log("OnTogglePause ない" );
         if (!PauseMenuOpenPermit) return;
+        Debug.Log("OnTogglePause PauseMenuOpenPermitはtrueでした" );
         // ポーズ解除のロジックを復元
         if (IsPaused)
         {
+            Debug.Log("OnTogglePause ない　IsPaused" );
             // ポーズ解除はいつでも許可
             ResumeGame();
         }
         else
         {
+            Debug.Log("OnTogglePause ない　!IsPaused" );
             // ロード中かのチェックを最優先で行う
             if (SceneManagerController.Instance != null && SceneManagerController.Instance.IsLoading)
             {
@@ -88,7 +102,7 @@ public class PauseMenuController : Singleton<PauseMenuController>
                     return; // ポーズ処理を中断
                 }
             }
-            
+            Debug.Log("PauseGameを実行しようとします" );
             PauseGame();
         }
     }
@@ -106,6 +120,7 @@ public class PauseMenuController : Singleton<PauseMenuController>
 
     private void PauseGame()
     {
+        Debug.Log("PauseGame関数内です" );
         mosaicVolume.enabled = true;
         Time.timeScale = 0f;
         IsPaused = true;

@@ -242,8 +242,8 @@ public class ReaderController : Singleton<ReaderController>
 
         SetActive(true);
         onOpened?.Invoke();
-        PlaySE(asset.openSE);
-
+        AudioClip openSound = (overrideTurnSE != null) ? overrideTurnSE : asset.openSE;
+        PlaySE(openSound);
         if (!string.IsNullOrWhiteSpace(asset.id)) _readFlags.Add(asset.id);
 
         RefreshPage();

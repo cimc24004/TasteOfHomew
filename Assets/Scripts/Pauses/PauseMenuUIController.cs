@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -20,25 +21,33 @@ public class PauseMenuUIController : MonoBehaviour
     [SerializeField] private Button backToTitleButton;
     
     private ConfigController configController;
-
+    private ConfigMenuUIController configMenuUIController;
     void Start()
     {
         // ボタンにリスナーを登録
         resumeButton.onClick.AddListener(OnResumeButtonClicked);
         settingsButton.onClick.AddListener(OnSettingsButtonClicked);
         backToTitleButton.onClick.AddListener(OnBackToTitleButtonClicked);
-        
+
         // ▼▼▼ ★★★ 修正箇所 (ラムダ式で引数 false を渡す) ★★★ ▼▼▼
         // backToPauseButton.onClick.AddListener(HideConfigPanel);
         // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         // 最初は非表示にしておく
         pauseMenuPanel.SetActive(false);
-        configPanel.SetActive(false);
-        
-        configController = ConfigController.Instance;
+        configController = ConfigController.instance;
+        configMenuUIController = configController.uiController;
+        configPanel = configMenuUIController.SettingCanvas;
+        configPanel.gameObject.SetActive(false);
+        SceneManager.sceneLoaded += SceneLoaded;
     }
+    private void SceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        configController = ConfigController.instance;
+        configMenuUIController = configController.uiController;
+        configPanel = configMenuUIController.SettingCanvas;
 
+    }
     // --- PauseMenuControllerから呼び出されるメソッド ---
 
     public void ShowPauseMenu()
@@ -103,17 +112,15 @@ public class PauseMenuUIController : MonoBehaviour
     public void HideConfigPanel(bool settingsWereApplied)
     {
         // 1. ConfigControllerに「閉じた」ことを通知し、戻り先のフォーカス対象を渡す
-        if (configController != null)
-        {
-            configController.OnCloseConfig(settingsButton.gameObject);
-        }
+
+        configController.OnCloseConfig(settingsButton.gameObject);
 
         // 設定パネルを非表示にし、ポーズメニューを再表示する
         configPanel.SetActive(false);
         pauseMenuPanel.SetActive(true);
 
         // 2. 「適用」ボタンが押された *以外* の場合、変更を破棄(リバート)する
-        if (!settingsWereApplied && configController != null) // configControllerのnullチェック追加
+        if (!settingsWereApplied) // configControllerのnullチェック追加
         {
             configController.RevertPendingSettings();
         }

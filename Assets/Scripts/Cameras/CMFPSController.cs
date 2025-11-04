@@ -75,10 +75,10 @@ public class CMFPSController : Singleton<CMFPSController>
         if (inputProvider == null) return; 
 
         // ConfigController (金庫) が見つからなければ何もしない
-        if (ConfigController.Instance == null) return;
+        if (ConfigController.instance == null) return;
 
         // ConfigControllerから最新の設定を取得して適用する
-        ApplySettingsToProvider(ConfigController.Instance.CurrentSettings);
+        ApplySettingsToProvider(ConfigController.instance.CurrentSettings);
     }
 
     /// <summary>
@@ -139,9 +139,9 @@ public class CMFPSController : Singleton<CMFPSController>
         // ★★★重要★★★
         // Unlockした直後に、現在の設定を即座に再適用する（オプションだが推奨）
         // （Update()でも適用されるが、1フレームの遅延を防ぐ）
-        if (ConfigController.Instance != null)
+        if (ConfigController.instance != null)
         {
-            ApplySettingsToProvider(ConfigController.Instance.CurrentSettings);
+            ApplySettingsToProvider(ConfigController.instance.CurrentSettings);
         }
 
         IsLocked = false;
