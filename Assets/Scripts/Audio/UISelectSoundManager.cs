@@ -61,10 +61,10 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
         }
 
         GameObject currentSelected = EventSystem.current.currentSelectedGameObject;
-
         // 選択されているオブジェクトが、前のフレームと変わったか？
         if (currentSelected != lastSelectedObject)
         {
+            // Debug.Log("現在選択されているオブジェクト: " + (currentSelected != null ? currentSelected.name : "null"));
             // 選択対象が null ではなく (何かが選択され)、
             // *かつ*、前のフレームの選択対象も null ではない (null からの選択ではない)
             // かつ、それが Selectable (Button, Toggle, Sliderなど) である場合

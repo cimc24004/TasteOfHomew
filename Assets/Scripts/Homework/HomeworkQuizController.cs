@@ -257,10 +257,10 @@ public class HomeworkQuizController : MonoBehaviour
     private void OnClickChoice(int choiceIndex, Button clickedButton)
     {
         HideChoices(clickedButton);
-
+        
         var q = questions[currentIndex];
         bool isCorrect = (choiceIndex == q.correctIndex);
-
+        EventSystem.current.SetSelectedGameObject(null);
         if (!q.horrorDirection)
         {
             Image targetImage = null;
