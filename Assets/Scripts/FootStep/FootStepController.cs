@@ -26,7 +26,7 @@ public class FootStepController : SerializedMonoBehaviour
 
     [Header("足音設定")]
     [SerializeField]
-    private float walkStepInterval = 0.5f;
+    public float walkStepInterval = 0.5f;
     [SerializeField]
     private float runStepInterval = 0.3f;
     public Dictionary<string, List<AudioClip>> footstepSounds = new Dictionary<string, List<AudioClip>>();

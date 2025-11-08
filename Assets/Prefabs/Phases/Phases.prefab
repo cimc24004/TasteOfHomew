@@ -608,6 +608,10 @@ MonoBehaviour:
   stopAllOnDetect: 1
   autoStopWhenStateChanged: 1
   waitTimeScale: 1
+  enableFastWalk: 1
+  fastWalkAgentSpeedMultiplier: 1.3
+  fastWalkAnimatorSpeedMultiplier: 1.5
+  fastWalkFootstepMultiplier: 3
   enableTimer: 1
   timerText: {fileID: 0}
   timerBox: {fileID: 0}
@@ -624,6 +628,8 @@ MonoBehaviour:
     agent: {fileID: 0}
     eye: {fileID: 0}
     cpuStatus: {fileID: 0}
+    animator: {fileID: 0}
+    footStepController: {fileID: 0}
     patrolPoints:
     - {fileID: 4396003437251136764}
     - {fileID: 4352246096283370591}
@@ -652,7 +658,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 1023
     canHear: 1
-    hearingDistance: 8
+    hearingDistance: 10
     investigateWaitTime: 1.5
     playDialogueOnInvestigate: 1
     investigateDialogueGroup: {fileID: 11400000, guid: a388277ceed7ff74e93078419a6cf695, type: 2}
@@ -663,6 +669,10 @@ MonoBehaviour:
     direction: 1
     isInvestigating: 0
     cachedInvestigateSequence: {fileID: 0}
+    defaultAgentSpeed: 0
+    defaultAnimatorSpeed: 0
+    defaultFootstepInterval: 0
+    isHastening: 0
   gizmoAlways: 1
   gizmoDrawFOV: 1
   gizmoDrawHearing: 1
@@ -16136,6 +16146,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1495275609087480566}
     m_Modifications:
+    - target: {fileID: 1511855698364549111, guid: 1a1c345477af23c45a953f39feaa6c13, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 1511855698364549111, guid: 1a1c345477af23c45a953f39feaa6c13, type: 3}
     - target: {fileID: 2512832983869130690, guid: 1a1c345477af23c45a953f39feaa6c13, type: 3}
       propertyPath: m_Data.m_SourceObjects.m_Item0.transform
       value: 

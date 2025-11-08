@@ -1,3 +1,5 @@
+// CrossHairController.cs
+
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -82,7 +84,22 @@ public class CrossHairController : Singleton<CrossHairController>
                 // 入力チェック
                 if (interactAction != null && interactAction.triggered)
                 {
-                    interactable.Interact();
+                    // ▼▼▼ ここから修正 ▼▼▼
+                    
+                    // 見つけた相手が DoorController かどうかをチェック
+                    if (interactable is DoorController door)
+                    {
+                        // DoorController なら、引数付きの Interact(interactor) を呼ぶ
+                        door.Interact(playerInput.gameObject);
+                    }
+                    else
+                    {
+                        // PlayerableCall や他のすべてのクラスはこちら
+                        // 既存の Interact() を呼ぶ
+                        interactable.Interact();
+                    }
+                    
+                    // ▲▲▲ 修正ここまで ▲▲▲
                 }
                 return;
             }
@@ -104,4 +121,3 @@ public class CrossHairController : Singleton<CrossHairController>
         }
     }
 }
-

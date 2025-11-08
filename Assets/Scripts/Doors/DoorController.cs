@@ -1,8 +1,10 @@
+// DoorController.cs
+
 using UnityEngine;
 using UnityEngine.Events;
 using DG.Tweening;
 using Sirenix.OdinInspector;
-using Cysharp.Threading.Tasks; // ← 追加
+using Cysharp.Threading.Tasks;
 
 public class DoorController : SerializedMonoBehaviour, IInteractable
 {
@@ -40,9 +42,17 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
 
     // ★ 鍵連携
     [Title("鍵")]
-    public DoorKeyController keyController;          // ドアに同居させる DoorKeyController を参照
-    public AudioClip LockedClip;                     // 施錠時に再生（任意）
-    public UnityEvent OnOpenBlockedByLock;           // 施錠で開けられなかった時
+    public DoorKeyController keyController;
+    public AudioClip LockedClip;
+    public UnityEvent OnOpenBlockedByLock;
+
+    // ★ 音 (ステルス)
+    [Title("音 (ステルス)")]
+    [Tooltip("ドアを開けた時にステルスAIに通知する音の半径。0以下なら通知しない。")]
+    public float openSoundRadius = 10f;
+
+    [Tooltip("ドアを閉めた時にステルスAIに通知する音の半径。0以下なら通知しない。")]
+    public float closeSoundRadius = 5f;
 
     // ★ 鍵確認ダイアログ
     [Title("鍵確認ダイアログ")]
@@ -53,7 +63,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
     [Tooltip("選択結果を返す一時フラグ（true=使う）")]
     public string useKeyFlagKey = "__door_use_key_tmp";
 
-    private bool _busy; // 連打/多重起動防止
+    private bool _busy;
 
     void Start()
     {
@@ -75,14 +85,21 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         }
     }
 
-    // IInteractable 実装
-    public void Interact() => OpenCloseAutoSelect();
-
-    // 既存API互換：同期メソッドだが中で非同期を叩く
-    public void OpenCloseAutoSelect()
+    // ▼▼▼ 修正 ▼▼▼
+    // ★ 1. IInteractable の実装 (引数なし・既存の定義)
+    // (CrossHairController以外から呼ばれた場合)
+    public void Interact()
     {
-        OpenCloseAutoSelectAsync(null).Forget();
+
+        OpenCloseAutoSelectAsync(PlayerStatus.instance.gameObject).Forget();
     }
+
+    // ★ 2. CrossHairController が呼ぶための、引数ありの Interact
+    public void Interact(GameObject interactor)
+    {
+        OpenCloseAutoSelectAsync(interactor).Forget();
+    }
+    // ▲▲▲ 修正 ▲▲▲
 
     /// <summary>
     /// 施錠中 & 鍵所持なら「鍵を使う？」ダイアログを出して選ばせる。
@@ -101,7 +118,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
                 bool? use = await PromptUseKeyAsync();
                 if (use == true)
                 {
-                    // 解錠して続行（万一失敗したらブロック）
+                    // 解錠して続行
                     if (!keyController.UnlockWithHeldKey(interactor))
                     {
                         if (LockedClip && audio_source) audio_source.PlayOneShot(LockedClip);
@@ -128,9 +145,9 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
             }
         }
 
-        // ここまで来たらロックなし。開閉実行
-        if (nowDoorStatus == DoorStatus.Closed) Open();
-        else Close();
+        // ロックなし。開閉実行 (interactor を渡す)
+        if (nowDoorStatus == DoorStatus.Closed) Open(interactor);
+        else Close(interactor);
     }
 
     /// <summary>
@@ -149,18 +166,10 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
 
         try
         {
-            // 一時フラグ初期化
             DialogueController.instance.SetFlag(useKeyFlagKey, false);
-
-            // ダイアログ実行（完了まで待つ）
             await DialogueController.instance.StartDialogueAsync(useKeyGroupKey, useKeySequenceId);
-
-            // 結果取得
             bool use = DialogueController.instance.GetFlag(useKeyFlagKey, false);
-
-            // 任意でクリア
             DialogueController.instance.SetFlag(useKeyFlagKey, false);
-
             return use;
         }
         catch (System.OperationCanceledException)
@@ -173,22 +182,18 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         }
     }
 
-    // ★ 表示テキスト：施錠中は「鍵がかかっている……。」などに差し替えたい場合
     public string GetDisplayText()
     {
-        // if (keyController != null && keyController.IsLocked)
-        // {
-        //     return "";
-        // }
         return "";
     }
 
     public bool ShouldHighlight() => true;
 
+    // ▼▼▼ 修正 (interactor を受け取れるように) ▼▼▼
     [Button]
-    public void Open()
+    public void Open() => Open(null); // ボタン用
+    public void Open(GameObject interactor = null)
     {
-        // 直呼び対策：Open() が外部から直で叩かれてもロックを尊重
         if (keyController != null && keyController.IsLocked)
         {
             if (LockedClip && audio_source) audio_source.PlayOneShot(LockedClip);
@@ -200,6 +205,12 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         nowDoorStatus = DoorStatus.Opened;
         if (OpenClip && audio_source) audio_source.PlayOneShot(OpenClip);
         OpenStartEvent?.Invoke();
+
+        // ★ 音イベントを「誰が」発生させたかを渡す
+        if (openSoundRadius > 0f)
+        {
+            StealthGameController.MakeSoundAt(transform.position, openSoundRadius, interactor);
+        }
 
         if (open_type == OpenType.SideOpen)
         {
@@ -224,11 +235,18 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
     }
 
     [Button]
-    public void Close()
+    public void Close() => Close(null); // ボタン用
+    public void Close(GameObject interactor = null)
     {
         OpenedClosedCompletedAnimation = false;
         nowDoorStatus = DoorStatus.Closed;
         if (CloseClip && audio_source) audio_source.PlayOneShot(CloseClip);
+
+        // ★ 音イベントを「誰が」発生させたかを渡す
+        if (closeSoundRadius > 0f)
+        {
+            StealthGameController.MakeSoundAt(transform.position, closeSoundRadius, interactor);
+        }
 
         Tween onDoneTween = null;
 
@@ -251,18 +269,17 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
                 if (collider) collider.isTrigger = false;
                 CloseCompleted?.Invoke();
 
-                // 閉じ切り後：自動再ロック通知
                 if (keyController != null) keyController.NotifyDoorClosed(this);
             });
         }
     }
+    // ▲▲▲ 修正ここまで ▲▲▲
 
     [Button("即座に開ける (音・アニメなし)")]
     public void ForceOpen()
     {
-        // ロック状態を無視して強制的に開きます
         nowDoorStatus = DoorStatus.Opened;
-        OpenedClosedCompletedAnimation = false; // 念のため処理中はフラグを更新
+        OpenedClosedCompletedAnimation = false; 
 
         if (open_type == OpenType.SideOpen)
         {
@@ -271,19 +288,18 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         else if (open_type == OpenType.Rotate)
         {
             transform.localEulerAngles = TargetRotateVector;
-            // 開いた状態でのコライダー設定を反映
             if (TriggerChangeModeOpenClose && collider) collider.isTrigger = false; 
         }
 
-        OpenedClosedCompletedAnimation = true; // 処理完了
-        OpenCompleted?.Invoke(); // イベントを呼び出す
+        OpenedClosedCompletedAnimation = true; 
+        OpenCompleted?.Invoke(); 
     }
 
     [Button("即座に閉める (音・アニメなし)")]
     public void ForceClose()
     {
         nowDoorStatus = DoorStatus.Closed;
-        OpenedClosedCompletedAnimation = false; // 念のため処理中はフラグを更新
+        OpenedClosedCompletedAnimation = false; 
 
         if (open_type == OpenType.SideOpen)
         {
@@ -293,13 +309,11 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         {
             transform.localEulerAngles = DefaultRotateVector;
         }
-
-        // 閉じた状態ではコライダーを通常状態に戻す
+ 
         if (collider) collider.isTrigger = false; 
-        OpenedClosedCompletedAnimation = true; // 処理完了
-        CloseCompleted?.Invoke(); // イベントを呼び出す
+        OpenedClosedCompletedAnimation = true; 
+        CloseCompleted?.Invoke(); 
 
-        // 自動再ロックの通知
         if (keyController != null) keyController.NotifyDoorClosed(this);
     }
 }

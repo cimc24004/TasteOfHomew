@@ -64,24 +64,31 @@ public class MotherDoorOpener : SerializedMonoBehaviour
 
             if (door == null) return;
 
+            // ▼▼▼ ここから修正 ▼▼▼
+
             // Rotate: 閉まってたら一回だけ Open()
             if (door.open_type == DoorController.OpenType.Rotate)
             {
                 if (door.nowDoorStatus == DoorController.DoorStatus.Closed)
                 {
-                    door.Open();
+                    // ★修正★ interactor として this.gameObject を渡す
+                    door.Open(this.gameObject);
                 }
             }
-            // Slide: 一定間隔で OpenCloseAutoSelect を叩き続ける
+            // Slide: 一定間隔で Interact を叩き続ける
             else if (door.open_type == DoorController.OpenType.SideOpen)
             {
                 float now = Time.time;
                 if (!_nextAllowedSlideCall.TryGetValue(door, out float next) || now >= next)
                 {
-                    door.OpenCloseAutoSelect(); // 内部でアニメ中は弾かれるので連打OK
+                    // ★修正★ OpenCloseAutoSelect ではなく、
+                    // interactor を渡せる Interact() を呼ぶ
+                    door.Interact(this.gameObject); 
                     _nextAllowedSlideCall[door] = now + slideCallInterval;
                 }
             }
+            
+            // ▲▲▲ 修正ここまで ▲▲▲
         }
     }
 

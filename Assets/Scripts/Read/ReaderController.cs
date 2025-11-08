@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.InputSystem; // ▼▼▼ ★★★ InputSystem を使うために追加 ★★★ ▼▼▼
-using UnityEngine.EventSystems; // (EventSystem も必要ですが、今回は不要)
+using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 public class ReaderController : Singleton<ReaderController>
@@ -48,12 +48,13 @@ public class ReaderController : Singleton<ReaderController>
     private AudioSource _audio;
     private static readonly System.Collections.Generic.HashSet<string> _readFlags = new();
     private GameStateController gameStateController;
+    private bool _isCloseAllowed = true; // ▼▼▼ ★★★ (ここから追加) 閉じる操作が許可されているか ★★★ ▼▼▼
 
     // ▼▼▼ ★★★ (ここから修正) InputSystem用 ★★★ ▼▼▼
     private PlayerInput playerInput;
-    private InputAction nextAction;     // 'E'
-    private InputAction prevAction;     // 'Q'
-    private InputAction closeAction;    // 'RightClick' (新規追加)
+    private InputAction nextAction;      // 'E'
+    private InputAction prevAction;      // 'Q'
+    private InputAction closeAction;     // 'RightClick' (新規追加)
     // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     // ページ情報
@@ -86,7 +87,10 @@ public class ReaderController : Singleton<ReaderController>
 
         if (nextButton) nextButton.onClick.AddListener(NextPage);
         if (prevButton) prevButton.onClick.AddListener(PrevPage);
-        if (closeButton) closeButton.onClick.AddListener(Close);
+        
+        // ▼▼▼ ★★★ (ここから修正) force=false で Close を呼ぶラムダ式に変更 ★★★ ▼▼▼
+        if (closeButton) closeButton.onClick.AddListener(() => Close(false));
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         _audio = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
         _audio.playOnAwake = false;
@@ -107,7 +111,9 @@ public class ReaderController : Singleton<ReaderController>
 
     void OnDisable()
     {
-        if (_now != null) Close();
+        // ▼▼▼ ★★★ (ここから修正) force=true で Close を呼ぶ (強制クローズ) ★★★ ▼▼▼
+        if (_now != null) Close(true);
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
         
         // ▼▼▼ ★★★ (ここから修正) イベント解除 ★★★ ▼▼▼
         // OnDisableではイベントを「解除」する
@@ -219,8 +225,9 @@ public class ReaderController : Singleton<ReaderController>
         // リーダーが開かれていない (_now == null) 場合は何もしない
         if (_now == null) return;
         
-        // 閉じる処理を呼ぶ
-        Close();
+        // ▼▼▼ ★★★ (ここから修正) 閉じる処理を呼ぶ (force=false) ★★★ ▼▼▼
+        Close(false);
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▼
     }
     
     // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
@@ -249,8 +256,17 @@ public class ReaderController : Singleton<ReaderController>
         RefreshPage();
     }
 
-    public void Close()
+    // ▼▼▼ ★★★ (ここから修正) force パラメータを追加 ★★★ ▼▼▼
+    public void Close(bool force = false)
     {
+        // ▼▼▼ ★★★ (ここから追加) 閉じる許可フラグをチェック ★★★ ▼▼▼
+        // force=false (通常) の場合のみ、閉じる許可フラグをチェックする
+        if (!force && !_isCloseAllowed)
+        {
+            return; // 許可されていないため処理を中断
+        }
+        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+
         if (_now == null) return;
         EventSystem.current.SetSelectedGameObject(null);
         gameStateController.ActionByModeSelect(GameStateController.GameState.Gameplay, false);
@@ -260,6 +276,7 @@ public class ReaderController : Singleton<ReaderController>
         onClosed?.Invoke();
         _now = null;
     }
+    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     public bool HasRead(string readableId) => _readFlags.Contains(readableId);
 
@@ -317,16 +334,20 @@ public class ReaderController : Singleton<ReaderController>
         bool hasPrev = TotalPages > 0 && _page > 0;
         bool hasNext = TotalPages > 0 && _page < TotalPages - 1;
         
+        // ▼▼▼ ★★★ (ここから修正) 閉じるボタンと許可フラグのロジック ★★★ ▼▼▼
+        // 閉じる操作を許可するかどうかを決定する
+        _isCloseAllowed = true; // デフォルトは許可 (リストにないページなど)
+        if (_now.showCloseButtonOnPages != null && _page >= 0 && _page < _now.showCloseButtonOnPages.Count)
+        {
+            _isCloseAllowed = _now.showCloseButtonOnPages[_page];
+        }
+
         if (closeButton)
         {
-            bool showCloseButton = true;
-            // ◀◀◀【修正】変数名を `showCloseButtonOnPages` に修正
-            if (_now.showCloseButtonOnPages != null && _page >= 0 && _page < _now.showCloseButtonOnPages.Count)
-            {
-                showCloseButton = _now.showCloseButtonOnPages[_page];
-            }
-            closeButton.gameObject.SetActive(showCloseButton);
+            // 閉じる許可フラグに基づいてボタンの表示/非表示を決定
+            closeButton.gameObject.SetActive(_isCloseAllowed);
         }
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         if (prevIndicator) prevIndicator.SetActive(hasPrev);
         else if (prevButton) prevButton.gameObject.SetActive(hasPrev);
