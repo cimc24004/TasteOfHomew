@@ -25,5 +25,4 @@ public class DialogueSequenceAsset : SerializedScriptableObject
         }
     }
     #endif
-
 }

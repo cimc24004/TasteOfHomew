@@ -152,7 +152,10 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
 
         // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
         PopulateResolutionDropdown(); // 解像度リストをフィルタリング
-        PopulateWindowModeDropdown(); // ウィンドウモードリストを生成
+        
+        // ※PopulateWindowModeDropdown() は LocalizedDropdown スクリプトが
+        // 　肩代わりするため、呼び出しを削除 (メソッド自体も削除)
+        
         // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         GameSettings settings = configController.InitializePendingSettings();
@@ -257,10 +260,10 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
              Debug.LogWarning("16:9 の解像度が見つかりませんでした。すべての解像度を表示します。");
              for (int i = 0; i < resolutions.Count; i++)
              {
-                var res = resolutions[i];
-                string option = $"{res.width} x {res.height} @ {res.refreshRateRatio.value:F0} Hz";
-                options.Add(option);
-                resolutionOptionIndexMap.Add(i); // この場合、indexは 1:1 になる
+                 var res = resolutions[i];
+                 string option = $"{res.width} x {res.height} @ {res.refreshRateRatio.value:F0} Hz";
+                 options.Add(option);
+                 resolutionOptionIndexMap.Add(i); // この場合、indexは 1:1 になる
              }
         }
 
@@ -268,29 +271,11 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     }
     // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
-    // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
-    /// <summary>
-    /// ウィンドウモードのドロップダウンリストを初期化する
-    /// </summary>
-    private void PopulateWindowModeDropdown()
-    {
-        if (windowModeDropdown == null) return;
-        
-        windowModeDropdown.ClearOptions();
-        
-        // Enumは (0, 1, 2, 3) の順番が保証されています。
-        // ユーザーフレンドリーな名前に手動でマッピングします。
-        List<string> options = new List<string>
-        {
-            "フルスクリーン", // (FullScreenMode)0 = ExclusiveFullScreen
-            "ボーダーレス",   // (FullScreenMode)1 = FullScreenWindow
-            "最大化ウィンドウ",       // (FullScreenMode)2 = MaximizedWindow
-            "ウィンドウモード"        // (FullScreenMode)3 = Windowed
-        };
-        
-        windowModeDropdown.AddOptions(options);
-    }
-    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
+    // ▼▼▼ ★★★ (ここから削除) ★★★ ▼▼▼
+    // LocalizedDropdown スクリプトが処理するため、このメソッドは不要
+    // private void PopulateWindowModeDropdown()
+    // { ... }
+    // ▲▲▲ ★★★ (ここまで削除) ★★★ ▲▲▲
 
     /// <summary>
     /// ConfigControllerからロードした設定値をすべてのUIに反映させる

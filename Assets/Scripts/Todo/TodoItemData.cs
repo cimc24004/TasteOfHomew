@@ -1,8 +1,7 @@
-// TodoItemData.cs
-
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine.Localization; // ← 【追加】
 
 /// <summary>
 /// ToDoリストのアイテム情報を保持するためのデータクラス
@@ -12,5 +11,12 @@ using Sirenix.OdinInspector;
 public class TodoItemData : ScriptableObject
 {
     public string key;
+
+    [Title("--- OLD DATA (for Migration) ---")]
+    [TextArea(1, 2)]
     public string text;
+
+    [Title("--- LOCALIZATION (NEW) ---")]
+    [Tooltip("こちらを設定すると、上記の古い Text より優先されます")]
+    public LocalizedString localizedText;
 }

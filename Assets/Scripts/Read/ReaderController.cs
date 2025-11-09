@@ -4,8 +4,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.InputSystem; // ▼▼▼ ★★★ InputSystem を使うために追加 ★★★ ▼▼▼
+using UnityEngine.InputSystem; 
 using UnityEngine.EventSystems;
+using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization.Components; // ← 【追加】
 
 [DisallowMultipleComponent]
 public class ReaderController : Singleton<ReaderController>
@@ -22,6 +24,14 @@ public class ReaderController : Singleton<ReaderController>
     [SerializeField] private Image foregroundImage;
 
     [SerializeField] private TextMeshProUGUI pageNumberText;
+
+    // ▼▼▼ 【(3) 追加】 LocalizeStringEvent への参照 ▼▼▼
+    [Header("Localization References (NEW)")]
+    [Tooltip("タイトルのTMPについている Localize String Event")]
+    [SerializeField] private LocalizeStringEvent titleLocalizeEvent;
+    [Tooltip("本文のTMPについている Localize String Event")]
+    [SerializeField] private LocalizeStringEvent bodyLocalizeEvent;
+    // ▲▲▲ 【(3) ここまで】 ▲▲▲
 
     [Title("Navigation")]
     [SerializeField] private Button nextButton;
@@ -48,17 +58,28 @@ public class ReaderController : Singleton<ReaderController>
     private AudioSource _audio;
     private static readonly System.Collections.Generic.HashSet<string> _readFlags = new();
     private GameStateController gameStateController;
-    private bool _isCloseAllowed = true; // ▼▼▼ ★★★ (ここから追加) 閉じる操作が許可されているか ★★★ ▼▼▼
+    private bool _isCloseAllowed = true; 
 
-    // ▼▼▼ ★★★ (ここから修正) InputSystem用 ★★★ ▼▼▼
     private PlayerInput playerInput;
     private InputAction nextAction;      // 'E'
     private InputAction prevAction;      // 'Q'
     private InputAction closeAction;     // 'RightClick' (新規追加)
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     // ページ情報
-    public int TotalPages => _now?.pages != null ? _now.pages.Count : 0;
+    public int TotalPages
+    {
+        get
+        {
+            if (_now == null) return 0;
+            // (優先) 新しいリストのカウント
+            if (_now.localizedPages != null && _now.localizedPages.Count > 0)
+                return _now.localizedPages.Count;
+            // (フォールバック) 古いリストのカウント
+            if (_now.pages != null)
+                return _now.pages.Count;
+            return 0;
+        }
+    }
     public int CurrentPage1 => _now == null ? 0 : (_page + 1);
     public string PageCounterText => $"{(TotalPages > 0 ? CurrentPage1 : 0)}/{TotalPages}";
 
@@ -70,13 +91,10 @@ public class ReaderController : Singleton<ReaderController>
     [SerializeField] private GameObject pageNumberRoot;
     private AudioClip _turnSEOverride;
 
-    // ▼▼▼ ★★★ (ここから追加) OnEnable ★★★ ▼▼▼
     void OnEnable()
     {
-        // Start() で playerInput が取得済みの場合、イベントを購読
         SubscribeInputEvents();
     }
-    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
     void Start()
     {
@@ -87,150 +105,73 @@ public class ReaderController : Singleton<ReaderController>
 
         if (nextButton) nextButton.onClick.AddListener(NextPage);
         if (prevButton) prevButton.onClick.AddListener(PrevPage);
-        
-        // ▼▼▼ ★★★ (ここから修正) force=false で Close を呼ぶラムダ式に変更 ★★★ ▼▼▼
         if (closeButton) closeButton.onClick.AddListener(() => Close(false));
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         _audio = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
         _audio.playOnAwake = false;
         
-        // ▼▼▼ ★★★ (ここから修正) InputSystemの初期化 ★★★ ▼▼▼
         if (PlayerDataHub.instance != null && PlayerDataHub.instance.CurrentplayerInput != null)
         {
             this.playerInput = PlayerDataHub.instance.CurrentplayerInput;
-            // Start() での最初の購読
             SubscribeInputEvents(); 
         }
         else
         {
             Debug.LogWarning("[ReaderController] PlayerInput が PlayerDataHub から取得できません。", this);
         }
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
     }
 
     void OnDisable()
     {
-        // ▼▼▼ ★★★ (ここから修正) force=true で Close を呼ぶ (強制クローズ) ★★★ ▼▼▼
         if (_now != null) Close(true);
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
-        
-        // ▼▼▼ ★★★ (ここから修正) イベント解除 ★★★ ▼▼▼
-        // OnDisableではイベントを「解除」する
         UnsubscribeInputEvents();
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
     }
     
-    // ▼▼▼ ★★★ (ここから修正) InputSystem関連メソッド ★★★ ▼▼▼
-    
-    /// <summary>
-    /// InputSystem のイベントを購読する
-    /// </summary>
+    // --- (InputSystem関連のメソッドは変更なし) ---
     private void SubscribeInputEvents()
     {
-        // playerInput が (Start()で) 取得できていない場合は何もしない
-        if (playerInput == null || playerInput.actions == null)
-        {
-            return;
-        }
-
-        // 念のため、多重登録を防ぐために一度解除してから登録する
+        if (playerInput == null || playerInput.actions == null) return;
         UnsubscribeInputEvents(); 
 
-        // ConfigController と同じ 'E' と 'Q' のアクション名を使う
         nextAction = playerInput.actions.FindAction("E");
         prevAction = playerInput.actions.FindAction("Q");
-        // "RightClick" アクションを取得
         closeAction = playerInput.actions.FindAction("RightClick");
 
-        if (nextAction != null)
-        {
-            nextAction.performed += HandleNextPage;
-        }
-        else
-        {
-            Debug.LogWarning("[ReaderController] 'E' アクションが見つかりません。");
-        }
+        if (nextAction != null) nextAction.performed += HandleNextPage;
+        else Debug.LogWarning("[ReaderController] 'E' アクションが見つかりません。");
         
-        if (prevAction != null)
-        {
-            prevAction.performed += HandlePrevPage;
-        }
-        else
-        {
-            Debug.LogWarning("[ReaderController] 'Q' アクションが見つかりません。");
-        }
+        if (prevAction != null) prevAction.performed += HandlePrevPage;
+        else Debug.LogWarning("[ReaderController] 'Q' アクションが見つかりません。");
         
-        // (新規追加)
-        if (closeAction != null)
-        {
-            closeAction.performed += HandleClose;
-        }
-        else
-        {
-            Debug.LogWarning("[ReaderController] 'RightClick' アクションが見つかりません。");
-        }
+        if (closeAction != null) closeAction.performed += HandleClose;
+        else Debug.LogWarning("[ReaderController] 'RightClick' アクションが見つかりません。");
     }
 
-    /// <summary>
-    /// InputSystem のイベント購読を解除する
-    /// </summary>
     private void UnsubscribeInputEvents()
     {
-        if (nextAction != null)
-        {
-            nextAction.performed -= HandleNextPage;
-        }
-        if (prevAction != null)
-        {
-            prevAction.performed -= HandlePrevPage;
-        }
-        // (新規追加)
-        if (closeAction != null)
-        {
-            closeAction.performed -= HandleClose;
-        }
+        if (nextAction != null) nextAction.performed -= HandleNextPage;
+        if (prevAction != null) prevAction.performed -= HandlePrevPage;
+        if (closeAction != null) closeAction.performed -= HandleClose;
     }
     
-    /// <summary>
-    /// "E" アクションが実行された (Next Page)
-    /// </summary>
     private void HandleNextPage(InputAction.CallbackContext context)
     {
-        // リーダーが開かれていない (_now == null) 場合は何もしない
         if (_now == null) return;
-
-        // 既存のページ送り処理を呼ぶ
         TryNextPage();
     }
 
-    /// <summary>
-    /// "Q" アクションが実行された (Previous Page)
-    /// </summary>
     private void HandlePrevPage(InputAction.CallbackContext context)
     {
-        // リーダーが開かれていない (_now == null) 場合は何もしない
         if (_now == null) return;
-
-        // 既存のページ送り処理を呼ぶ
         PrevPage();
     }
     
-    // (新規追加)
-    /// <summary>
-    /// "RightClick" アクションが実行された (Close Reader)
-    /// </summary>
     private void HandleClose(InputAction.CallbackContext context)
     {
-        // リーダーが開かれていない (_now == null) 場合は何もしない
         if (_now == null) return;
-        
-        // ▼▼▼ ★★★ (ここから修正) 閉じる処理を呼ぶ (force=false) ★★★ ▼▼▼
         Close(false);
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▼
     }
-    
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+    // --- (InputSystem関連ここまで) ---
 
 
     [Button("Open(Test)")]
@@ -256,16 +197,12 @@ public class ReaderController : Singleton<ReaderController>
         RefreshPage();
     }
 
-    // ▼▼▼ ★★★ (ここから修正) force パラメータを追加 ★★★ ▼▼▼
     public void Close(bool force = false)
     {
-        // ▼▼▼ ★★★ (ここから追加) 閉じる許可フラグをチェック ★★★ ▼▼▼
-        // force=false (通常) の場合のみ、閉じる許可フラグをチェックする
         if (!force && !_isCloseAllowed)
         {
-            return; // 許可されていないため処理を中断
+            return; 
         }
-        // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
         if (_now == null) return;
         EventSystem.current.SetSelectedGameObject(null);
@@ -276,7 +213,6 @@ public class ReaderController : Singleton<ReaderController>
         onClosed?.Invoke();
         _now = null;
     }
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
     public bool HasRead(string readableId) => _readFlags.Contains(readableId);
 
@@ -306,11 +242,7 @@ public class ReaderController : Singleton<ReaderController>
         {
             _page--;
             RefreshPage();
-            
-            // ▼▼▼ ★★★ 修正 ★★★ ▼▼▼
-            // _turnSEOverride が設定されていればそちらを優先する
             PlaySE(_turnSEOverride ? _turnSEOverride : _now.turnSE);
-            // ▲▲▲ ★★★ 修正 ★★★ ▲▲▲
         }
     }
 
@@ -318,12 +250,65 @@ public class ReaderController : Singleton<ReaderController>
     {
         if (!_now) return;
 
-        string text = "";
-        if (TotalPages > 0 && _page < TotalPages)
-            text = _now.pages[_page] ?? "";
+        // ▼▼▼ 【(4) 移行ロジック（ここが最重要）】 ▼▼▼
 
-        if (titleText) titleText.text = _now.title ?? "";
-        if (bodyText) bodyText.text = text ?? "";
+        // --- (A) 新しい LocalizedString を取得試行 ---
+        LocalizedString locTitle = _now.localizedTitle;
+        LocalizedString locText = null;
+        if (_now.localizedPages != null && _page < _now.localizedPages.Count)
+        {
+            locText = _now.localizedPages[_page];
+        }
+        
+        // --- (B) 古い string を取得（フォールバック用） ---
+        string oldTitle = _now.title ?? "";
+        string oldText = "";
+        if (_now.pages != null && _page < _now.pages.Count)
+        {
+            oldText = _now.pages[_page] ?? "";
+        }
+
+        // --- (C) タイトルの適用 ---
+        if (titleLocalizeEvent)
+        {
+            // (優先) 新しい LocalizedString が設定されていれば、それを使う
+            if (locTitle != null && !locTitle.IsEmpty)
+            {
+                titleLocalizeEvent.StringReference = locTitle;
+            }
+            else
+            {
+                // (フォールバック) 新しいのが空なら、古い string を直接表示（翻訳されない）
+                titleLocalizeEvent.StringReference = null; // LocalizeEvent を無効化
+                if (titleText) titleText.text = oldTitle; // 古い text に戻す
+            }
+        }
+        else if(titleText)
+        {
+             titleText.text = oldTitle; // LocalizeEventが未設定なら古い方だけ使う
+        }
+
+        // --- (D) 本文の適用 ---
+        if (bodyLocalizeEvent)
+        {
+            // (優先) 新しい LocalizedString が設定されていれば、それを使う
+            if (locText != null && !locText.IsEmpty)
+            {
+                bodyLocalizeEvent.StringReference = locText;
+            }
+            else
+            {
+                // (フォールバック) 新しいのが空なら、古い string を直接表示（翻訳されない）
+                bodyLocalizeEvent.StringReference = null; // LocalizeEvent を無効化
+                if (bodyText) bodyText.text = oldText; // 古い text に戻す
+            }
+        }
+        else if (bodyText)
+        {
+             bodyText.text = oldText; // LocalizeEventが未設定なら古い方だけ使う
+        }
+        // ▲▲▲ 【(4) 移行ロジックここまで】 ▲▲▲
+        
         
         var bg = GetSpriteSafely(_now.backgroundImages, _page);
         var fg = GetSpriteSafely(_now.foregroundImages, _page);
@@ -334,8 +319,6 @@ public class ReaderController : Singleton<ReaderController>
         bool hasPrev = TotalPages > 0 && _page > 0;
         bool hasNext = TotalPages > 0 && _page < TotalPages - 1;
         
-        // ▼▼▼ ★★★ (ここから修正) 閉じるボタンと許可フラグのロジック ★★★ ▼▼▼
-        // 閉じる操作を許可するかどうかを決定する
         _isCloseAllowed = true; // デフォルトは許可 (リストにないページなど)
         if (_now.showCloseButtonOnPages != null && _page >= 0 && _page < _now.showCloseButtonOnPages.Count)
         {
@@ -344,10 +327,8 @@ public class ReaderController : Singleton<ReaderController>
 
         if (closeButton)
         {
-            // 閉じる許可フラグに基づいてボタンの表示/非表示を決定
             closeButton.gameObject.SetActive(_isCloseAllowed);
         }
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         if (prevIndicator) prevIndicator.SetActive(hasPrev);
         else if (prevButton) prevButton.gameObject.SetActive(hasPrev);
@@ -363,7 +344,6 @@ public class ReaderController : Singleton<ReaderController>
             pageNumberText.text = PageCounterText;
         }
 
-        // ここでイベントを発火させることで、購読しているReadablePickupに通知がいく
         onPageChanged?.Invoke(CurrentPage1);
     }
 

@@ -1,4 +1,3 @@
-// DialogueController.cs
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +13,9 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems; 
-using System.Text.RegularExpressions; // ▼▼▼ ★★★ (ここから追加) 正規表現を使うために必要 ★★★ ▼▼▼
+using System.Text.RegularExpressions;
+using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization.Components; // ← 【追加】
 
 [DisallowMultipleComponent]
 public class DialogueController : Singleton<DialogueController>
@@ -82,12 +83,8 @@ public class DialogueController : Singleton<DialogueController>
     private const int MaxGotoHops = 64;
     private const char _stepSep = '#';
     private InputDeviceDetector inputDeviceDetector;
-    // ▼▼▼ ★★★ (ここから追加) 変数置換用の正規表現 ★★★ ▼▼▼
-    /// <summary>
-    /// #{FunctionName("Argument")} 形式のプレースホルダーを検出する正規表現
-    /// </summary>
+    
     private static readonly Regex placeholderRegex = new Regex(@"\#\{(\w+)\(""([^""]*)""\)\}", RegexOptions.Compiled);
-    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 
     void OnValidate() { RebuildLookup(); }
 
@@ -298,9 +295,9 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
             
-            // --- ステップのプロパティを事前チェック ---
-            bool hasSpeaker = !string.IsNullOrWhiteSpace(step.speaker);
-            bool hasBody = !string.IsNullOrWhiteSpace(step.text);
+            // --- ステップのプロパティを事前チェック (移行ロジック) ---
+            bool hasSpeaker = (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty) || !string.IsNullOrWhiteSpace(step.speaker);
+            bool hasBody = (step.localizedText != null && !step.localizedText.IsEmpty) || !string.IsNullOrWhiteSpace(step.text);
             bool hasChoices = step.choices != null && step.choices.Count > 0;
 
             // --- スピーカー(話者)のロジック ---
@@ -312,9 +309,18 @@ public class DialogueController : Singleton<DialogueController>
                 {
                     if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
                     
-                    // ▼▼▼ ★★★ (ここから修正) テキストをパースする ★★★ ▼▼▼
-                    _currentUIRefs.speakerText.text = ParseDialogueText(step.speaker);
-                    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+                    // ▼▼▼ ★★★ (6) 移行ロジック (awaitで取得) ★★★ ▼▼▼
+                    string speakerText;
+                    if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
+                    {
+                        speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(token);
+                    }
+                    else
+                    {
+                        speakerText = step.speaker; // フォールバック
+                    }
+                    _currentUIRefs.speakerText.text = ParseDialogueText(speakerText);
+                    // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
                     
                     _currentUIRefs.speakerText.enabled = true;
                 }
@@ -332,8 +338,17 @@ public class DialogueController : Singleton<DialogueController>
 
             // --- 本文(Body)のロジック ---
             
-            // ▼▼▼ ★★★ (ここから修正) テキストをパースする ★★★ ▼▼▼
-            string parsedBodyText = ParseDialogueText(step.text);
+            // ▼▼▼ ★★★ (7) 移行ロジック (awaitで取得) ★★★ ▼▼▼
+            string rawBodyText;
+            if (step.localizedText != null && !step.localizedText.IsEmpty)
+            {
+                rawBodyText = await step.localizedText.GetLocalizedStringAsync(token);
+            }
+            else
+            {
+                rawBodyText = step.text; // フォールバック
+            }
+            string parsedBodyText = ParseDialogueText(rawBodyText);
             
             if (hasBody)
             {
@@ -348,9 +363,10 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
-                await TypeTextAsync(runId, parsedBodyText, token);
+                // (hasBody=false, hasChoices=false の場合)
+                await TypeTextAsync(runId, rawBodyText, token); // (rawBodyTextは null か "" のはず)
             }
-            // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+            // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
             ThrowIfStale(runId);
             
@@ -575,7 +591,6 @@ public class DialogueController : Singleton<DialogueController>
         ClearChoices();
         ThrowIfStale(runId);
         
-        // useUnscaledTime フラグを考慮して1秒待機する
         var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
         await UniTask.Delay(TimeSpan.FromSeconds(0.1f), delayType, PlayerLoopTiming.Update, token);
         ThrowIfStale(runId); // 待機したのでStaleチェック
@@ -585,8 +600,26 @@ public class DialogueController : Singleton<DialogueController>
         {
             if (!CheckConditions(ch.conditions)) continue;
             var btn = UnityEngine.Object.Instantiate(_currentUIRefs.choiceButtonPrefab, _currentUIRefs.choicesRoot);
+            
+            // ▼▼▼ ★★★ (8) 移行ロジック (awaitで取得) ★★★ ▼▼▼
+            // (選択肢ボタンのPrefabにはLocalizeStringEventが無いと仮定し、手動でテキストをセットする)
             var label = btn.GetComponentInChildren<TextMeshProUGUI>();
-            if (label) label.text = ch.text;
+            if (label)
+            {
+                string choiceText;
+                if (ch.localizedText != null && !ch.localizedText.IsEmpty)
+                {
+                    // 非同期で文字列を取得
+                    choiceText = await ch.localizedText.GetLocalizedStringAsync(token);
+                }
+                else
+                {
+                    choiceText = ch.text; // フォールバック
+                }
+                label.text = choiceText; // ここでは ParseDialogueText は呼ばない
+            }
+            // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
+
             btn.gameObject.SetActive(true);
             usable.Add((ch, btn));
         }
@@ -647,9 +680,7 @@ public class DialogueController : Singleton<DialogueController>
         if (dialogueRaycaster && !dialogueRaycaster.enabled)
             dialogueRaycaster.enabled = true;
     }
-    /// <summary>
-    /// 一つのメッセージを指定されたUIで、指定された時間だけ表示し、自動で消去します。
-    /// </summary>
+    
     public void ShowBriefMessage(DialogueUIRefs uiRefs, string speaker, string body, float duration)
     {
         if (_briefMessageCoroutine != null)
@@ -670,13 +701,20 @@ public class DialogueController : Singleton<DialogueController>
             _briefMessageCoroutine = null;
             yield break; 
         }
+        
+        // ▼▼▼ ★★★ (9) 移行ロジック (BriefMessage) ★★★ ▼▼▼
+        // (BriefMessage は LocalizedString を想定していないため、
+        //  渡された生の string をそのまま表示する)
+        
         bool hasBody = !string.IsNullOrWhiteSpace(body);
-        uiToUse.bodyText.text = body;
+        uiToUse.bodyText.text = body; // そのまま代入
         uiToUse.dialogueBox.SetActive(hasBody);
 
         bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
         if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(hasSpeaker);
-        if(uiToUse.speakerText) uiToUse.speakerText.text = speaker;
+        if(uiToUse.speakerText) uiToUse.speakerText.text = speaker; // そのまま代入
+        // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
+
         if (duration > 0)
         {
             yield return new WaitForSeconds(duration);
@@ -691,6 +729,7 @@ public class DialogueController : Singleton<DialogueController>
         
         _briefMessageCoroutine = null;
     }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfStale(int runId)
     {
@@ -698,9 +737,6 @@ public class DialogueController : Singleton<DialogueController>
     }
 
 
-    /// <summary>
-    /// DataShareControllerからフラグの値をマージ（同期）します。
-    /// </summary>
     private void MergeFlagsFromDataShare()
     {
         var ds = DataShareController.instance;
@@ -711,51 +747,30 @@ public class DialogueController : Singleton<DialogueController>
             if (!string.IsNullOrWhiteSpace(kv.Key))
             {
                 flags[kv.Key] = kv.Value;
-                // Debug.Log($"[DialogueController] Merged flag from DataShare: {kv.Key} = {kv.Value}");
             }
         }
     }
     
-    // ▼▼▼ ★★★ (ここから追加) テキスト置換システム ★★★ ▼▼▼
-
-    /// <summary>
-    /// ダイアログテキスト内の #{...} プレースホルダーを解析し、
-    /// 対応するメソッドの戻り値に置き換えます。
-    /// </summary>
-/// <summary>
-    /// ダイアログテキスト内の #{...} プレースホルダーを解析し、
-    /// 対応するメソッドの戻り値に置き換えます。
-    /// </summary>
+    // ▼▼▼ ★★★ (ここから下は変更なし) ★★★ ▼▼▼
+    
     private string ParseDialogueText(string rawText)
     {
-        // プレースホルダーがなければ、余計な処理をせずそのまま返す
         if (string.IsNullOrEmpty(rawText) || rawText.IndexOf("#{") == -1)
         {
             return rawText;
         }
-
-        // Regex.Replace と MatchEvaluator (ラムダ式) を使って、
-        // 見つかったすべてのプレースホルダーを置換する
+        
         string processedText = placeholderRegex.Replace(rawText, (match) => 
         {
-            // match.Groups[1] = 関数名 (例: "InputActionName")
-            // match.Groups[2] = 引数 (例: "FriendGame")
             string functionName = match.Groups[1].Value;
             string argument = match.Groups[2].Value;
-
-            // 関数名に応じて処理を分岐
+            
             if (functionName.Equals("InputActionName", StringComparison.OrdinalIgnoreCase))
             {
                 return InputActionName(argument);
             }
-            // --- 今後、他の #{...} を追加する場合は、ここに else if を追加 ---
-            // else if (functionName.Equals("PlayerName", StringComparison.OrdinalIgnoreCase))
-            // {
-            //     return GetPlayerName();
-            // }
             else
             {
-                // 不明な関数名の場合は、エラーが分かるように元のテキストをそのまま返す
                 Debug.LogWarning($"[DialogueController] 不明なプレースホルダー関数: {functionName}");
                 return match.Value; 
             }
@@ -763,12 +778,7 @@ public class DialogueController : Singleton<DialogueController>
 
         return processedText;
     }
-/// <summary>
-    /// #{InputActionName("actionName")} に対応するメソッド。
-    /// InputDeviceDetector の現在のデバイスタイプに基づいた入力キー名を返します。
-    /// </summary>
-    /// <param name="actionName">Input Action Asset内のアクション名</param>
-    /// <returns>表示用のキー名文字列</returns>
+    
     private string InputActionName(string actionName)
     {
         if (playerInput == null) 
@@ -787,7 +797,6 @@ public class DialogueController : Singleton<DialogueController>
         if (inputDeviceDetector == null)
         {
             Debug.LogWarning("[DialogueController] InputDeviceDetector が見つかりません。デフォルトのキー表示を使います。");
-            // フォールバックとして以前の動作
             string fallbackName = action.GetBindingDisplayString();
             int deviceNameStartIndexFB = fallbackName.LastIndexOf('[');
             if (deviceNameStartIndexFB > 0)
@@ -797,16 +806,13 @@ public class DialogueController : Singleton<DialogueController>
             return fallbackName; 
         }
 
-        // 1. 現在のデバイスタイプから、Control Scheme の「名前」を取得
         string targetSchemeName;
         if (inputDeviceDetector.CurrentDeviceType == InputDeviceDetector.DeviceType.Gamepad)
         {
-            // InputDeviceDetector の public フィールドから名前を取得
             targetSchemeName = inputDeviceDetector.gamepadSchemeName;
         }
         else
         {
-            // InputDeviceDetector の public フィールドから名前を取得
             targetSchemeName = inputDeviceDetector.keyboardMouseSchemeName;
         }
         
@@ -816,39 +822,22 @@ public class DialogueController : Singleton<DialogueController>
              return "[Scheme名未設定]";
         }
 
-        // 2. アクションの全バインディングを検索
         foreach (var binding in action.bindings)
         {
-            // 3. バインディングが現在の Control Scheme グループに属しているか確認
-            //    (binding.groups は "Gamepad;Keyboard&Mouse" のようにセミコロン区切り)
             if (binding.groups != null && binding.groups.Contains(targetSchemeName))
             {
-                // 4. 見つかったバインディングの表示名を取得
-                // (例: "E [Keyboard]" や "Button South [Gamepad]")
                 string bindingName = binding.ToDisplayString();
                 
-                // 5. デバイス名 (例: "[Keyboard]") を手動で削除
                 int deviceNameStartIndex = bindingName.LastIndexOf('[');
                 if (deviceNameStartIndex > 0)
                 {
                     bindingName = bindingName.Substring(0, deviceNameStartIndex).Trim();
                 }
-
-                // (オプション: 日本語へのマッピング)
-                // switch (bindingName.ToUpper())
-                // {
-                //     case "BUTTON SOUTH":
-                //         return "Aボタン";
-                // }
                 
-                // 6. 該当する最初のバインディング名を返す
                 return bindingName;
             }
         }
         
-        // もし該当するSchemeのBindingが見つからなかった場合
         return $"[キー未設定: {actionName}]";
     }
-    
-    // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
 }

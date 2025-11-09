@@ -18,7 +18,7 @@ public class GameSettings
     public int resolutionIndex; // Screen.resolutions のインデックス
     public FullScreenMode fullscreenMode;
     public bool vsync;
-    public int shadowQuality; // 0: Low, 1: Medium, 2: High (QualitySettingsに対応)
+    public int shadowQuality; // 0: High, 1: Medium, 2: Low (0=High に統一)
     public int textureQuality; // 0: High, 1: Medium, 2: Low (masterTextureLimit)
     public int antiAliasing; // 0: 0x, 1: 2x, 2: 4x, 3: 8x
 
@@ -75,7 +75,6 @@ public class GameSettings
         fov = other.fov;
     }
 }
-
 
 /// <summary>
 /// ゲーム設定の管理（ロード、保存、適用）を行う。
@@ -232,8 +231,10 @@ public class ConfigController : SerializedMonoBehaviour
         // VSync (これはQualitySettingsでOK)
         QualitySettings.vSyncCount = settings.vsync ? 1 : 0;
 
-        // テクスチャ (これもQualitySettingsでOK)
-        QualitySettings.globalTextureMipmapLimit = settings.textureQuality; // 0=フル, 1=1/2, 2=1/4...
+        // テクスチャ (0=High, 1=Medium, 2=Low)
+        // QualitySettings.globalTextureMipmapLimit は 0=High, 1=Medium, 2=Low なので、
+        // settings.textureQuality の値をそのまま代入すればOK。
+        QualitySettings.globalTextureMipmapLimit = settings.textureQuality;
 
         // --- URP設定 ---
         if (urpAsset == null)
@@ -242,14 +243,22 @@ public class ConfigController : SerializedMonoBehaviour
             return;
         }
 
-        // アンチエイリアス (0: 0x, 1: 2x, 2: 4x, 3: 8x)
-        // URPのMSAAは 1=Off, 2, 4, 8
-        int[] aaValues = { 1, 2, 4, 8 }; 
-        urpAsset.msaaSampleCount = aaValues[Mathf.Clamp(settings.antiAliasing, 0, aaValues.Length - 1)];
+        // アンチエイリアス (0: Off, 1: On (2x))
+        // URPのMSAAは 1=Off, 2=2x
+        int[] aaMap = { 1, 2 }; // 0(Off) -> 1, 1(On) -> 2
+        int msaaValue = aaMap[Mathf.Clamp(settings.antiAliasing, 0, aaMap.Length - 1)];
+        urpAsset.msaaSampleCount = msaaValue;
 
-        // シャドウ品質 (0: Low, 1: Medium, 2: High)
+        // シャドウ品質 (0: High, 1: Medium, 2: Low)
+        // settings.shadowQuality (0=High, 1=Medium, 2=Low) を
+        // switch文の (0=Low, 1=Medium, 2=High) に変換するマップ
+        int[] shadowMap = { 2, 1, 0 }; // 0(High) -> 2, 1(Medium) -> 1, 2(Low) -> 0
+        
+        // クランプ処理も追加
+        int shadowSetting = shadowMap[Mathf.Clamp(settings.shadowQuality, 0, shadowMap.Length - 1)];
+
         // ※これは一例です。URPアセットのどの項目を変更するかはプロジェクトによります
-        switch (settings.shadowQuality)
+        switch (shadowSetting) // ← ここで変換後の値を使う
         {
             case 0: // Low
                 urpAsset.additionalLightsShadowmapResolution = urpAsset.additionalLightsShadowResolutionTierLow;
@@ -281,7 +290,7 @@ public class ConfigController : SerializedMonoBehaviour
         }
         
         // ※ AudioMixer側で "MasterVolumeParam", "MusicVolumeParam", "SFXVolumeParam" 
-        //     という名前の変数をExposeしておく必要があります。
+        //    という名前の変数をExposeしておく必要があります。
         masterMixer.SetFloat("MasterVolume", ConvertToDecibel(settings.masterVolume));
     }
     
@@ -343,7 +352,7 @@ public class ConfigController : SerializedMonoBehaviour
              if (Screen.resolutions[i].width == currentRes.width &&
                  Screen.resolutions[i].height == currentRes.height)
              {
-                return i;
+                 return i;
              }
         }
         
@@ -393,7 +402,7 @@ public class ConfigController : SerializedMonoBehaviour
     /// <summary>
     /// [リセット] (Rキー)。pendingSettingsを「工場出荷時」のデフォルト設定に戻す
     /// </summary>
-/// <summary>
+    /// <summary>
     /// [リセット] (Rキー)。pendingSettingsを「工場出荷時」のデフォルト設定に戻す
     /// </summary>
     public void ResetToDefaults()
@@ -404,7 +413,7 @@ public class ConfigController : SerializedMonoBehaviour
         // ▼▼▼ ★★★ (ここから追加) ★★★ ▼▼▼
         // 2. 解像度だけ「現在のモニター解像度」で上書きする
         //    (LoadSettings と同じ初回起動時の動作)
-        Resolution currentRes = Screen.currentResolution;
+        Resolution currentRes = Screen.resolutions[Screen.resolutions.Length - 1]; // 最大解像度を取得
         pendingSettings.resolutionIndex = GetCurrentResolutionIndex(currentRes);
         // ▲▲▲ ★★★ (ここまで追加) ★★★ ▲▲▲
         

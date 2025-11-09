@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine.Localization; // ← 【追加】
 
 public class TodoController : SerializedMonoBehaviour
 {
@@ -17,14 +18,14 @@ public class TodoController : SerializedMonoBehaviour
     private readonly Dictionary<string, TodoBox> _byId = new();
     private readonly Dictionary<string, string> _keyToId = new();
 
-    // ====== Runtime API ======
+    // ====== Runtime API (Old) ======
 
     public string Add(string text)
     {
         if (!ValidateSetup()) return null;
         var box = Instantiate(todoBoxPrefab, todoLists, false);
         var id = System.Guid.NewGuid().ToString("N");
-        box.Setup(this, id, text);
+        box.Setup(this, id, text); // 古いSetup
         _byId[id] = box;
         return id;
     }
@@ -34,13 +35,48 @@ public class TodoController : SerializedMonoBehaviour
         if (string.IsNullOrWhiteSpace(key)) return Add(text);
         if (_keyToId.TryGetValue(key, out var existId) && _byId.TryGetValue(existId, out var exist))
         {
-            exist.SetText(text);
+            exist.SetText(text); // 古いSetText
             return existId;
         }
         var id = Add(text);
         if (id != null) _keyToId[key] = id;
         return id;
     }
+    
+    // ====== Runtime API (NEW) ======
+
+    /// <summary>
+    /// (新しい) LocalizedString を使って ToDo を追加
+    /// </summary>
+    public string AddLocalized(LocalizedString locText)
+    {
+        if (!ValidateSetup()) return null;
+        var box = Instantiate(todoBoxPrefab, todoLists, false);
+        var id = System.Guid.NewGuid().ToString("N");
+        box.SetupLocalized(this, id, locText); // 新しいSetupLocalized
+        _byId[id] = box;
+        return id;
+    }
+
+    /// <summary>
+    /// (新しい) LocalizedString と Key を使って ToDo を追加
+    /// </summary>
+    public string AddWithKeyLocalized(string key, LocalizedString locText)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return AddLocalized(locText);
+        
+        // ※キーが重複した場合、テキストを更新
+        if (_keyToId.TryGetValue(key, out var existId) && _byId.TryGetValue(existId, out var exist))
+        {
+            exist.SetLocalizedText(locText); // 新しいSetLocalizedText
+            return existId;
+        }
+        
+        var id = AddLocalized(locText); // 新しいAddLocalized
+        if (id != null) _keyToId[key] = id;
+        return id;
+    }
+
 
     /// <summary>
     /// ToDoリストの状態を指定されたリストの内容で完全に上書きします。
@@ -57,10 +93,20 @@ public class TodoController : SerializedMonoBehaviour
         // 2. 新しいリストのアイテムを生成する
         foreach (var item in todoItems)
         {
-            if (item != null && !string.IsNullOrEmpty(item.text))
+            if (item == null) continue;
+
+            // ▼▼▼ 【(5) 移行ロジック】 ▼▼▼
+            // (優先) 新しい localizedText があれば、それを使う
+            if (item.localizedText != null && !item.localizedText.IsEmpty)
+            {
+                AddWithKeyLocalized(item.key, item.localizedText);
+            }
+            // (フォールバック) なければ、古い text を使う
+            else if (!string.IsNullOrEmpty(item.text))
             {
                 AddWithKey(item.key, item.text);
             }
+            // ▲▲▲ 【(5) ここまで】 ▲▲▲
         }
     }
 

@@ -1,59 +1,91 @@
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using UnityEngine;
+using Sirenix.OdinInspector;
+using UnityEngine.Localization; // ← 【追加】
 
-[System.Serializable]
-public class FlagCondition
-{
-    [Tooltip("true/false を照会するキー名")] public string key;
-    [Tooltip("この値に一致したときだけ通過")] public bool requiredValue = true;
-}
-
-[System.Serializable]
-public class DialogueChoice
-{
-    [TextArea] public string text;
-    [Tooltip("同グループ: \"id\" / 別グループ: \"group:id\"")]
-    public string gotoId;
-    [Tooltip("この選択肢を表示する条件")] public List<FlagCondition> conditions = new();
-}
-
+// ### DialogueStep ###
 [System.Serializable]
 public class DialogueStep
 {
-    // --- 表示用の自動StepId（エディタ表示のみ） ---
-    [Sirenix.OdinInspector.ReadOnly, Sirenix.OdinInspector.LabelText("Step Id")]
-    public int displayStepId;  // 1始まり・実行時に使わない表示用
-
-    [Tooltip("話者名。空なら非表示")] public string speaker;
-    [TextArea(2, 6)] public string text;
-
-    [Tooltip("条件を満たすときだけこのステップを再生")]
+    [ReadOnly, LabelWidth(40)] public int displayStepId = 0;
+    
+    [Header("Conditions")]
     public List<FlagCondition> conditions = new();
 
-    [Header("自動送り")]
-    public bool autoNext = false;
-    public float autoNextDelay = 0.25f;
+    // ▼▼▼ 【(1) 古いデータ（移行用）】 ▼▼▼
+    [Title("--- OLD DATA (for Migration) ---")]
+    [Header("Content (Old)")]
+    [Tooltip("話者名。空欄OK")]
+    public string speaker;
 
+    [Tooltip("本文。空欄OK")]
+    [TextArea(3, 8)]
+    public string text;
+    // ▲▲▲ 【(1) ここまで】 ▲▲▲
+    
+    // ▼▼▼ 【(2) 新しいローカライズ用データ】 ▼▼▼
+    [Title("--- LOCALIZATION (NEW) ---")]
+    [Header("Content (Localized)")]
+    [Tooltip("話者名 (Localized)")]
+    public LocalizedString localizedSpeaker;
 
-    [Header("選択肢（空なら通常の次へ）")]
+    [Tooltip("本文 (Localized)")]
+    [TextArea(3, 8)]
+    public LocalizedString localizedText;
+    // ▲▲▲ 【(2) ここまで】 ▲▲▲
+
+    [Header("Choices")]
+    [Tooltip("このステップで表示する選択肢")]
     public List<DialogueChoice> choices = new();
 
-    [Header("このステップ突入時にフラグを変更（任意）")]
-    public List<FlagEdit> flagEditsOnEnter = new();
-        // DialogueStep に追記
-    [Header("Step Goto (immediate)")]
-    public bool useStepGoto;
+    [Header("Flow Control")]
+    public bool autoNext = false;
+    [ShowIf(nameof(autoNext))] public float autoNextDelay = 1f;
 
+    [Header("Step Goto (optional)")]
+    public bool useStepGoto;
     [ShowIf(nameof(useStepGoto))]
-    [LabelText("Goto (group:sequence or sequence)　同グループならsequenceIdのみ ")]
+    [LabelText("Goto (group:sequence:step or sequence:step or :step)")]
     public string stepGotoId;
 
+    [Header("Flag Edits (on enter)")]
+    public List<FlagEdit> flagEditsOnEnter = new();
 }
 
+// ### DialogueChoice ###
+[System.Serializable]
+public class DialogueChoice
+{
+    // ▼▼▼ 【(1) 古いデータ（移行用）】 ▼▼▼
+    [Tooltip("選択肢のテキスト (Old)")]
+    [TextArea(1, 2)]
+    public string text;
+    // ▲▲▲ 【(1) ここまで】 ▲▲▲
+
+    // ▼▼▼ 【(2) 新しいローカライズ用データ】 ▼▼▼
+    [Tooltip("選択肢のテキスト (Localized)")]
+    public LocalizedString localizedText;
+    // ▲▲▲ 【(2) ここまで】 ▲▲▲
+
+    [Tooltip("ジャンプ先 (group:sequence or sequence)")]
+    public string gotoId;
+
+    [Tooltip("表示条件")]
+    public List<FlagCondition> conditions = new();
+}
+
+// ### FlagCondition ###
+[System.Serializable]
+public class FlagCondition
+{
+    public string key;
+    public bool requiredValue = true;
+}
+
+// ### FlagEdit ###
 [System.Serializable]
 public class FlagEdit
 {
     public string key;
-    public bool value;
+    public bool value = true;
 }

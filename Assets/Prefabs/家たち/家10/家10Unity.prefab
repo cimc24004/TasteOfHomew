@@ -17468,7 +17468,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.211, y: 0.081}
+  m_AnchoredPosition: {x: 0.177, y: 0.081}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &2669836627740708236
@@ -17494,7 +17494,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 7164497713928546170, guid: 42a2aaed46eccc14884af6a361375dd7, type: 2}
+  - {fileID: 3937342113799860044, guid: 72e1bc2ef17d1a342b22ed10d4feff38, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17538,8 +17538,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u5BB6\u5185\u5B89\u5168"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 42a2aaed46eccc14884af6a361375dd7, type: 2}
-  m_sharedMaterial: {fileID: 7164497713928546170, guid: 42a2aaed46eccc14884af6a361375dd7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 72e1bc2ef17d1a342b22ed10d4feff38, type: 2}
+  m_sharedMaterial: {fileID: 3937342113799860044, guid: 72e1bc2ef17d1a342b22ed10d4feff38, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -17563,8 +17563,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 22
-  m_fontSizeBase: 22
+  m_fontSize: 28.1
+  m_fontSizeBase: 28.1
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -86989,6 +86989,34 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.15
       objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableEntryReference.m_KeyId
+      value: 620748398592
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableReference.m_TableCollectionName
+      value: GUID:502fbbb29d1158846b0a36136b8cda3c
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 5644946648304547533}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_text
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TMPro.TextMeshPro, Unity.TextMeshPro
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 4081051622786316727, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -87004,6 +87032,10 @@ PrefabInstance:
     - target: {fileID: 5648740504182240236, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_SizeDelta.y
       value: 17.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5648740504182240236, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -0.01
       objectReference: {fileID: 0}
     - target: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_LocalScale.x
@@ -87059,11 +87091,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_text
-      value: "\u5B66\u6821\u3067\u306F\u4E00\u4EBA\u3067\u3044\u306A\u3055\u3044\u3002\n\u8AB0\u3068\u3082\u8A71\u3059\u306A\u3002\n\u5B66\u6821\u3067\u306F\u7B11\u3046\u306A\u3002\n\u6CE8\u76EE\u3092\u6D74\u3073\u308B\u306A\u3002"
+      value: 'You must be alone at school.
+
+        Do not talk to anyone.
+
+        Do
+        not laugh at school.
+
+        Do not draw attention to yourself.'
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSize
-      value: 42.3
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontAsset
@@ -87075,12 +87114,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSizeBase
-      value: 42.3
+      value: 32.9
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -1222083699298443942, guid: 185022571cfbb98439267b5ad06a08f2, type: 2}
+    - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_paragraphSpacing
       value: 19.6
@@ -87110,6 +87153,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+--- !u!114 &5644946648304547533 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+  m_PrefabInstance: {fileID: 4375177548626801011}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
 --- !u!4 &7334140639541666373 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
@@ -87525,6 +87579,34 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.15000108
       objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableEntryReference.m_KeyId
+      value: 162587795456
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableReference.m_TableCollectionName
+      value: GUID:502fbbb29d1158846b0a36136b8cda3c
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 5521034337762125695}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_text
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TMPro.TextMeshPro, Unity.TextMeshPro
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 4081051622786316727, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -87595,11 +87677,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_text
-      value: "\u53CB\u9054\u3092\u4F5C\u3063\u3066\u306F\u3044\u3051\u306A\u3044\n\u52DD\u624B\u306B\u5916\u306B\u51FA\u3066\u306F\u3044\u3051\u306A\u3044\n\u304A\u6BCD\u3055\u3093\u306E\u8A00\u3046\u3053\u3068\u306F\u7D76\u5BFE\n\u5916\u306E\u4EBA\u9593\u306F\u5618\u3064\u304D\u3002\u4FE1\u3058\u308B\u306A\n"
+      value: 'You must not make friends.
+
+        You must not go outside without
+        permission.
+
+        Mother''s word is law.
+
+        Outsiders are liars.
+        Do not trust them.'
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSize
-      value: 42.3
+      value: 27.15
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontAsset
@@ -87611,12 +87701,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSizeBase
-      value: 42.3
+      value: 28.4
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -1222083699298443942, guid: 185022571cfbb98439267b5ad06a08f2, type: 2}
+    - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_paragraphSpacing
       value: 19.6
@@ -87646,6 +87740,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+--- !u!114 &5521034337762125695 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+  m_PrefabInstance: {fileID: 4503466205353926849}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
 --- !u!4 &7422033780062417911 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
@@ -95289,6 +95394,38 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.15
       objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_LocalVariables.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableEntryReference.m_KeyId
+      value: 19996587384832
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableReference.m_TableCollectionName
+      value: GUID:502fbbb29d1158846b0a36136b8cda3c
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 3965916481112991345}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_text
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TMPro.TextMeshPro, Unity.TextMeshPro
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 4081051622786316727, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -95363,11 +95500,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_text
-      value: "\u7D76\u5BFE\u306B\u5165\u308B\u306A"
+      value: Do not Enter
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSize
-      value: 70.63
+      value: 66
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontAsset
@@ -95378,6 +95515,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 66
+      objectReference: {fileID: 0}
+    - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSizeBase
       value: 70.63
       objectReference: {fileID: 0}
@@ -95385,6 +95526,10 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -1222083699298443942, guid: 185022571cfbb98439267b5ad06a08f2, type: 2}
+    - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_paragraphSpacing
       value: 19.6
@@ -95419,6 +95564,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
   m_PrefabInstance: {fileID: 5037528915238199759}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3965916481112991345 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+  m_PrefabInstance: {fileID: 5037528915238199759}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
 --- !u!1001 &5054590655772787539
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -121909,6 +122065,34 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.15
       objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableEntryReference.m_KeyId
+      value: 8501649408
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_StringReference.m_TableReference.m_TableCollectionName
+      value: GUID:502fbbb29d1158846b0a36136b8cda3c
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 432603862573804716}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: set_text
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: TMPro.TextMeshPro, Unity.TextMeshPro
+      objectReference: {fileID: 0}
+    - target: {fileID: 2192409945107407330, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_UpdateString.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 4081051622786316727, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -121919,7 +122103,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5648740504182240236, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 56.945
+      value: 50.7
       objectReference: {fileID: 0}
     - target: {fileID: 5648740504182240236, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_SizeDelta.y
@@ -121935,7 +122119,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5648740504182240236, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.09999917
+      value: -0.05
       objectReference: {fileID: 0}
     - target: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_LocalScale.x
@@ -121991,11 +122175,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_text
-      value: "\u306E\u3053\u3055\u305A\u98DF\u3079\u306A\u3055\u3044\n\u306E\u3053\u3057\u305F\u3089\u7F70\uFF01\uFF01"
+      value: 'Punishment
+
+        if you don''t finish!!'
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSize
-      value: 70.8
+      value: 72
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontAsset
@@ -122007,12 +122193,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_fontSizeBase
-      value: 70.8
+      value: 56.9
       objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -1222083699298443942, guid: 185022571cfbb98439267b5ad06a08f2, type: 2}
+    - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
       propertyPath: m_VerticalAlignment
       value: 256
@@ -122036,8 +122226,75 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7117607838850507046, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1291068501376867160}
   m_SourcePrefab: {fileID: 100100000, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+--- !u!114 &432603862573804716 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8277934824146290622, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+  m_PrefabInstance: {fileID: 8422236215213763346}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596272804872276532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
+--- !u!1 &1596272804872276532 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7117607838850507046, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
+  m_PrefabInstance: {fileID: 8422236215213763346}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1291068501376867160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596272804872276532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69beb381e244f92449b8c4cf954630e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_TrackedObjects:
+  - rid: 5653097464547508539
+  references:
+    version: 2
+    RefIds:
+    - rid: 5653097464547508539
+      type: {class: TrackedUGuiGraphic, ns: UnityEngine.Localization.PropertyVariants.TrackedObjects, asm: Unity.Localization}
+      data:
+        m_Target: {fileID: 432603862573804716}
+        m_TrackedProperties:
+          items:
+          - rid: 5653097464547508540
+          - rid: 5653097464547508541
+        m_UpdateType: 0
+    - rid: 5653097464547508540
+      type: {class: FloatTrackedProperty, ns: UnityEngine.Localization.PropertyVariants.TrackedProperties, asm: Unity.Localization}
+      data:
+        m_PropertyPath: m_fontSize
+        m_VariantData:
+        - localeIdentifier:
+            m_Code: en
+          value: 56.9
+        - localeIdentifier:
+            m_Code: ja
+          value: 69.25
+    - rid: 5653097464547508541
+      type: {class: BoolTrackedProperty, ns: UnityEngine.Localization.PropertyVariants.TrackedProperties, asm: Unity.Localization}
+      data:
+        m_PropertyPath: m_enableAutoSizing
+        m_VariantData:
+        - localeIdentifier:
+            m_Code: en
+          value: 0
+        - localeIdentifier:
+            m_Code: ja
+          value: 1
 --- !u!4 &3287084532757837860 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6449113716021072694, guid: 4a47f1f32018e694697db20a5799eb57, type: 3}
