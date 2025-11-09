@@ -1,10 +1,12 @@
-// CrossHairController.cs
-
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.Localization; // LocalizedString のために必要
+using UnityEngine.Localization.Components; // LocalizeStringEvent のために必要
+using UnityEngine.Localization.Tables;
+using UnityEditor.Localization; // ★★★ StringTableCollection のためにこれが必要 ★★★
 
 public class CrossHairController : Singleton<CrossHairController>
 {
@@ -21,6 +23,14 @@ public class CrossHairController : Singleton<CrossHairController>
     [SerializeField] public TextMeshProUGUI promptText;
     [SerializeField] public GameObject InteractBox;
     [SerializeField] public CanvasGroup InteractBoxCanvasGroup;
+    
+    [Title("Localization (NEW)")]
+    [Tooltip("インタラクト用テキスト「話す」「読む」などが入った String Table Collection アセット")]
+    [SerializeField] private StringTableCollection defaultInteractTable; // ← ★★★ この型
+    
+    [Tooltip("promptText にアタッチされている Localize String Event")]
+    [SerializeField] private LocalizeStringEvent promptLocalizeEvent;
+
     [Title("Animator")]
     private Animator crosshairAnimator;
 
@@ -44,6 +54,16 @@ public class CrossHairController : Singleton<CrossHairController>
         promptText = playerUIInfo.promptText;
         InteractBox = playerUIInfo.InteractBox;
         InteractBoxCanvasGroup = playerUIInfo.InteractBoxCanvasGroup;
+        promptLocalizeEvent = playerUIInfo.promptLocalizeEvent;
+        defaultInteractTable = playerUIInfo.defaultInteractTable;
+        if (promptLocalizeEvent == null)
+        {
+            Debug.LogError("[CrossHairController] promptLocalizeEvent が設定されていません！翻訳できません。");
+        }
+        if (defaultInteractTable == null)
+        {
+            Debug.LogError("[CrossHairController] defaultInteractTable が設定されていません！翻訳できません。");
+        }
     }
 
     void Update()
@@ -61,45 +81,48 @@ public class CrossHairController : Singleton<CrossHairController>
             var interactable = hit.collider.GetComponentInParent<IInteractable>();
             if (interactable != null)
             {
-                // クロスヘア強調
                 SetHighlight(interactable.ShouldHighlight());
 
-                // テキスト表示
-                if (promptText)
+                // "ui_interact_talk" などの「キー」または「""」を取得
+                string displayKey = interactable.GetDisplayText();
+
+                // 翻訳を実行
+                if (promptLocalizeEvent != null && defaultInteractTable != null)
                 {
-                    string display = interactable.GetDisplayText();
-                    if (!string.IsNullOrEmpty(display))
+                    if (!string.IsNullOrEmpty(displayKey))
                     {
-                        promptText.text = display;
+                        // (A) LocalizeEvent に「テーブル名」と「キー」をセット
+                        // ※ .TableReference は (string) TableCollectionName を直接受け取れます
+                        promptLocalizeEvent.StringReference.TableReference = defaultInteractTable.TableCollectionName;
+                        promptLocalizeEvent.StringReference.TableEntryReference = displayKey;
+                        
                         playerUIInfo.InteractBox.SetActive(true);
                     }
                     else
                     {
+                        // (B) キーが空なら、InteractBoxを非表示
+                        promptLocalizeEvent.StringReference.TableEntryReference = null; // キーをクリア
                         playerUIInfo.InteractBox.SetActive(false);
                     }
                 }
-
+                else if (promptText) // (フォールバック) LocalizeEvent が設定されてない場合
+                {
+                    promptText.text = displayKey; // 生のキーが表示されてしまう
+                    playerUIInfo.InteractBox.SetActive(!string.IsNullOrEmpty(displayKey));
+                }
+                
                 currentInteractable = interactable;
 
-                // 入力チェック
                 if (interactAction != null && interactAction.triggered)
                 {
-                    // ▼▼▼ ここから修正 ▼▼▼
-                    
-                    // 見つけた相手が DoorController かどうかをチェック
                     if (interactable is DoorController door)
                     {
-                        // DoorController なら、引数付きの Interact(interactor) を呼ぶ
                         door.Interact(playerInput.gameObject);
                     }
                     else
                     {
-                        // PlayerableCall や他のすべてのクラスはこちら
-                        // 既存の Interact() を呼ぶ
                         interactable.Interact();
                     }
-                    
-                    // ▲▲▲ 修正ここまで ▲▲▲
                 }
                 return;
             }
@@ -107,7 +130,11 @@ public class CrossHairController : Singleton<CrossHairController>
 
         // 何もヒットしなかった場合
         SetHighlight(false);
-        if (promptText) playerUIInfo.InteractBox.SetActive(false);
+        if (promptLocalizeEvent != null)
+        {
+             promptLocalizeEvent.StringReference.TableEntryReference = null; // キーをクリア
+        }
+        if (playerUIInfo.InteractBox.activeSelf) playerUIInfo.InteractBox.SetActive(false);
         currentInteractable = null;
     }
 

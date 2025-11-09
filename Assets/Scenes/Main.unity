@@ -6107,6 +6107,21 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2047229638273050199, guid: 15e55eb96e00e5440ad3f6ce15f0dbc2, type: 3}
   m_PrefabInstance: {fileID: 6407472486447142702}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &134726466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _snapMode: 0
+  _snapHalfSpace: 0
+  _projectionSettings: {fileID: 0}
 --- !u!1 &140568537
 GameObject:
   m_ObjectHideFlags: 0
@@ -9075,21 +9090,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3439369019479123956, guid: 71a272fc6a9f2954e8d155e0e62bf877, type: 3}
   m_PrefabInstance: {fileID: 191158872}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &191338660
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _snapMode: 0
-  _snapHalfSpace: 0
-  _projectionSettings: {fileID: 0}
 --- !u!1001 &192426549
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25716,6 +25716,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3831493589794454059, guid: 7d086b95b475649468ad6832fb837a1a, type: 3}
   m_PrefabInstance: {fileID: 555743579}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &557799095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _halfSpace: 1
+  _alignAxis: 0
+  _alignmentAxis: 1
+  _invertAlignmentAxis: 0
+  _projectAsUnit: 0
+  _embedInSurface: 1
+  _inFrontOffset: 0
+  _behindOffset: 0
 --- !u!1001 &557868176
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37695,21 +37715,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1057880722714086949, guid: bad4fe416cdc01d429e724cbd807cfd8, type: 3}
   m_PrefabInstance: {fileID: 806027506}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &807713620
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _snapMode: 0
-  _snapHalfSpace: 0
-  _projectionSettings: {fileID: 0}
 --- !u!1001 &807769393
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39819,7 +39824,7 @@ MonoBehaviour:
   _spawnGuide: {fileID: 910595725}
   _extensionPlane:
     _refOBBFace: 4
-  _modularSnapSession: {fileID: 191338660}
+  _modularSnapSession: {fileID: 939023000}
   _mirrorGizmo: {fileID: 1025282081}
 --- !u!114 &850750237 stripped
 MonoBehaviour:
@@ -44231,6 +44236,21 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e66744b779a85b345b987e10e9272ac5, type: 3}
+--- !u!114 &939023000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a40404d9721ed4f984030fbce11d53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _snapMode: 0
+  _snapHalfSpace: 0
+  _projectionSettings: {fileID: 0}
 --- !u!1 &942823805 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2639405891051842897, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
@@ -71550,26 +71570,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e66744b779a85b345b987e10e9272ac5, type: 3}
---- !u!114 &1506100060
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49490255aaf1a2641a4c5771511bd253, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _halfSpace: 1
-  _alignAxis: 0
-  _alignmentAxis: 1
-  _invertAlignmentAxis: 0
-  _projectAsUnit: 0
-  _embedInSurface: 1
-  _inFrontOffset: 0
-  _behindOffset: 0
 --- !u!1001 &1506584785
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -81709,7 +81709,7 @@ MonoBehaviour:
   _extensionPlane:
     _refOBBFace: 4
   _heightPatternDirection: 0
-  _modularSnapSession: {fileID: 807713620}
+  _modularSnapSession: {fileID: 134726466}
   _mirrorGizmo: {fileID: 1563054386}
 --- !u!1001 &1640279166
 PrefabInstance:
@@ -87898,6 +87898,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 3933078871326420704, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+    - target: {fileID: 3965916481112991345, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
+      propertyPath: m_text
+      value: "\u7D76\u5BFE\u306B\u5165\u308B\u306A"
+      objectReference: {fileID: 0}
     - target: {fileID: 3980542255761523491, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -88036,15 +88040,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5521034337762125695, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_text
-      value: 'You must not make friends.
-
-        You must not go outside without
-        permission.
-
-        Mother''s word is law.
-
-        Outsiders are liars.
-        Do not trust them.'
+      value: "\u53CB\u9054\u3092\u4F5C\u3063\u3066\u306F\u3044\u3051\u306A\u3044\n\u52DD\u624B\u306B\u5916\u306B\u51FA\u3066\u306F\u3044\u3051\u306A\u3044\n\u304A\u6BCD\u3055\u3093\u306E\u8A00\u3046\u3053\u3068\u306F\u7D76\u5BFE\n\u5916\u306E\u4EBA\u9593\u306F\u5618\u3064\u304D\u4FE1\u3058\u308B\u306A"
       objectReference: {fileID: 0}
     - target: {fileID: 5584267375453493445, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_SizeDelta.x
@@ -100648,14 +100644,7 @@ PrefabInstance:
       objectReference: {fileID: 5616255301042821679, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
     - target: {fileID: 5644946648304547533, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_text
-      value: 'You must be alone at school.
-
-        Do not talk to anyone.
-
-        Do
-        not laugh at school.
-
-        Do not draw attention to yourself.'
+      value: "\u5B66\u6821\u3067\u306F\u4E00\u4EBA\u3067\u3044\u306A\u3055\u3044\u3002\n\u8AB0\u3068\u3082\u8A71\u3059\u306A\u3002\n\u5B66\u6821\u3067\u306F\u7B11\u3046\u306A\u3002\n\u6CE8\u76EE\u3092\u6D74\u3073\u308B\u306A\u3002"
       objectReference: {fileID: 0}
     - target: {fileID: 5703178412565276419, guid: 40e68e72673f0d242bcbcd7d5a2c3832, type: 3}
       propertyPath: m_IsActive
@@ -192082,7 +192071,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8725edae6a1fd4408036dedaf0199f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _projectionSettings: {fileID: 1506100060}
+  _projectionSettings: {fileID: 557799095}
   _dragAndDropGuide: {fileID: 0}
 --- !u!1001 &2147227208
 PrefabInstance:
@@ -194370,7 +194359,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: CurrentPhaseStep
-      value: 4
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.Prefab
@@ -194388,7 +194377,7 @@ PrefabInstance:
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: 'serializationData.PrefabModifications.Array.data[1]'
       value: '"path":"EndingShareDictionary.{\"EscapeMyHouse\"}","value":{"$id":0,"$type":"System.Boolean,
-        mscorlib",false}'
+        mscorlib",true}'
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModificationsReferencedUnityObjects.Array.size
@@ -197751,6 +197740,10 @@ PrefabInstance:
     - target: {fileID: 2945850280006056127, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2967150286110465159, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
+      propertyPath: defaultInteractKey
+      value: ui_interact_gohan
       objectReference: {fileID: 0}
     - target: {fileID: 2993423638506661359, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
       propertyPath: serializationData.Prefab
@@ -202307,6 +202300,10 @@ PrefabInstance:
     - target: {fileID: 8446261999361799874, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0.020168602
+      objectReference: {fileID: 0}
+    - target: {fileID: 8453656583961211905, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
+      propertyPath: defaultInteractKey
+      value: ui_interact_knife
       objectReference: {fileID: 0}
     - target: {fileID: 8453656583961211905, guid: a7c75f9f071292c4ca76103690a5b7cd, type: 3}
       propertyPath: serializationData.Prefab
@@ -208415,6 +208412,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 1433776584826159895, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+    - target: {fileID: 1868794172325598173, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
+      propertyPath: m_text
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1886009954194875345, guid: fec95ef7b89a87e40873e400ee5422a2, type: 3}
       propertyPath: OutputAudioMixerGroup
       value: 

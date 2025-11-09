@@ -51,6 +51,7 @@ MonoBehaviour:
   promptText: "\u5BBF\u984C\u3092\u3059\u308B"
   hideWhenLocked: 0
   lockedText: "\u4ECA\u306F\u4F7F\u3048\u306A\u3044"
+  defaultInteractKey: ui_interact_homework
   once: 1
   disableOnPlayed: 1
   onPlayed:
@@ -148,6 +149,7 @@ MonoBehaviour:
   groupKey: MorningHitorigoto
   groupAsset: {fileID: 0}
   sequenceId: 5
+  changeGameState: 1
 --- !u!65 &3356244730302522901
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -207,6 +209,7 @@ MonoBehaviour:
         m_CallState: 2
   displayText: 
   highlightWhenAvailable: 1
+  defaultInteractKey: 
   once: 0
   disableGameObjectAfterInvoke: 0
 --- !u!1 &6424610701109731473
@@ -271,8 +274,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -294,7 +295,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -418,8 +418,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -441,7 +439,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0

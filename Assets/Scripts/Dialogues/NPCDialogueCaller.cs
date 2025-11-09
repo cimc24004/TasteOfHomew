@@ -3,6 +3,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Events;
+using UnityEngine.Localization; // ← 【追加】
 
 public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 {
@@ -11,13 +12,13 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 
     [Title("Group")]
     [EnumToggleButtons] public GroupRefMode groupRef = GroupRefMode.ByAsset;
-    [ShowIf(nameof(groupRef), GroupRefMode.ByKey)]  [LabelText("Group Key")]   public string groupKey;
-    [ShowIf(nameof(groupRef), GroupRefMode.ByAsset)][LabelText("Group Asset")] public DialogueSequenceGroupAsset groupAsset;
+    [ShowIf(nameof(groupRef), GroupRefMode.ByKey)] [LabelText("Group Key")] public string groupKey;
+    [ShowIf(nameof(groupRef), GroupRefMode.ByAsset)] [LabelText("Group Asset")] public DialogueSequenceGroupAsset groupAsset;
 
     [Title("Start Mode")]
     [EnumToggleButtons] public StartMode mode = StartMode.Single;
-    [ShowIf(nameof(mode), StartMode.Single)]        [LabelText("Sequence ID")] public string singleSequenceId;
-    [ShowIf(nameof(mode), StartMode.RandomFromList)][LabelText("候補 Sequence IDs"), ListDrawerSettings(Expanded = true)]
+    [ShowIf(nameof(mode), StartMode.Single)] [LabelText("Sequence ID")] public string singleSequenceId;
+    [ShowIf(nameof(mode), StartMode.RandomFromList)] [LabelText("候補 Sequence IDs"), ListDrawerSettings(Expanded = true)]
     public List<string> candidateSequenceIds = new();
 
     [Title("Options")]
@@ -25,15 +26,38 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
     [Tooltip("このNPCで会話進行中は新たなTalkを無視（推奨）")] public bool blockWhileTalking = true;
     [Tooltip("話しかけたときにプレイヤーの方向を向くか。")] public bool LookAtPlayerY;
 
+    // ▼▼▼ 【(1) 修正】 デフォルトキーのフィールドを追加 ▼▼▼
+    [Title("Localization")]
+    [Tooltip("（オプション）「調べる」など、デフォルト以外のキーを個別に指定する場合")]
+    [SerializeField] private LocalizedString interactText;
+
+    [Tooltip("↑の interactText が空の場合に使われる、デフォルトの翻訳キー（String Table内）")]
+    [SerializeField] private string defaultInteractKey = "ui_interact_talk"; // ← ★★★ これを追加 ★★★
+    // ▲▲▲ 【(1) 修正ここまで】 ▲▲▲
+
     [Title("Local Events (このCaller専用)")]
     public UnityEvent onDialogueStarted;
-    public UnityEvent onDialogueClosed;  // ← 会話が閉じた直後にこのCallerだけで発火
+    public UnityEvent onDialogueClosed;   // ← 会話が閉じた直後にこのCallerだけで発火
     private bool consumed = false;
     private bool localBusy = false;
 
     // IInteractable
     public void Interact() => Talk().Forget();
-    public string GetDisplayText() => "話す";
+    
+    // ▼▼▼ 【(2) 修正】 GetDisplayText がフォールバックするように変更 ▼▼▼
+    public string GetDisplayText()
+    {
+        // (優先) "interactText" が設定されていれば、そのキーを返す
+        if (interactText != null && !interactText.IsEmpty)
+        {
+            return interactText.TableEntryReference.Key;
+        }
+        
+        // (フォールバック) "interactText" が空なら、デフォルトのキーを返す
+        return defaultInteractKey; 
+    }
+    // ▲▲▲ 【(2) 修正ここまで】 ▲▲▲
+    
     public bool ShouldHighlight() => (!blockWhileTalking || !localBusy) && (!once || !consumed);
 
     [Button("Talk()")]
@@ -63,13 +87,13 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         localBusy = true;
         try
         {
-            onDialogueStarted?.Invoke();                 // ← このCallerの開始イベント
+            onDialogueStarted?.Invoke();              // ← このCallerの開始イベント
             if(LookAtPlayerY)npcActions.LookAtPlayerY();
             await ctrl.StartDialogueAsync(gKey, seqId);  // （ここが戻ってきたら閉じた合図）
         }
         finally
         {
-            onDialogueClosed?.Invoke();                  // ← このCallerの終了イベント（常に自分だけ）
+            onDialogueClosed?.Invoke();               // ← このCallerの終了イベント（常に自分だけ）
             if(LookAtPlayerY)npcActions.LookAtDefaultY();
             if (once) consumed = true;
             localBusy = false;
