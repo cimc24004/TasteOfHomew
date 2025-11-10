@@ -11,6 +11,8 @@ public class GameStartMenuController : MonoBehaviour
     [SerializeField] private Button GameContinueButton;
     [SerializeField] private Button ContinueToTopBackButton;
     [SerializeField] private Button SettingButton;
+    [SerializeField] private Button CreditButton;
+
     
     [Header("Canvas Groups")]
     [SerializeField] private CanvasGroup StartNavMenuCanvasGroup;
@@ -83,7 +85,10 @@ public class GameStartMenuController : MonoBehaviour
                 EventSystem.current.SetSelectedGameObject(GameStartFromBeginButton.gameObject);
             }
         });
-
+        CreditButton.onClick.AddListener(() =>
+        {
+            sceneManagerController.LoadScene("Credit");
+        });
         // 最初のフォーカスを設定
         GameStartFromBeginButton.Select();
 
