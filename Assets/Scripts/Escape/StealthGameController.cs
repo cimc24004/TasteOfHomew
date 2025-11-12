@@ -1,5 +1,4 @@
-// StealthGameController.cs
-
+// (using は元のままでOK)
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,84 +14,50 @@ using UnityEditor;
 [AddComponentMenu("Game/Controllers/StealthGameController (Manager)")]
 public class StealthGameController : SerializedMonoBehaviour
 {
-    // ======= Static Sound Event System =======
+    // ... (Fields from OnWorldSoundMade to StealthBGM are unchanged) ...
     public static event Action<Vector3, float, GameObject> OnWorldSoundMade;
     public static void MakeSoundAt(Vector3 position, float radius, GameObject soundSource = null)
     {
         OnWorldSoundMade?.Invoke(position, radius, soundSource);
     }
     
-    // ======= References =======
     [TitleGroup("References"), PropertyOrder(-100)]
     [Required] public MyHouseEscapeGameController myHouseEscapeGameController;
-
     [TitleGroup("References")]
-    [Tooltip("プレイヤー Transform。未設定なら Tag=Player を探索")]
     public Transform player;
     private PlayerStatus playerStatus;
     private Transform playerHead;
-
     [TitleGroup("References")]
-    [ReadOnly, Tooltip("プレイヤーから自動取得")]
-    public FootStepController playerFootStepController;
-
-    // ======= Behaviour (全体) =======
+    [ReadOnly] public FootStepController playerFootStepController;
     [TitleGroup("Behaviour"), PropertySpace]
-    [InfoBox("発見したら全ガードを停止するか？", InfoMessageType.None)]
     public bool stopAllOnDetect = true;
-
     [TitleGroup("Behaviour")]
-    [InfoBox("MyHouseEscapeGameController の状態が Stealth 以外になったら自動停止する", InfoMessageType.None)]
     public bool autoStopWhenStateChanged = true;
-
     [TitleGroup("Behaviour")]
     [LabelText("Wait Time Scale (全体倍率)")]
-    [Tooltip("全ガードの待機時間に掛ける倍率。0.5=半分, 2=2倍")]
     [MinValue(0f)]
     public float waitTimeScale = 1f;
     
-    // ▼▼▼ 追加 (早歩き設定) ▼▼▼
-    // ======= Hearing (Investigate) =======
     [TitleGroup("Hearing (Investigate)"), PropertySpace]
-    [LabelText("Enable Fast Walk")]
-    [Tooltip("調査時に早歩きを有効にするか")]
     public bool enableFastWalk = true;
-    
     [TitleGroup("Hearing (Investigate)"), ShowIf("enableFastWalk")]
-    [LabelText("Fast Walk Speed Multiplier")]
-    [Tooltip("NavMeshAgent.speed に掛ける倍率")]
     [MinValue(1f)] public float fastWalkAgentSpeedMultiplier = 1.5f;
-
     [TitleGroup("Hearing (Investigate)"), ShowIf("enableFastWalk")]
-    [LabelText("Fast Walk Anim Multiplier")]
-    [Tooltip("Animator.speed に掛ける倍率")]
     [MinValue(1f)] public float fastWalkAnimatorSpeedMultiplier = 1.5f;
-
     [TitleGroup("Hearing (Investigate)"), ShowIf("enableFastWalk")]
-    [LabelText("Fast Walk Footstep Multiplier")]
-    [Tooltip("FootstepController.walkStepInterval を「割る」値 (1.5 = 1.5倍速)")]
     [MinValue(1f)] public float fastWalkFootstepMultiplier = 2f;
-    // ▲▲▲ 追加ここまで ▲▲▲
-
-    // ======= Timer (Police到着まで) =======
-    // ... (変更なし) ...
     [TitleGroup("Timer"), PropertySpace]
-    [LabelText("Enable Timer")]
     public bool enableTimer = true;
     [TitleGroup("Timer")]
     public TextMeshProUGUI timerText;
     [TitleGroup("Timer")]
     public GameObject timerBox;
     [TitleGroup("Timer")]
-    [LabelText("Hide When Idle")]
     public bool hideTimerWhenIdle = true;
     private Coroutine timerCo;
     [SerializeField] private float timerRemain;
     
-    // ======= Random Dialogue =======
-    // ... (変更なし) ...
     [TitleGroup("Random Dialogue"), PropertySpace]
-    [LabelText("Enable Random Dialogue")]
     public bool enableRandomDialogue = true;
     [TitleGroup("Random Dialogue"), ShowIf("enableRandomDialogue")]
     [Required] public DialogueSequenceGroupAsset randomDialogueGroup;
@@ -107,37 +72,26 @@ public class StealthGameController : SerializedMonoBehaviour
     [SerializeField]
     private AudioSource StealthBGM;
     
-    // ======= Guard 設定 =======
+    // ... (GuardEntry class is unchanged) ...
     [System.Serializable]
     public class GuardEntry
     {
         [HorizontalGroup("H", Width = 220)]
         [BoxGroup("H/ID", false)]
         [LabelText("Name")] public string name = "Mother";
-
         [BoxGroup("H/Agent", false)]
         [Required, LabelText("NavMeshAgent")] public NavMeshAgent agent;
-
         [BoxGroup("H/Agent", false)]
         [LabelText("Eye(任意)")] public Transform eye;
-        
         [BoxGroup("H/Agent", false)]
         [LabelText("CPU Status(任意)")] public CPUStatus cpuStatus;
-
-        // ▼▼▼ 追加 (Animator と FootStepController) ▼▼▼
         [BoxGroup("H/Agent", false)]
         [LabelText("Animator(任意)")]
-        [Tooltip("早歩きアニメーション用 (必須)")]
         public Animator animator;
-
         [BoxGroup("H/Agent", false)]
         [LabelText("FootStepController(任意)")]
-        [Tooltip("早歩き足音用 (任意)")]
         public FootStepController footStepController;
-        // ▲▲▲ 追加ここまで ▲▲▲
-
         [FoldoutGroup("Patrol", true)]
-        // ... (Patrol 設定は変更なし) ...
         [ListDrawerSettings(Expanded = true, DraggableItems = true)]
         [LabelText("Patrol Points")] public List<Transform> patrolPoints = new();
         [FoldoutGroup("Patrol")][LabelText("Random Patrol")] public bool randomPatrol = false;
@@ -149,67 +103,48 @@ public class StealthGameController : SerializedMonoBehaviour
         [FoldoutGroup("Patrol")][LabelText("Arrival Timeout (s)")] public float arrivalTimeoutSeconds = 6f;
         [FoldoutGroup("Patrol")][LabelText("Planar Distance (XZ) で到着判定も見る")] public bool usePlanarDistance = true;
         [FoldoutGroup("Patrol")][LabelText("Wait (s) 一定時間"), MinValue(0f)] public float waitAtPointSeconds = 1.0f;
-
         [FoldoutGroup("Vision", true)]
-        // ... (Vision 設定は変更なし) ...
         [Range(10f, 180f), LabelText("View Angle")] public float viewAngle = 70f;
         [FoldoutGroup("Vision")][LabelText("View Distance")] public float viewDistance = 12f;
         [FoldoutGroup("Vision")][LabelText("Eye Height (Y)")] public float eyeHeight = 1.6f;
         [FoldoutGroup("Vision")][LabelText("Player Height (Y)")] public float playerHeight = 1.6f;
         [FoldoutGroup("Vision")][LabelText("Player Layer")] public LayerMask playerLayer = 1 << 6;
         [FoldoutGroup("Vision")][LabelText("Obstruction Layers")] public LayerMask obstructionLayers = ~0;
-
         [FoldoutGroup("Hearing", true)]
-        // ... (Hearing 設定は変更なし) ...
         [LabelText("Can Hear")] public bool canHear = true;
         [FoldoutGroup("Hearing"), ShowIf("canHear")]
         [LabelText("Hearing Distance")] public float hearingDistance = 8f;
         [FoldoutGroup("Hearing"), ShowIf("canHear")]
-        [Tooltip("音の発生源に到着後、その場で待機する時間")]
         [LabelText("Investigate Wait (s)")] public float investigateWaitTime = 3f;
-
         [FoldoutGroup("Investigate Dialogue", true)]
-        // ... (Dialogue 設定は変更なし) ...
-        [LabelText("Play Dialogue On Investigate")] 
         public bool playDialogueOnInvestigate = true;
         [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
-        [Required, Tooltip("調査中に再生するセリフのGroup")]
-        public DialogueSequenceGroupAsset investigateDialogueGroup;
+        [Required] public DialogueSequenceGroupAsset investigateDialogueGroup;
         [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
-        [Tooltip("使用するSequenceのID")]
         public string investigateDialogueSequenceId = "InvestigateTalk";
         [FoldoutGroup("Investigate Dialogue"), ShowIf("playDialogueOnInvestigate")]
-        [Range(1f, 10f), Tooltip("一回のセリフの表示時間（秒）")]
-        public float investigateDialogueDuration = 3.5f;
-
-        // Runtime
+        [Range(1f, 10f)] public float investigateDialogueDuration = 3.5f;
         [HideInInspector] public bool active;
         [HideInInspector] public int currentIndex;
         [HideInInspector] public Coroutine patrolCo;
         [HideInInspector] public int direction = 1;
         [HideInInspector] public bool isInvestigating = false;
-        
         [HideInInspector] public DialogueSequenceAsset cachedInvestigateSequence;
-        
-        // ▼▼▼ 追加 (デフォルト値の保存用) ▼▼▼
         [HideInInspector] public float defaultAgentSpeed;
         [HideInInspector] public float defaultAnimatorSpeed;
         [HideInInspector] public float defaultFootstepInterval;
-        [HideInInspector] public bool isHastening; // 現在、早歩き中か
-        // ▲▲▲ 追加ここまで ▲▲▲
+        [HideInInspector] public bool isHastening;
     }
 
     [TitleGroup("Guards"), PropertySpace]
     [ListDrawerSettings(Expanded = true, DraggableItems = true, ShowIndexLabels = true)]
     public List<GuardEntry> guards = new();
 
-    // ======= Odin Buttons =======
-    // ... (変更なし) ...
+    // ... (Odin Buttons are unchanged) ...
     [TitleGroup("Controls"), ButtonGroup("Controls/Row1"), GUIColor(0.2f, 0.75f, 0.2f)]
     [Button("Start Stealth", ButtonSizes.Large)]
     public void StealthGameStart()
     {
-        // ... (Player 参照取得 ... )
         if (playerStatus != null)
         {
             player = playerStatus.transform;
@@ -238,7 +173,12 @@ public class StealthGameController : SerializedMonoBehaviour
         StealthBGM.Play();
         StartRandomDialogue();
         
-        foreach (var g in guards) StartGuard(g);
+        foreach (var g in guards)
+        {
+            g.footStepController = g.cpuStatus?.footStepController;
+            g.animator = g.cpuStatus.CPUAnimator;
+            StartGuard(g);
+        }
     }
 
     [ButtonGroup("Controls/Row1"), GUIColor(0.9f, 0.35f, 0.35f)]
@@ -277,8 +217,7 @@ public class StealthGameController : SerializedMonoBehaviour
 #endif
     }
 
-    // ======= Lifecycle =======
-    
+    // ... (Lifecycle: OnEnable, Start, OnDisable are unchanged) ...
     private void OnEnable()
     {
         OnWorldSoundMade += HandleWorldSound;
@@ -311,17 +250,14 @@ public class StealthGameController : SerializedMonoBehaviour
             Debug.LogWarning($"[StealthGameController] Player '{player.name}' に FootStepController が見つかりません。聴覚が機能しません。", player);
         }
     }
-
-
+    
     private void OnDisable()
     {
         OnWorldSoundMade -= HandleWorldSound;
         StopAllGuards();
     }
     
-    /// <summary>
-    /// OnWorldSoundMade (MakeSoundAt) イベントを受け取った時の処理
-    /// </summary>
+    // ... (HandleWorldSound and Update are unchanged) ...
     private void HandleWorldSound(Vector3 soundPosition, float soundRadius, GameObject soundSource)
     {
         if (player == null || myHouseEscapeGameController.CurrentState != MyHouseEscapeGameController.State.Stealth)
@@ -335,7 +271,7 @@ public class StealthGameController : SerializedMonoBehaviour
             if (!g.canHear) continue; 
             if (soundSource != null && soundSource == g.agent.gameObject)
             {
-                continue; // 自分の音は無視
+                continue; 
             }
             if (g.isInvestigating) continue;
 
@@ -349,8 +285,7 @@ public class StealthGameController : SerializedMonoBehaviour
             }
         }
     }
-
-
+    
     private void Update()
     {
         if (autoStopWhenStateChanged && myHouseEscapeGameController != null)
@@ -371,10 +306,8 @@ public class StealthGameController : SerializedMonoBehaviour
         {
             if (!g.active || g.agent == null) continue;
 
-            // 1. 視覚 (最優先)
             if (IsPlayerVisible(g))
             {
-                // ... (発見処理) ...
                 if (g.cpuStatus != null && g.cpuStatus.multiAimConstraint != null)
                 {
                     g.cpuStatus.multiAimConstraint.weight = 1;
@@ -385,21 +318,18 @@ public class StealthGameController : SerializedMonoBehaviour
                 break;
             }
 
-            // 2. 聴覚 (調査中でない場合のみ)
             if (g.isInvestigating) continue; 
 
             if (IsPlayerHeard(g))
             {
-                // プレイヤーの足音をキャッチ
                 Debug.Log($"[Stealth] {g.name} heard player!");
-                if (g.patrolCo != null) StopCoroutine(g.patrolCo); // 現状のパトロールを中断
-                g.patrolCo = StartCoroutine(InvestigateSoundCo(g, player.position)); // 調査コルーチンを開始
+                if (g.patrolCo != null) StopCoroutine(g.patrolCo); 
+                g.patrolCo = StartCoroutine(InvestigateSoundCo(g, player.position)); 
             }
         }
     }
 
-    // ======= Timer =======
-    // ... (変更なし) ...
+    // ... (Timer methods are unchanged) ...
     private void StartTimer()
     {
         if (timerCo != null) StopCoroutine(timerCo);
@@ -460,7 +390,7 @@ public class StealthGameController : SerializedMonoBehaviour
     }
 
     // ======= Random Dialogue Control =======
-    // ... (変更なし) ...
+    
     private void StartRandomDialogue()
     {
         if (!enableRandomDialogue) return;
@@ -507,12 +437,13 @@ public class StealthGameController : SerializedMonoBehaviour
             DialogueStep randomStep = _targetSequence.steps[randomIndex];
             if (randomStep != null && DialogueController.instance != null)
             {
-                DialogueController.instance.ShowBriefMessage(
+                // ▼▼▼ 【(1) 修正】 ShowBriefMessage → ShowBriefLocalizedStep ▼▼▼
+                DialogueController.instance.ShowBriefLocalizedStep(
                     randomGuard.cpuStatus.dialogueUIRefs, 
-                    randomStep.speaker, 
-                    randomStep.text, 
+                    randomStep, // 生の DialogueStep を渡す
                     dialogueDisplayDuration
                 );
+                // ▲▲▲ 【(1) 修正ここまで】 ▲▲▲
             }
             float waitTime = UnityEngine.Random.Range(randomDialogueInterval.x, randomDialogueInterval.y);
             yield return new WaitForSeconds(waitTime);
@@ -521,35 +452,20 @@ public class StealthGameController : SerializedMonoBehaviour
     
     // ======= Guard 制御 =======
 
-    // ▼▼▼ 追加 (早歩きヘルパー) ▼▼▼
-    /// <summary>
-    /// ガードの速度を設定（早歩き or 通常）
-    /// </summary>
     private void SetHasten(GuardEntry g, bool hasten)
     {
-        // この機能がオフなら何もしない
         if (!enableFastWalk) return;
-        // 必要なコンポーネントがなければ何もしない
         if (g == null || g.agent == null) return;
-        
-        // 既に目的の状態なら何もしない
         if (g.isHastening == hasten) return;
         g.isHastening = hasten;
 
         if (hasten)
         {
-            // --- 1. 早歩き状態にする ---
-            
-            // NavMeshAgent.speed を上げる
             g.agent.speed = g.defaultAgentSpeed * fastWalkAgentSpeedMultiplier;
-            
-            // Animator.speed を上げる
             if (g.animator != null)
             {
                 g.animator.speed = g.defaultAnimatorSpeed * fastWalkAnimatorSpeedMultiplier;
             }
-            
-            // Footstep.walkStepInterval を下げる (速くする)
             if (g.footStepController != null)
             {
                 g.footStepController.walkStepInterval = g.defaultFootstepInterval / fastWalkFootstepMultiplier;
@@ -557,25 +473,17 @@ public class StealthGameController : SerializedMonoBehaviour
         }
         else
         {
-            // --- 2. 通常状態に戻す ---
-            
-            // NavMeshAgent.speed をデフォルトに戻す
             g.agent.speed = g.defaultAgentSpeed;
-            
-            // Animator.speed をデフォルトに戻す
             if (g.animator != null)
             {
                 g.animator.speed = g.defaultAnimatorSpeed;
             }
-            
-            // Footstep.walkStepInterval をデフォルトに戻す
             if (g.footStepController != null)
             {
                 g.footStepController.walkStepInterval = g.defaultFootstepInterval;
             }
         }
     }
-    // ▲▲▲ 追加ここまで ▲▲▲
 
 
     private void StartGuard(GuardEntry g)
@@ -593,13 +501,12 @@ public class StealthGameController : SerializedMonoBehaviour
         if (g.startFromClosestPoint && g.patrolPoints != null && g.patrolPoints.Count > 1)
             g.currentIndex = FindClosestPointIndex(g);
 
-        // ▼▼▼ 追加 (デフォルト値の保存) ▼▼▼
         g.defaultAgentSpeed = g.agent.speed;
-        g.isHastening = false; // 念のためリセット
+        g.isHastening = false; 
 
         if (g.animator != null)
         {
-            g.defaultAnimatorSpeed = g.animator.speed; // (通常は 1.0)
+            g.defaultAnimatorSpeed = g.animator.speed; 
         }
         else if (enableFastWalk)
         {
@@ -614,9 +521,7 @@ public class StealthGameController : SerializedMonoBehaviour
         {
             Debug.LogWarning($"[Stealth] Guard '{g.name}' に FootStepController が設定されていません。早歩き足音が機能しません。", g.agent);
         }
-        // ▲▲▲ 追加ここまで ▲▲▲
 
-        // (調査ダイアログのキャッシュ処理)
         if (g.playDialogueOnInvestigate && g.investigateDialogueGroup != null)
         {
             g.cachedInvestigateSequence = g.investigateDialogueGroup.sequences.Find(seq => seq.id == g.investigateDialogueSequenceId);
@@ -637,15 +542,10 @@ public class StealthGameController : SerializedMonoBehaviour
 
     private void StopGuard(GuardEntry g)
     {
-        // ▼▼▼ 追加 (速度リセット) ▼▼▼
-        // 停止時に必ず速度を通常に戻す
         SetHasten(g, false);
-        // ▲▲▲ 追加ここまで ▲▲▲
-
         g.isInvestigating = false;
         g.active = false;
         
-        // lingering messageを消す
         if (DialogueController.instance != null && g.cpuStatus != null)
         {
             DialogueController.instance.ShowBriefMessage(g.cpuStatus.dialogueUIRefs, "", "", 0);
@@ -657,14 +557,10 @@ public class StealthGameController : SerializedMonoBehaviour
 
     private IEnumerator PatrolLoop(GuardEntry g)
     {
-        // ▼▼▼ 追加 (速度リセット) ▼▼▼
-        // 巡回は必ず「通常」速度で実行する
         SetHasten(g, false);
-        // ▲▲▲ 追加ここまで ▲▲▲
 
         while (g.active)
         {
-            // PatrolLoopが呼ばれる＝通常巡回状態
             g.isInvestigating = false;
             
             Transform target = null;
@@ -676,7 +572,6 @@ public class StealthGameController : SerializedMonoBehaviour
                 Vector3 targetPos = target.position;
                 g.agent.SetDestination(targetPos);
                 
-                // ... (到着待ちループ ... 変更なし) ...
                 float sinceSet = 0f;
                 while (g.active && !g.isInvestigating)
                 {
@@ -719,7 +614,6 @@ public class StealthGameController : SerializedMonoBehaviour
                 float waitSec = Mathf.Max(0f, g.waitAtPointSeconds * Mathf.Max(0f, waitTimeScale));
                 if (waitSec > 0f)
                 {
-                    // (通常巡回なので、Animator Speed は既にデフォルト(1.0)のはず)
                     float t = 0f;
                     while (g.active && !g.isInvestigating && t < waitSec) { t += Time.deltaTime; yield return null; }
                 }
@@ -739,22 +633,21 @@ public class StealthGameController : SerializedMonoBehaviour
     {
         g.isInvestigating = true;
         
-        // ▼▼▼ 追加 (早歩き開始) ▼▼▼
         SetHasten(g, true);
-        // ▲▲▲ 追加ここまで ▲▲▲
 
-        // (調査ダイアログの再生 ... 変更なし)
         if (g.playDialogueOnInvestigate && g.cachedInvestigateSequence != null && 
             g.cachedInvestigateSequence.steps.Count > 0 && DialogueController.instance != null && g.cpuStatus != null)
         {
             var steps = g.cachedInvestigateSequence.steps;
             DialogueStep randomStep = steps[UnityEngine.Random.Range(0, steps.Count)];
-            DialogueController.instance.ShowBriefMessage(
+            
+            // ▼▼▼ 【(2) 修正】 ShowBriefMessage → ShowBriefLocalizedStep ▼▼▼
+            DialogueController.instance.ShowBriefLocalizedStep(
                 g.cpuStatus.dialogueUIRefs,
-                randomStep.speaker,
-                randomStep.text,
+                randomStep, // 生の DialogueStep を渡す
                 g.investigateDialogueDuration
             );
+            // ▲▲▲ 【(2) 修正ここまで】 ▲▲▲
         }
 
 
@@ -763,7 +656,6 @@ public class StealthGameController : SerializedMonoBehaviour
             g.agent.SetDestination(soundPosition);
 
             // --- 到着待ち ---
-            // ... (変更なし) ...
             float sinceSet = 0f;
             while (g.active && g.isInvestigating)
             {
@@ -797,23 +689,18 @@ public class StealthGameController : SerializedMonoBehaviour
             }
             // --- 到着待ちここまで ---
             
-            // 停止するまで待機
             while (g.active && g.isInvestigating && g.agent.velocity.sqrMagnitude > 0.01f)
             {
                 yield return null;
             }
 
-            // 調査地点で待機
             float waitSec = Mathf.Max(0f, g.investigateWaitTime * Mathf.Max(0f, waitTimeScale));
             if (waitSec > 0f)
             {
-                // ▼▼▼ 追加 (待機中はアニメーション速度を通常に戻す) ▼▼▼
                 if (g.animator != null && g.isHastening)
                 {
-                    // (ご要望: 止まっている間は 1.0 にする)
                     g.animator.speed = g.defaultAnimatorSpeed; 
                 }
-                // ▲▲▲ 追加ここまで ▲▲▲
 
                 float t = 0f;
                 while (g.active && g.isInvestigating && t < waitSec) 
@@ -821,19 +708,13 @@ public class StealthGameController : SerializedMonoBehaviour
                     t += Time.deltaTime; 
                     yield return null; 
                 }
-
-                // (待機が終わったら、次の PatrolLoop が SetHasten(false) を呼ぶか、
-                //  このコルーチンの最後で SetHasten(false) が呼ばれるので、
-                //  Animator.speed は自動的に 1.0 に戻ります)
             }
         }
         else
         {
-            // NavMeshに乗っていない
             yield return new WaitForSeconds(0.25f);
         }
 
-        // (調査終了ダイアログクリア ... 変更なし)
         if (g.playDialogueOnInvestigate && DialogueController.instance != null && g.cpuStatus != null)
         {
             DialogueController.instance.ShowBriefMessage(g.cpuStatus.dialogueUIRefs, "", "", 0);
@@ -841,19 +722,14 @@ public class StealthGameController : SerializedMonoBehaviour
 
         g.isInvestigating = false;
         
-        // 停止(StopGuard)されていなければ、パトロールを再開
         if (g.active)
         {
-            // (PatrolLoop が内部で SetHasten(false) を呼ぶので、ここではリセット不要)
             if (g.patrolCo != null) StopCoroutine(g.patrolCo);
-            g.patrolCo = StartCoroutine(PatrolLoop(g)); // PatrolLoopを最初から再開
+            g.patrolCo = StartCoroutine(PatrolLoop(g)); 
         }
         else
         {
-            // ▼▼▼ 追加 (念のためリセット) ▼▼▼
-            // (PatrolLoop に移行せず終了した場合、StopGuard が呼ばれているはずだが念のため)
             SetHasten(g, false);
-            // ▲▲▲ 追加ここまで ▲▲▲
         }
     }
 

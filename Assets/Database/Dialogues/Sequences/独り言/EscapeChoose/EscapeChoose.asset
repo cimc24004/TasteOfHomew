@@ -25,32 +25,89 @@ MonoBehaviour:
   memo: "\u3069\u3063\u3061\u306B\u9003\u3052\u308B\u304B\u9078\u629E\u3059\u308B\u30B7\u30FC\u30F3"
   steps:
   - displayStepId: 1
+    conditions: []
     speaker: 
     text: "\u3069\u3046\u3057\u3088\u3046...\u3002"
-    conditions: []
+    localizedSpeaker:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizedText:
+      m_TableReference:
+        m_TableCollectionName: GUID:ba151c6c767f62c48af65bcf8c621fb7
+      m_TableEntryReference:
+        m_KeyId: 10460389376
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    choices: []
     autoNext: 0
     autoNextDelay: 0.25
-    choices: []
+    useStepGoto: 0
+    stepGotoId: 
     flagEditsOnEnter:
     - key: 
       value: 0
-    useStepGoto: 0
-    stepGotoId: 
   - displayStepId: 2
+    conditions: []
     speaker: 
     text: 
-    conditions: []
-    autoNext: 0
-    autoNextDelay: 0.25
+    localizedSpeaker:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
+    localizedText:
+      m_TableReference:
+        m_TableCollectionName: 
+      m_TableEntryReference:
+        m_KeyId: 0
+        m_Key: 
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocalVariables: []
     choices:
     - text: "\u307E\u305A\u306F\u81EA\u5206\u306E\u5BB6\u306B\u884C\u3063\u3066\u8B66\u5BDF\u306B\u901A\u5831"
+      localizedText:
+        m_TableReference:
+          m_TableCollectionName: GUID:ba151c6c767f62c48af65bcf8c621fb7
+        m_TableEntryReference:
+          m_KeyId: 47676448768
+          m_Key: 
+        m_FallbackState: 0
+        m_WaitForCompletion: 0
+        m_LocalVariables: []
       gotoId: EscapeChoose:EscapeMyHouse
       conditions: []
     - text: "\u3055\u304D\u306B\u548C\u4E5F\u3092\u6551\u3044\u306B\u884C\u304F\u3002"
+      localizedText:
+        m_TableReference:
+          m_TableCollectionName: GUID:ba151c6c767f62c48af65bcf8c621fb7
+        m_TableEntryReference:
+          m_KeyId: 73794379776
+          m_Key: 
+        m_FallbackState: 0
+        m_WaitForCompletion: 0
+        m_LocalVariables: []
       gotoId: EscapeChoose:EscapeFriendHouse
       conditions: []
-    flagEditsOnEnter: []
+    autoNext: 0
+    autoNextDelay: 0.25
     useStepGoto: 0
     stepGotoId: 
+    flagEditsOnEnter: []
   useGoto: 0
   gotoId: 
+  references:
+    version: 2
+    RefIds: []

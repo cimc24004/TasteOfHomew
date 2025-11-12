@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using System.Threading; // ← 【追加】
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
@@ -15,11 +15,12 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems; 
 using System.Text.RegularExpressions;
 using UnityEngine.Localization; // ← 【追加】
-using UnityEngine.Localization.Components; // ← 【追加】
+using UnityEngine.Localization.Components; 
 
 [DisallowMultipleComponent]
 public class DialogueController : Singleton<DialogueController>
 {
+    // ... (Fields from sequenceGroupAssets to inputDeviceDetector are unchanged) ...
     [Title("Sequence Group Assets (ScriptableObject)")]
     [OdinSerialize] public List<DialogueSequenceGroupAsset> sequenceGroupAssets = new();
 
@@ -30,7 +31,6 @@ public class DialogueController : Singleton<DialogueController>
     [SerializeField]
     private DefaultDialogueUIInfo defaultUIInfo;
 
-    // 実行時に使用するUI参照を動的に保持する
     private DialogueUIRefs _currentUIRefs;
 
     [Title("Typewriter")]
@@ -74,7 +74,7 @@ public class DialogueController : Singleton<DialogueController>
     private InputAction advanceAction, skipAction, cancelAction;
     private CancellationTokenSource _runCts;
     private GameStateController gameStateController;
-    private PauseMenuController pauseMenuController; // PauseMenuControllerへの参照
+    private PauseMenuController pauseMenuController; 
 
     private float lastClickTime = -999f;
     private float Now => useUnscaledTime ? Time.unscaledTime : Time.time;
@@ -86,6 +86,7 @@ public class DialogueController : Singleton<DialogueController>
     
     private static readonly Regex placeholderRegex = new Regex(@"\#\{(\w+)\(""([^""]*)""\)\}", RegexOptions.Compiled);
 
+    // ... (OnValidate, Start, SceneLoaded, Init, OnDisable, RebuildLookup are unchanged) ...
     void OnValidate() { RebuildLookup(); }
 
     void Start()
@@ -163,7 +164,7 @@ public class DialogueController : Singleton<DialogueController>
         }
     }
 
-    // ===== Public API =====
+    // ... (Public API StartDialogue methods are unchanged) ...
     public void StartDialogue(string groupKey, string sequenceId, int startStepId = 1, bool changeGameState = true)
         => StartDialogueAsync(groupKey, sequenceId, null, default, startStepId, changeGameState).Forget();
 
@@ -182,6 +183,7 @@ public class DialogueController : Singleton<DialogueController>
         StartDialogue(groupAsset.groupKey, sequenceId, overrideUIRefs, startStepId, changeGameState);
     }
     
+    // ... (StartDialogueAsync and StopCurrent are unchanged) ...
     public async UniTask StartDialogueAsync(string groupKey, string sequenceId, DialogueUIRefs overrideUIRefs = null, CancellationToken externalToken = default, int startStepId = 1, bool changeGameState = true)
     {
         StopCurrent(); // (StopCurrent内で PauseMenuOpenPermit = true が呼ばれる)
@@ -261,7 +263,7 @@ public class DialogueController : Singleton<DialogueController>
     public bool GetFlag(string key, bool def = false) => flags.TryGetValue(key, out var v) ? v : def;
     public void SetFlag(string key, bool val) => flags[key] = val;
 
-    // ===== Core =====
+    // ... (Core RunSequenceAsync is unchanged, uses await localization) ...
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
         if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
@@ -295,21 +297,17 @@ public class DialogueController : Singleton<DialogueController>
                 foreach (var e in step.flagEditsOnEnter)
                     if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
             
-            // --- ステップのプロパティを事前チェック (移行ロジック) ---
             bool hasSpeaker = (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty) || !string.IsNullOrWhiteSpace(step.speaker);
             bool hasBody = (step.localizedText != null && !step.localizedText.IsEmpty) || !string.IsNullOrWhiteSpace(step.text);
             bool hasChoices = step.choices != null && step.choices.Count > 0;
 
-            // --- スピーカー(話者)のロジック ---
             if (_currentUIRefs.speakerText)
             {
                 ThrowIfStale(runId);
-                
                 if (hasSpeaker)
                 {
                     if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
                     
-                    // ▼▼▼ ★★★ (6) 移行ロジック (awaitで取得) ★★★ ▼▼▼
                     string speakerText;
                     if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
                     {
@@ -317,17 +315,13 @@ public class DialogueController : Singleton<DialogueController>
                     }
                     else
                     {
-                        speakerText = step.speaker; // フォールバック
+                        speakerText = step.speaker; 
                     }
                     _currentUIRefs.speakerText.text = ParseDialogueText(speakerText);
-                    // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
                     
                     _currentUIRefs.speakerText.enabled = true;
                 }
-                else if (!hasBody && hasChoices)
-                {
-                    // (話者名を維持)
-                }
+                else if (!hasBody && hasChoices) { }
                 else
                 {
                     if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
@@ -335,10 +329,7 @@ public class DialogueController : Singleton<DialogueController>
                     _currentUIRefs.speakerText.enabled = false;
                 }
             }
-
-            // --- 本文(Body)のロジック ---
             
-            // ▼▼▼ ★★★ (7) 移行ロジック (awaitで取得) ★★★ ▼▼▼
             string rawBodyText;
             if (step.localizedText != null && !step.localizedText.IsEmpty)
             {
@@ -346,7 +337,7 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
-                rawBodyText = step.text; // フォールバック
+                rawBodyText = step.text; 
             }
             string parsedBodyText = ParseDialogueText(rawBodyText);
             
@@ -363,14 +354,11 @@ public class DialogueController : Singleton<DialogueController>
             }
             else
             {
-                // (hasBody=false, hasChoices=false の場合)
-                await TypeTextAsync(runId, rawBodyText, token); // (rawBodyTextは null か "" のはず)
+                await TypeTextAsync(runId, rawBodyText, token); 
             }
-            // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
             ThrowIfStale(runId);
             
-            // --- 選択肢 / 次へのロジック ---
             if (hasChoices)
             {
                 string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
@@ -398,6 +386,7 @@ public class DialogueController : Singleton<DialogueController>
         }
     }
 
+    // ... (CheckConditions, TryParseTarget, TryGetSequence are unchanged) ...
     private bool CheckConditions(List<FlagCondition> conds)
     {
         if (conds == null || conds.Count == 0) return true;
@@ -405,18 +394,14 @@ public class DialogueController : Singleton<DialogueController>
             if (GetFlag(c.key, false) != c.requiredValue) return false;
         return true;
     }
-
     private bool TryParseTarget(string raw, string currentGroup, out string group, out string seq, out int stepId)
     {
         group = currentGroup;
         seq = null;
         stepId = 1;
-
         if (string.IsNullOrWhiteSpace(raw)) return false;
-
         var tokens = raw.Split(':');
         for (int i = 0; i < tokens.Length; i++) tokens[i] = tokens[i].Trim();
-
         if (tokens.Length == 1)
         {
             seq = tokens[0];
@@ -447,7 +432,6 @@ public class DialogueController : Singleton<DialogueController>
         }
         return false;
     }
-
     private bool TryGetSequence(string groupKey, string seqId, out DialogueSequenceAsset asset)
     {
         asset = null;
@@ -457,7 +441,7 @@ public class DialogueController : Singleton<DialogueController>
         return map.TryGetValue(seqId, out asset);
     }
 
-    // ===== Typewriter =====
+    // ... (Typewriter TypeTextAsync is unchanged) ...
     private async UniTask TypeTextAsync(int runId, string content, CancellationToken token)
     {
         string full = content ?? "";
@@ -523,13 +507,12 @@ public class DialogueController : Singleton<DialogueController>
         }
     }
     
-    // ===== Wait / Delay =====
+    // ... (Wait/Delay methods are unchanged) ...
     private async UniTask WaitAdvanceAsync(int runId, CancellationToken token)
     {
         await UniTask.Yield(PlayerLoopTiming.Update, token);
         ThrowIfStale(runId);
 
-        // (1) クールダウン処理:
         if (!_pauseAdvanceInput && advanceAction != null)
         {
             while (advanceAction.IsPressed()) 
@@ -540,7 +523,6 @@ public class DialogueController : Singleton<DialogueController>
             }
         }
         
-        // (2) 新しい「押し込み」を待機
         bool inputPressed = false;
         while (true)
         {
@@ -561,7 +543,6 @@ public class DialogueController : Singleton<DialogueController>
             ThrowIfStale(runId);
         }
 
-        // (3) 「リリース」を待機
         while (inputPressed)
         {
             token.ThrowIfCancellationRequested();
@@ -569,7 +550,7 @@ public class DialogueController : Singleton<DialogueController>
 
             if (!_pauseAdvanceInput && advanceAction != null && advanceAction.WasReleasedThisFrame())
             {
-                return; // ★ここで初めて次のステップに進む
+                return; 
             }
 
             if (cancelAction != null && cancelAction.triggered)
@@ -585,7 +566,7 @@ public class DialogueController : Singleton<DialogueController>
         await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, seconds)), delayType, PlayerLoopTiming.Update, token);
     }
 
-    // ===== Choices =====
+    // ... (ShowChoicesAndWaitAsync is unchanged, uses await localization) ...
     private async UniTask<string> ShowChoicesAndWaitAsync(int runId, List<DialogueChoice> choices, CancellationToken token)
     {
         ClearChoices();
@@ -593,7 +574,7 @@ public class DialogueController : Singleton<DialogueController>
         
         var delayType = useUnscaledTime ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime;
         await UniTask.Delay(TimeSpan.FromSeconds(0.1f), delayType, PlayerLoopTiming.Update, token);
-        ThrowIfStale(runId); // 待機したのでStaleチェック
+        ThrowIfStale(runId); 
 
         var usable = new List<(DialogueChoice, Button)>();
         foreach (var ch in choices)
@@ -601,30 +582,26 @@ public class DialogueController : Singleton<DialogueController>
             if (!CheckConditions(ch.conditions)) continue;
             var btn = UnityEngine.Object.Instantiate(_currentUIRefs.choiceButtonPrefab, _currentUIRefs.choicesRoot);
             
-            // ▼▼▼ ★★★ (8) 移行ロジック (awaitで取得) ★★★ ▼▼▼
-            // (選択肢ボタンのPrefabにはLocalizeStringEventが無いと仮定し、手動でテキストをセットする)
             var label = btn.GetComponentInChildren<TextMeshProUGUI>();
             if (label)
             {
                 string choiceText;
                 if (ch.localizedText != null && !ch.localizedText.IsEmpty)
                 {
-                    // 非同期で文字列を取得
                     choiceText = await ch.localizedText.GetLocalizedStringAsync(token);
                 }
                 else
                 {
-                    choiceText = ch.text; // フォールバック
+                    choiceText = ch.text; 
                 }
-                label.text = choiceText; // ここでは ParseDialogueText は呼ばない
+                label.text = choiceText; 
             }
-            // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
             btn.gameObject.SetActive(true);
             usable.Add((ch, btn));
         }
         
-        if (usable.Count == 0) return null; // 有効な選択肢がなければ終了
+        if (usable.Count == 0) return null; 
 
         if (EventSystem.current != null)
         {
@@ -657,6 +634,7 @@ public class DialogueController : Singleton<DialogueController>
         return result;
     }
 
+    // ... (ClearChoices and CleanupUI are unchanged) ...
     private void ClearChoices()
     {
         if (_currentUIRefs == null || !_currentUIRefs.choicesRoot) return;
@@ -667,7 +645,6 @@ public class DialogueController : Singleton<DialogueController>
             else DestroyImmediate(go);
         }
     }
-
     private void CleanupUI()
     {
         if (_currentUIRefs == null) return;
@@ -681,6 +658,7 @@ public class DialogueController : Singleton<DialogueController>
             dialogueRaycaster.enabled = true;
     }
     
+    // ... (ShowBriefMessage and BriefMessageRoutine are unchanged) ...
     public void ShowBriefMessage(DialogueUIRefs uiRefs, string speaker, string body, float duration)
     {
         if (_briefMessageCoroutine != null)
@@ -702,18 +680,13 @@ public class DialogueController : Singleton<DialogueController>
             yield break; 
         }
         
-        // ▼▼▼ ★★★ (9) 移行ロジック (BriefMessage) ★★★ ▼▼▼
-        // (BriefMessage は LocalizedString を想定していないため、
-        //  渡された生の string をそのまま表示する)
-        
         bool hasBody = !string.IsNullOrWhiteSpace(body);
-        uiToUse.bodyText.text = body; // そのまま代入
+        uiToUse.bodyText.text = body; 
         uiToUse.dialogueBox.SetActive(hasBody);
 
         bool hasSpeaker = !string.IsNullOrWhiteSpace(speaker);
         if(uiToUse.speakerBox) uiToUse.speakerBox.SetActive(hasSpeaker);
-        if(uiToUse.speakerText) uiToUse.speakerText.text = speaker; // そのまま代入
-        // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
+        if(uiToUse.speakerText) uiToUse.speakerText.text = speaker; 
 
         if (duration > 0)
         {
@@ -729,13 +702,65 @@ public class DialogueController : Singleton<DialogueController>
         
         _briefMessageCoroutine = null;
     }
+
+    // ▼▼▼ 【(1) 新しいメソッドを追加】 ▼▼▼
+    /// <summary>
+    /// 翻訳が必要なステップ情報（LocalizedString）を受け取り、
+    /// 翻訳後に BriefMessage を表示する非同期ラッパー。
+    /// </summary>
+    public void ShowBriefLocalizedStep(DialogueUIRefs uiRefs, DialogueStep step, float duration)
+    {
+        // 待機しない（.Forget()）
+        ShowBriefLocalizedStepAsync(uiRefs, step, duration).Forget();
+    }
+
+    private async UniTaskVoid ShowBriefLocalizedStepAsync(DialogueUIRefs uiRefs, DialogueStep step, float duration)
+    {
+        if (step == null)
+        {
+            ShowBriefMessage(uiRefs, "", "", duration);
+            return;
+        }
+
+        string speakerText;
+        string bodyText;
+
+        // 1. Localized Speaker 解決
+        if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
+        {
+            // このメソッドは .Forget() されるので、CancellationToken.None を使う
+            speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(CancellationToken.None);
+        }
+        else
+        {
+            speakerText = step.speaker; // フォールバック
+        }
+
+        // 2. Localized Body 解決
+        if (step.localizedText != null && !step.localizedText.IsEmpty)
+        {
+            bodyText = await step.localizedText.GetLocalizedStringAsync(CancellationToken.None);
+        }
+        else
+        {
+            bodyText = step.text; // フォールバック
+        }
+
+        // 3. 翻訳済みテキストで BriefMessage を呼び出す
+        ShowBriefMessage(
+            uiRefs,
+            ParseDialogueText(speakerText), 
+            ParseDialogueText(bodyText),    
+            duration
+        );
+    }
+    // ▲▲▲ 【(1) 追加ここまで】 ▲▲▲
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfStale(int runId)
     {
         if (runId != _runId) throw new OperationCanceledException("stale run");
     }
-
 
     private void MergeFlagsFromDataShare()
     {
@@ -751,9 +776,9 @@ public class DialogueController : Singleton<DialogueController>
         }
     }
     
-    // ▼▼▼ ★★★ (ここから下は変更なし) ★★★ ▼▼▼
-    
-    private string ParseDialogueText(string rawText)
+    // ▼▼▼ 【(2) private から public に変更】 ▼▼▼
+    public string ParseDialogueText(string rawText)
+    // ▲▲▲ 【(2) 変更ここまで】 ▲▲▲
     {
         if (string.IsNullOrEmpty(rawText) || rawText.IndexOf("#{") == -1)
         {

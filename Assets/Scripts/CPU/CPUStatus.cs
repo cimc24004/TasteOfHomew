@@ -7,7 +7,7 @@ public class CPUStatus : MonoBehaviour
     [Header("必須コンポーネント")]
     [SerializeField] private NavMeshAgent navMeshAgent;
     [SerializeField] public Animator CPUAnimator;
-    [SerializeField] private FootStepController footStepController;
+    [SerializeField] public FootStepController footStepController;
     [SerializeField] public MultiAimConstraint multiAimConstraint;
     // 状態の閾値。この速度より大きければ「歩いている」と判断する
     [Header("設定")]

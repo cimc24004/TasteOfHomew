@@ -7,10 +7,13 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.EventSystems;
+using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization.Components; // ← 【追加】
 
 [DisallowMultipleComponent]
 public class HomeworkQuizController : MonoBehaviour
 {
+    // ... (UI, Feedback, SFX Fields are omitted) ...
     [Header("UI (SetActive 切替)")]
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private Transform choicesRoot;
@@ -18,14 +21,14 @@ public class HomeworkQuizController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI homeWorkBodyText;
 
     [Header("Feedback UI")]
-    [SerializeField] private Image correctFeedbackImage; // 〇画像
-    [SerializeField] private Image wrongFeedbackImage;   // ×画像
+    [SerializeField] private Image correctFeedbackImage; 
+    [SerializeField] private Image wrongFeedbackImage;   
 
     [Header("Feedback Animation Settings")]
-    [SerializeField] private float feedbackDuration = 0.3f; // アニメーション時間
-    [SerializeField] private float correctScaleFactor = 1.5f; // 正解時の拡大倍率
-    [SerializeField] private float wrongScaleFactor = 1.2f;   // 不正解時の拡大倍率
-    [SerializeField] private Ease feedbackEase = Ease.OutBack; // アニメーションのイージング
+    [SerializeField] private float feedbackDuration = 0.3f; 
+    [SerializeField] private float correctScaleFactor = 1.5f; 
+    [SerializeField] private float wrongScaleFactor = 1.2f;  
+    [SerializeField] private Ease feedbackEase = Ease.OutBack; 
 
     [Header("問題セット")]
     [SerializeField] private List<QuizQuestionAsset> questions = new();
@@ -42,7 +45,7 @@ public class HomeworkQuizController : MonoBehaviour
 
     [Header("BGM")]
     [SerializeField] private AudioSource horrorBgmSource;
-    [SerializeField] private float bgmFadeDuration = 1.0f; // BGMのフェードイン・アウト時間
+    [SerializeField] private float bgmFadeDuration = 1.0f; 
 
     [Header("進行")]
     [SerializeField] private bool autoProceedNext = true;
@@ -127,6 +130,7 @@ public class HomeworkQuizController : MonoBehaviour
 
         currentBgmTween?.Kill();
 
+        // --- BGM ロジックは省略 (変更なし) ---
         if (q.horrorDirection)
         {
             if (horrorBgmSource)
@@ -160,12 +164,17 @@ public class HomeworkQuizController : MonoBehaviour
                     });
             }
         }
+        // --- BGM ロジックここまで ---
 
         var dlg = DialogueController.instance;
-        List<DialogueSequenceAsset> dialogueSequenceAssets = dlg.sequenceGroupAssets.Find(g => g.groupKey == questionGroupKey).sequences;
-        homeWorkBodyText.text = dialogueSequenceAssets.Find(s => s.id == q.questionSequenceId).steps[0].text;
+        
+        // ▼▼▼ 【修正】 DialogueController に任せるため、この行を削除またはコメントアウト ▼▼▼
+        // homeWorkBodyText.text = dialogueSequenceAssets.Find(s => s.id == q.questionSequenceId).steps[0].text;
+        // ▲▲▲ 【修正】 ▲▲▲
+
         if (dlg != null && !string.IsNullOrWhiteSpace(q.questionSequenceId))
         {
+            // 問題文の表示 (DialogueControllerが翻訳済みテキストを流してくれる)
             await dlg.StartDialogueAsync(questionGroupKey, q.questionSequenceId);
         }
 
@@ -188,6 +197,7 @@ public class HomeworkQuizController : MonoBehaviour
         }
     }
 
+    // ... (Feedback Images and OnRevealChoicesClicked are omitted) ...
     private void ResetFeedbackImages()
     {
         currentFeedbackTween?.Kill();
@@ -212,18 +222,27 @@ public class HomeworkQuizController : MonoBehaviour
         var q = questions[currentIndex];
         BuildChoices(q);
     }
+    // ... (omitted) ...
 
     private void BuildChoices(QuizQuestionAsset q)
     {
         ClearChoices();
 
-        if (q.choices == null || q.choices.Count == 0)
+        // ▼▼▼ 【移行ロジック】 LocalizedString リストを使うか、古い string リストを使うか判断 ▼▼▼
+        List<LocalizedString> locChoices = q.localizedChoices;
+        List<string> oldChoices = q.choices;
+        
+        bool useLocalized = (locChoices != null && locChoices.Count > 0);
+
+        if (!useLocalized && (oldChoices == null || oldChoices.Count == 0))
         {
             Debug.LogError("[HomeworkQuiz] choices が空");
             return;
         }
+        
+        int count = useLocalized ? locChoices.Count : oldChoices.Count;
 
-        for (int i = 0; i < q.choices.Count; i++)
+        for (int i = 0; i < count; i++)
         {
             var btn = Instantiate(choiceButtonPrefab, choicesRoot);
             if (!btn.gameObject.activeSelf) btn.gameObject.SetActive(true);
@@ -231,8 +250,29 @@ public class HomeworkQuizController : MonoBehaviour
             if (btn.targetGraphic) btn.targetGraphic.raycastTarget = true;
             if(i == 0) 
                 EventSystem.current.SetSelectedGameObject(btn.gameObject);
+            
+            // TextMeshProUGUI と LocalizeStringEvent を取得
             var label = btn.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label) label.text = q.choices[i];
+            var localizeEvent = btn.GetComponentInChildren<LocalizeStringEvent>(true); 
+
+            if (useLocalized)
+            {
+                // New system: LocalizedStringを Localize Event に渡す
+                if (localizeEvent)
+                {
+                    localizeEvent.StringReference = locChoices[i];
+                }
+                else if (label)
+                {
+                    label.text = "[LOCALIZE COMPONENT MISSING]"; // Error fallback
+                }
+            }
+            else
+            {
+                // Old system: 古い string をそのまま代入
+                if (localizeEvent) localizeEvent.StringReference = null; // Localizerを無効化
+                if (label) label.text = oldChoices[i]; // 生の文字列を代入
+            }
 
             int idx = i;
             btn.onClick.AddListener(() => OnClickChoice(idx, btn));
@@ -261,6 +301,8 @@ public class HomeworkQuizController : MonoBehaviour
         var q = questions[currentIndex];
         bool isCorrect = (choiceIndex == q.correctIndex);
         EventSystem.current.SetSelectedGameObject(null);
+        
+        // --- Feedback and SFX logic is omitted (no change) ---
         if (!q.horrorDirection)
         {
             Image targetImage = null;

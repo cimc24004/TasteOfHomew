@@ -1,8 +1,7 @@
-// QuizQuestionAsset.cs
-
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Localization; // ← 【追加】
 
 [CreateAssetMenu(menuName = "Homework/Quiz Question", fileName = "QQA_")]
 public class QuizQuestionAsset : SerializedScriptableObject
@@ -13,7 +12,14 @@ public class QuizQuestionAsset : SerializedScriptableObject
     public string questionSequenceId; // 例: "Q1", "Q2"…（groupは questionGroupKey で共通）
 
     [Header("選択肢（2〜4個程度）")]
+    [Tooltip("移行用：古い文字列データ。このデータは残したままにしてください。")]
     public List<string> choices = new List<string>();
+    
+    // ▼▼▼ 【新しいフィールドを追加】 ▼▼▼
+    [Tooltip("（優先）翻訳が必要な場合にLocalizeキーを割り当てます。")]
+    public List<LocalizedString> localizedChoices = new List<LocalizedString>();
+    // ▲▲▲ 【新しいフィールドを追加】 ▲▲▲
+    
     [Tooltip("正解のインデックス（0始まり）")]
     public int correctIndex = 0;
 
