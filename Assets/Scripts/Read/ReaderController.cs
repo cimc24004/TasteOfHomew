@@ -6,8 +6,10 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.InputSystem; 
 using UnityEngine.EventSystems;
-using UnityEngine.Localization; // ← 【追加】
-using UnityEngine.Localization.Components; // ← 【追加】
+using UnityEngine.Localization; 
+// using UnityEngine.Localization.Components; // ← 【削除】 LocalizeStringEvent はもう使わない
+using Cysharp.Threading.Tasks; 
+using System.Collections.Generic; 
 
 [DisallowMultipleComponent]
 public class ReaderController : Singleton<ReaderController>
@@ -25,13 +27,11 @@ public class ReaderController : Singleton<ReaderController>
 
     [SerializeField] private TextMeshProUGUI pageNumberText;
 
-    // ▼▼▼ 【(3) 追加】 LocalizeStringEvent への参照 ▼▼▼
-    [Header("Localization References (NEW)")]
-    [Tooltip("タイトルのTMPについている Localize String Event")]
-    [SerializeField] private LocalizeStringEvent titleLocalizeEvent;
-    [Tooltip("本文のTMPについている Localize String Event")]
-    [SerializeField] private LocalizeStringEvent bodyLocalizeEvent;
-    // ▲▲▲ 【(3) ここまで】 ▲▲▲
+    // ▼▼▼ 【(1) 削除】 LocalizeStringEvent への参照は不要 ▼▼▼
+    // [Header("Localization References (NEW)")]
+    // [SerializeField] private LocalizeStringEvent titleLocalizeEvent;
+    // [SerializeField] private LocalizeStringEvent bodyLocalizeEvent;
+    // ▲▲▲ 【(1) 削除ここまで】 ▲▲▲
 
     [Title("Navigation")]
     [SerializeField] private Button nextButton;
@@ -39,8 +39,8 @@ public class ReaderController : Singleton<ReaderController>
     [SerializeField] private Button closeButton;
 
     [Tooltip("ボタンではなく『表示用の矢印画像』を隠したい場合に割り当て（未指定ならボタンを隠します）")]
-    [SerializeField] private GameObject nextIndicator;  // 例: Next の Image/矢印GO
-    [SerializeField] private GameObject prevIndicator;  // 例: Prev の Image/矢印GO
+    [SerializeField] private GameObject nextIndicator;  
+    [SerializeField] private GameObject prevIndicator;  
 
     [Title("UI切替")]
     [SerializeField] private UISwitcher uiSwitcher;
@@ -61,9 +61,9 @@ public class ReaderController : Singleton<ReaderController>
     private bool _isCloseAllowed = true; 
 
     private PlayerInput playerInput;
-    private InputAction nextAction;      // 'E'
-    private InputAction prevAction;      // 'Q'
-    private InputAction closeAction;     // 'RightClick' (新規追加)
+    private InputAction nextAction;      
+    private InputAction prevAction;      
+    private InputAction closeAction;     
 
     // ページ情報
     public int TotalPages
@@ -71,10 +71,8 @@ public class ReaderController : Singleton<ReaderController>
         get
         {
             if (_now == null) return 0;
-            // (優先) 新しいリストのカウント
             if (_now.localizedPages != null && _now.localizedPages.Count > 0)
                 return _now.localizedPages.Count;
-            // (フォールバック) 古いリストのカウント
             if (_now.pages != null)
                 return _now.pages.Count;
             return 0;
@@ -132,46 +130,69 @@ public class ReaderController : Singleton<ReaderController>
     {
         if (playerInput == null || playerInput.actions == null) return;
         UnsubscribeInputEvents(); 
-
         nextAction = playerInput.actions.FindAction("E");
         prevAction = playerInput.actions.FindAction("Q");
         closeAction = playerInput.actions.FindAction("RightClick");
-
         if (nextAction != null) nextAction.performed += HandleNextPage;
         else Debug.LogWarning("[ReaderController] 'E' アクションが見つかりません。");
-        
         if (prevAction != null) prevAction.performed += HandlePrevPage;
         else Debug.LogWarning("[ReaderController] 'Q' アクションが見つかりません。");
-        
         if (closeAction != null) closeAction.performed += HandleClose;
         else Debug.LogWarning("[ReaderController] 'RightClick' アクションが見つかりません。");
     }
-
     private void UnsubscribeInputEvents()
     {
         if (nextAction != null) nextAction.performed -= HandleNextPage;
         if (prevAction != null) prevAction.performed -= HandlePrevPage;
         if (closeAction != null) closeAction.performed -= HandleClose;
     }
-    
     private void HandleNextPage(InputAction.CallbackContext context)
     {
         if (_now == null) return;
         TryNextPage();
     }
-
     private void HandlePrevPage(InputAction.CallbackContext context)
     {
         if (_now == null) return;
         PrevPage();
     }
-    
     private void HandleClose(InputAction.CallbackContext context)
     {
         if (_now == null) return;
         Close(false);
     }
     // --- (InputSystem関連ここまで) ---
+
+
+    /// <summary>
+    /// 指定されたReadableAssetの翻訳テキストを非同期ですべてプリロードする
+    /// </summary>
+    public async UniTask PreloadReadableAssetAsync(ReadableAsset asset)
+    {
+        if (asset == null) return;
+        
+        var tasks = new List<UniTask>();
+        
+        // タイトルをロードに追加
+        if (asset.localizedTitle != null && !asset.localizedTitle.IsEmpty)
+        {
+            tasks.Add(asset.localizedTitle.GetLocalizedStringAsync().Task.AsUniTask());
+        }
+        
+        // 全ページをロードに追加
+        if (asset.localizedPages != null)
+        {
+            foreach (var locString in asset.localizedPages)
+            {
+                if (locString != null && !locString.IsEmpty)
+                {
+                    tasks.Add(locString.GetLocalizedStringAsync().Task.AsUniTask());
+                }
+            }
+        }
+        
+        await UniTask.WhenAll(tasks);
+    }
 
 
     [Button("Open(Test)")]
@@ -186,6 +207,10 @@ public class ReaderController : Singleton<ReaderController>
         int start1 = (startPage1 > 0 ? startPage1 : Mathf.Max(1, asset.defaultStartPage));
         _page = (total > 0) ? Mathf.Clamp(start1 - 1, 0, total - 1) : 0;
         _turnSEOverride = overrideTurnSE;
+        
+        // ★UIを表示する前に、テキストをセットする
+        RefreshPage(); 
+        
         if (switchUIOnOpenClose && uiSwitcher) uiSwitcher.SwitchTo(uiKindOnOpen);
 
         SetActive(true);
@@ -193,8 +218,6 @@ public class ReaderController : Singleton<ReaderController>
         AudioClip openSound = (overrideTurnSE != null) ? overrideTurnSE : asset.openSE;
         PlaySE(openSound);
         if (!string.IsNullOrWhiteSpace(asset.id)) _readFlags.Add(asset.id);
-
-        RefreshPage();
     }
 
     public void Close(bool force = false)
@@ -250,7 +273,7 @@ public class ReaderController : Singleton<ReaderController>
     {
         if (!_now) return;
 
-        // ▼▼▼ 【(4) 移行ロジック（ここが最重要）】 ▼▼▼
+        // ▼▼▼ 【(2) 修正】 Localize String Event を使わず、.text に直接書き込む ▼▼▼
 
         // --- (A) 新しい LocalizedString を取得試行 ---
         LocalizedString locTitle = _now.localizedTitle;
@@ -269,45 +292,37 @@ public class ReaderController : Singleton<ReaderController>
         }
 
         // --- (C) タイトルの適用 ---
-        if (titleLocalizeEvent)
+        if (titleText) 
         {
             // (優先) 新しい LocalizedString が設定されていれば、それを使う
             if (locTitle != null && !locTitle.IsEmpty)
             {
-                titleLocalizeEvent.StringReference = locTitle;
+                // Preload済みなので、キャッシュから同期的に文字列を取得する
+                titleText.text = locTitle.GetLocalizedString(); 
             }
             else
             {
-                // (フォールバック) 新しいのが空なら、古い string を直接表示（翻訳されない）
-                titleLocalizeEvent.StringReference = null; // LocalizeEvent を無効化
-                if (titleText) titleText.text = oldTitle; // 古い text に戻す
+                // (フォールバック) 古い string を直接表示
+                titleText.text = oldTitle; 
             }
-        }
-        else if(titleText)
-        {
-             titleText.text = oldTitle; // LocalizeEventが未設定なら古い方だけ使う
         }
 
         // --- (D) 本文の適用 ---
-        if (bodyLocalizeEvent)
+        if (bodyText)
         {
             // (優先) 新しい LocalizedString が設定されていれば、それを使う
             if (locText != null && !locText.IsEmpty)
             {
-                bodyLocalizeEvent.StringReference = locText;
+                // Preload済みなので、キャッシュから同期的に文字列を取得する
+                bodyText.text = locText.GetLocalizedString();
             }
             else
             {
-                // (フォールバック) 新しいのが空なら、古い string を直接表示（翻訳されない）
-                bodyLocalizeEvent.StringReference = null; // LocalizeEvent を無効化
-                if (bodyText) bodyText.text = oldText; // 古い text に戻す
+                // (フォールバック) 古い string を直接表示
+                bodyText.text = oldText; 
             }
         }
-        else if (bodyText)
-        {
-             bodyText.text = oldText; // LocalizeEventが未設定なら古い方だけ使う
-        }
-        // ▲▲▲ 【(4) 移行ロジックここまで】 ▲▲▲
+        // ▲▲▲ 【(2) 修正ここまで】 ▲▲▲
         
         
         var bg = GetSpriteSafely(_now.backgroundImages, _page);
@@ -319,7 +334,7 @@ public class ReaderController : Singleton<ReaderController>
         bool hasPrev = TotalPages > 0 && _page > 0;
         bool hasNext = TotalPages > 0 && _page < TotalPages - 1;
         
-        _isCloseAllowed = true; // デフォルトは許可 (リストにないページなど)
+        _isCloseAllowed = true; 
         if (_now.showCloseButtonOnPages != null && _page >= 0 && _page < _now.showCloseButtonOnPages.Count)
         {
             _isCloseAllowed = _now.showCloseButtonOnPages[_page];
