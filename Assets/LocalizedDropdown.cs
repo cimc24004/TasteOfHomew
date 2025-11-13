@@ -96,8 +96,15 @@ public class LocalizedDropdown : MonoBehaviour
         // m_Dropdown が破棄されている可能性をチェック
         if (m_Dropdown == null) return; 
 
+        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+        
+        // 1. 現在の選択インデックスを記憶する
+        int previousValue = m_Dropdown.value;
+
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
         m_Dropdown.interactable = false;
-        m_Dropdown.ClearOptions();
+        m_Dropdown.ClearOptions(); // (ここで value が 0 にリセットされる)
 
         var optionDataList = new List<TMP_Dropdown.OptionData>();
         
@@ -114,6 +121,23 @@ public class LocalizedDropdown : MonoBehaviour
         if (m_Dropdown == null) return;
 
         m_Dropdown.AddOptions(optionDataList);
+        
+        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
+
+        // 2. 記憶しておいたインデックスを復元する
+        //    (ただし、リストの範囲内に収まるように)
+        if (previousValue >= 0 && previousValue < m_Dropdown.options.Count)
+        {
+            m_Dropdown.value = previousValue;
+        }
+        else
+        {
+            // 範囲外だった場合は 0 にしておく
+            m_Dropdown.value = 0;
+        }
+        
+        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
+
         m_Dropdown.interactable = true;
     }
 
@@ -128,15 +152,17 @@ public class LocalizedDropdown : MonoBehaviour
     {
         if (m_Dropdown == null) return;
 
+        // ▼▼▼ ★★★ (エディタ側も同様に修正) ★★★ ▼▼▼
+        // 1. 現在の選択インデックスを記憶する
+        int previousValue = m_Dropdown.value;
+        // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
+
         m_Dropdown.interactable = false;
         m_Dropdown.ClearOptions();
 
         var optionDataList = new List<TMP_Dropdown.OptionData>();
 
-        // ▼▼▼ ★★★ (ここが正しい実装) ★★★ ▼▼▼
-
         // (1) エディタ上で現在選択されているロケール（言語）を取得
-        // (Localization Scene Controls ウィンドウがこの値を変更する)
         var selectedLocale = LocalizationSettings.SelectedLocale;
 
         // (2) もしロケールが取得できなければ（初期化中など）、プロジェクトのデフォルトを試す
@@ -173,9 +199,20 @@ public class LocalizedDropdown : MonoBehaviour
             }
         }
 
+        m_Dropdown.AddOptions(optionDataList);
+
+        // ▼▼▼ ★★★ (エディタ側も同様に修正) ★★★ ▼▼▼
+        // 2. 記憶しておいたインデックスを復元する
+        if (previousValue >= 0 && previousValue < m_Dropdown.options.Count)
+        {
+            m_Dropdown.value = previousValue;
+        }
+        else
+        {
+            m_Dropdown.value = 0;
+        }
         // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
-        m_Dropdown.AddOptions(optionDataList);
         m_Dropdown.interactable = true;
 
         // (4) エディタのUIに変更を通知し、シーンビューを更新する
