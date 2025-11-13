@@ -1,49 +1,33 @@
 # translate.py
 # (Assets/Python/translate.py に保存)
-# ★ Base64 デコードを復活
+# ★ ワークフロー変更
+# C#から来たデータに、翻訳用の空キー (englishText, etc.) を追加し、
+# 整形して C# に返す
 
 import sys
 import json
-import base64 # (Base64を使うために必要)
+import base64 
 
 def main():
     try:
-        # --- ▼▼▼ Base64デコードを復活 ▼▼▼ ---
-        # C#の StandardInput.Write() から「Base64文字列」を受け取る
+        # 1. C#から Base64 データを受け取り、デコードする
         base64_data = sys.stdin.read()
-        
-        # Base64データをデコード
         json_data = base64.b64decode(base64_data).decode('utf-8')
-        # --- ▲▲▲ ---
-        
-        # JSONをパース
         request = json.loads(json_data)
         
-        response = {"results": []}
-
-        # 各アイテムを処理
+        # 2. C#から来た「日本語の表」 (request["items"]) をループ処理
+        
         for item in request["items"]:
-            ja_text = item["japaneseText"]
-            
-            # (ダミー翻訳)
-            
-            if "\n" in ja_text:
-                zh_text = ja_text + " [zh-Hans]\n(translated)"
-                ko_text = ja_text + " [ko]\n(translated)"
-            else:
-                zh_text = ja_text + " [zh-Hans]"
-                ko_text = ja_text + " [ko]"
-
-            # 結果をレスポンスに追加
-            response["results"].append({
-                "collectionGUID": item["collectionGUID"],
-                "key": item["key"],
-                "chineseText": zh_text,
-                "koreanText": ko_text
-            })
-
-        # C#側はこれを受け取る (ensure_ascii=False が重要)
-        print(json.dumps(response, ensure_ascii=False))
+            # 3. ★ご要望の、翻訳用の「空のキー」を追加する
+            item["englishText"] = ""
+            item["chineseText"] = ""
+            item["koreanText"] = ""
+        
+        # 4. C# に「キーが追加された表」を、読みやすく整形(indent)して返す
+        #    C#側はこれをファイルに保存する
+        
+        # indent=2 をつけることで、見やすいJSONファイルになる
+        print(json.dumps(request, ensure_ascii=False, indent=2))
 
     except Exception as e:
         # C#側でエラーが読み取れるように、エラーメッセージを標準エラー出力(stderr)に書き出す
