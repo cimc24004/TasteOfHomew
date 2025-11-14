@@ -108,10 +108,7 @@ public class CrossHairController : Singleton<CrossHairController>
                 // ▼▼▼ ★★★ (これが正しいロジック) ★★★ ▼▼▼
                 
                 // (A) 「翻訳が必要なクラス」かどうかを「型」で判定する
-                bool needsLocalization = 
-                    (interactable is NpcDialogueCaller) || 
-                    (interactable is ReadablePickup) || 
-                    (interactable is KeyPickup);
+                bool needsLocalization = true;
                     // (↑ 今後、常に翻訳が必要なクラスが増えたら、ここに追加する)
 
                 if (string.IsNullOrEmpty(displayString))
