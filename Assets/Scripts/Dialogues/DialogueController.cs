@@ -432,7 +432,7 @@ public class DialogueController : Singleton<DialogueController>
         }
         return false;
     }
-    private bool TryGetSequence(string groupKey, string seqId, out DialogueSequenceAsset asset)
+    public bool TryGetSequence(string groupKey, string seqId, out DialogueSequenceAsset asset)
     {
         asset = null;
         if (string.IsNullOrWhiteSpace(groupKey) || string.IsNullOrWhiteSpace(seqId)) return false;

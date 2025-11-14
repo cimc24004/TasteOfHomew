@@ -169,7 +169,8 @@ public class HomeworkQuizController : MonoBehaviour
         var dlg = DialogueController.instance;
         
         // ▼▼▼ 【修正】 DialogueController に任せるため、この行を削除またはコメントアウト ▼▼▼
-        // homeWorkBodyText.text = dialogueSequenceAssets.Find(s => s.id == q.questionSequenceId).steps[0].text;
+        dlg.TryGetSequence(questionGroupKey, q.questionSequenceId, out var seqAsset);
+        homeWorkBodyText.text = seqAsset.steps[0].text;
         // ▲▲▲ 【修正】 ▲▲▲
 
         if (dlg != null && !string.IsNullOrWhiteSpace(q.questionSequenceId))
