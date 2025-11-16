@@ -266,126 +266,133 @@ public class DialogueController : Singleton<DialogueController>
     // ... (Core RunSequenceAsync is unchanged, uses await localization) ...
     private async UniTask RunSequenceAsync(int runId, string groupKey, string seqId, CancellationToken token, int hop, int startStepIndex)
     {
-        if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
-        {
-            Debug.LogWarning($"[DialogueController] '{groupKey}:{seqId}' が見つからない/空です。");
-            return;
-        }
-        int start = Mathf.Clamp(startStepIndex, 0, seq.steps.Count - 1);
-        for (int i = start; i < seq.steps.Count; i++)
-        {
-            token.ThrowIfCancellationRequested();
-            ThrowIfStale(runId);
-            var step = seq.steps[i];
-            if (!CheckConditions(step.conditions)) continue;
-            if (hop < MaxGotoHops && step.useStepGoto && !string.IsNullOrWhiteSpace(step.stepGotoId))
-            {
-                if (!TryParseTarget(step.stepGotoId.Trim(), groupKey, out string ng, out string ns, out int nStep))
-                {
-                    Debug.LogWarning($"[DialogueController] step goto 解析失敗 '{step.stepGotoId}'");
-                    return;
-                }
-                if (!TryGetSequence(ng, ns, out _))
-                {
-                    Debug.LogWarning($"[DialogueController] step goto '{step.stepGotoId}' が見つかりません。");
-                    return;
-                }
-                await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
-                return;
-            }
-            if (step.flagEditsOnEnter != null)
-                foreach (var e in step.flagEditsOnEnter)
-                    if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
-            
-            bool hasSpeaker = (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty) || !string.IsNullOrWhiteSpace(step.speaker);
-            bool hasBody = (step.localizedText != null && !step.localizedText.IsEmpty) || !string.IsNullOrWhiteSpace(step.text);
-            bool hasChoices = step.choices != null && step.choices.Count > 0;
+        if (!TryGetSequence(groupKey, seqId, out var seq) || seq.steps == null || seq.steps.Count == 0)
+        {
+            Debug.LogWarning($"[DialogueController] '{groupKey}:{seqId}' が見つからない/空です。");
+            return;
+        }
+        int start = Mathf.Clamp(startStepIndex, 0, seq.steps.Count - 1);
+        for (int i = start; i < seq.steps.Count; i++)
+        {
+            token.ThrowIfCancellationRequested();
+            ThrowIfStale(runId);
+            var step = seq.steps[i];
+            if (!CheckConditions(step.conditions)) continue;
+            if (hop < MaxGotoHops && step.useStepGoto && !string.IsNullOrWhiteSpace(step.stepGotoId))
+            {
+                if (!TryParseTarget(step.stepGotoId.Trim(), groupKey, out string ng, out string ns, out int nStep))
+                {
+                    Debug.LogWarning($"[DialogueController] step goto 解析失敗 '{step.stepGotoId}'");
+                    return;
+                }
+                if (!TryGetSequence(ng, ns, out _))
+                {
+                    Debug.LogWarning($"[DialogueController] step goto '{step.stepGotoId}' が見つかりません。");
+                    return;
+                }
+                await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
+                return;
+            }
+            if (step.flagEditsOnEnter != null)
+                foreach (var e in step.flagEditsOnEnter)
+                    if (!string.IsNullOrWhiteSpace(e.key)) SetFlag(e.key, e.value);
+            
+            bool hasSpeaker = (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty) || !string.IsNullOrWhiteSpace(step.speaker);
+            bool hasBody = (step.localizedText != null && !step.localizedText.IsEmpty) || !string.IsNullOrWhiteSpace(step.text);
+            bool hasChoices = step.choices != null && step.choices.Count > 0;
 
-            if (_currentUIRefs.speakerText)
-            {
-                ThrowIfStale(runId);
-                if (hasSpeaker)
-                {
-                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
-                    
-                    string speakerText;
-                    if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
-                    {
-                        speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(token);
-                    }
-                    else
-                    {
-                        speakerText = step.speaker; 
-                    }
-                    _currentUIRefs.speakerText.text = ParseDialogueText(speakerText);
-                    
-                    _currentUIRefs.speakerText.enabled = true;
-                }
-                else if (!hasBody && hasChoices) { }
-                else
-                {
-                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
-                    _currentUIRefs.speakerText.text = "";
-                    _currentUIRefs.speakerText.enabled = false;
-                }
-            }
-            
-            string rawBodyText;
-            if (step.localizedText != null && !step.localizedText.IsEmpty)
-            {
-                rawBodyText = await step.localizedText.GetLocalizedStringAsync(token);
-            }
-            else
-            {
-                rawBodyText = step.text; 
-            }
-            string parsedBodyText = ParseDialogueText(rawBodyText);
-            
-            if (hasBody)
-            {
-                await TypeTextAsync(runId, parsedBodyText, token);
-            }
-            else if (hasChoices)
-            {
-                if (_currentUIRefs.dialogueBox && !_currentUIRefs.dialogueBox.activeSelf)
-                {
-                    _currentUIRefs.dialogueBox.SetActive(true);
-                }
-            }
-            else
-            {
-                await TypeTextAsync(runId, rawBodyText, token); 
-            }
+            if (_currentUIRefs.speakerText)
+            {
+                ThrowIfStale(runId);
+                if (hasSpeaker)
+                {
+                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(true);
+                    
+                    string speakerText;
+                    if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
+                    {
+                        // ▼▼▼ 【修正点 1】 ▼▼▼
+                        // SmartFormat が #{...} を壊さないよう、Arguments を null にして無効化する
+                        step.localizedSpeaker.Arguments = null;
+                        speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(token);
+                        // ▲▲▲ 【修正点 1】 ▲▲▲
+                    }
+                    else
+                    {
+                        speakerText = step.speaker; 
+                    }
+                    _currentUIRefs.speakerText.text = ParseDialogueText(speakerText);
+                    
+                    _currentUIRefs.speakerText.enabled = true;
+                }
+                else if (!hasBody && hasChoices) { }
+                else
+                {
+                    if (_currentUIRefs.speakerBox) _currentUIRefs.speakerBox.SetActive(false);
+                    _currentUIRefs.speakerText.text = "";
+                    _currentUIRefs.speakerText.enabled = false;
+                }
+            }
+            
+            string rawBodyText;
+            if (step.localizedText != null && !step.localizedText.IsEmpty)
+            {
+                // ▼▼▼ 【修正点 2】 ▼▼▼
+                // SmartFormat が #{...} を壊さないよう、Arguments を null にして無効化する
+                step.localizedText.Arguments = null; 
+                rawBodyText = await step.localizedText.GetLocalizedStringAsync(token);
+                // ▲▲▲ 【修正点 2】 ▲▲▲
+            }
+            else
+            {
+                rawBodyText = step.text; 
+            }
+            string parsedBodyText = ParseDialogueText(rawBodyText);
+            
+            if (hasBody)
+            {
+                await TypeTextAsync(runId, parsedBodyText, token);
+            }
+            else if (hasChoices)
+            {
+                if (_currentUIRefs.dialogueBox && !_currentUIRefs.dialogueBox.activeSelf)
+                {
+                    _currentUIRefs.dialogueBox.SetActive(true);
+                }
+            }
+            else
+            {
+                await TypeTextAsync(runId, rawBodyText, token); 
+            }
 
-            ThrowIfStale(runId);
-            
-            if (hasChoices)
-            {
-                string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
-                ThrowIfStale(runId);
-                if (gotoRaw == null) return;
-                if (!TryParseTarget(gotoRaw.Trim(), groupKey, out string ng, out string ns, out int nStep))
-                {
-                    Debug.LogWarning($"[DialogueController] choice goto 解析失敗 '{gotoRaw}'");
-                    return;
-                }
-                if (!TryGetSequence(ng, ns, out _))
-                {
-                    Debug.LogWarning($"[DialogueController] goto '{gotoRaw}' が見つかりません。");
-                    return;
-                }
-                await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
-                return;
-            }
-            else
-            {
-                if (step.autoNext) await DelaySmartAsync(step.autoNextDelay, token);
-                else await WaitAdvanceAsync(runId, token);
-                ThrowIfStale(runId);
-            }
-        }
-    }
-
+            ThrowIfStale(runId);
+            
+            if (hasChoices)
+            {
+                string gotoRaw = await ShowChoicesAndWaitAsync(runId, step.choices, token);
+                ThrowIfStale(runId);
+                if (gotoRaw == null) return;
+                if (!TryParseTarget(gotoRaw.Trim(), groupKey, out string ng, out string ns, out int nStep))
+                {
+                    Debug.LogWarning($"[DialogueController] choice goto 解析失敗 '{gotoRaw}'");
+                    return;
+                }
+                if (!TryGetSequence(ng, ns, out _))
+                {
+                    Debug.LogWarning($"[DialogueController] goto '{gotoRaw}' が見つかりません。");
+                    return;
+                }
+                await RunSequenceAsync(runId, ng, ns, token, hop + 1, Mathf.Max(0, nStep - 1));
+                return;
+            }
+            else
+            {
+                if (step.autoNext) await DelaySmartAsync(step.autoNextDelay, token);
+                else await WaitAdvanceAsync(runId, token);
+                ThrowIfStale(runId);
+            }
+        }
+    }
     // ... (CheckConditions, TryParseTarget, TryGetSequence are unchanged) ...
     private bool CheckConditions(List<FlagCondition> conds)
     {
@@ -715,45 +722,53 @@ public class DialogueController : Singleton<DialogueController>
     }
 
     private async UniTaskVoid ShowBriefLocalizedStepAsync(DialogueUIRefs uiRefs, DialogueStep step, float duration)
-    {
-        if (step == null)
-        {
-            ShowBriefMessage(uiRefs, "", "", duration);
-            return;
-        }
+    {
+        if (step == null)
+        {
+            ShowBriefMessage(uiRefs, "", "", duration);
+            return;
+        }
 
-        string speakerText;
-        string bodyText;
+        string speakerText;
+        string bodyText;
 
-        // 1. Localized Speaker 解決
-        if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
-        {
-            // このメソッドは .Forget() されるので、CancellationToken.None を使う
-            speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(CancellationToken.None);
-        }
-        else
-        {
-            speakerText = step.speaker; // フォールバック
-        }
+        // 1. Localized Speaker 解決
+        if (step.localizedSpeaker != null && !step.localizedSpeaker.IsEmpty)
+        {
+            // ▼▼▼ 【修正点 3】 ▼▼▼
+            // SmartFormat が #{...} を壊さないよう、Arguments を null にして無効化する
+            step.localizedSpeaker.Arguments = null;
+            // このメソッドは .Forget() されるので、CancellationToken.None を使う
+            speakerText = await step.localizedSpeaker.GetLocalizedStringAsync(CancellationToken.None);
+            // ▲▲▲ 【修正点 3】 ▲▲▲
+        }
+        else
+        {
+            speakerText = step.speaker; // フォールバック
+        }
 
-        // 2. Localized Body 解決
-        if (step.localizedText != null && !step.localizedText.IsEmpty)
-        {
-            bodyText = await step.localizedText.GetLocalizedStringAsync(CancellationToken.None);
-        }
-        else
-        {
-            bodyText = step.text; // フォールバック
-        }
+        // 2. Localized Body 解決
+        if (step.localizedText != null && !step.localizedText.IsEmpty)
+        {
+            // ▼▼▼ 【修正点 4】 ▼▼▼
+            // SmartFormat が #{...} を壊さないよう、Arguments を null にして無効化する
+  	        step.localizedText.Arguments = null;
+            bodyText = await step.localizedText.GetLocalizedStringAsync(CancellationToken.None);
+            // ▲▲▲ 【修正点 4】 ▲▲▲
+        }
+        else
+        {
+            bodyText = step.text; // フォールバック
+        }
 
-        // 3. 翻訳済みテキストで BriefMessage を呼び出す
-        ShowBriefMessage(
-            uiRefs,
-            ParseDialogueText(speakerText), 
-            ParseDialogueText(bodyText),    
-            duration
-        );
-    }
+        // 3. 翻訳済みテキストで BriefMessage を呼び出す
+        ShowBriefMessage(
+            uiRefs,
+            ParseDialogueText(speakerText), 
+            ParseDialogueText(bodyText),    
+            duration
+        );
+    }
     // ▲▲▲ 【(1) 追加ここまで】 ▲▲▲
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
