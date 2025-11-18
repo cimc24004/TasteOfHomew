@@ -1,6 +1,7 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
 using UnityEngine.Animations.Rigging;
+using UnityEngine.Localization;
 
 public class KeyPickup : SerializedMonoBehaviour, IInteractable
 {
@@ -13,6 +14,8 @@ public class KeyPickup : SerializedMonoBehaviour, IInteractable
     public AudioClip pickupClip;
 
     private AudioSource _audio;
+    [SerializeField]
+    private string key_pickup_interact_localize_key = "ui_interact_key_get";
 
     void Start()
     {
@@ -42,7 +45,7 @@ public class KeyPickup : SerializedMonoBehaviour, IInteractable
 
     public string GetDisplayText()
     {
-        return $"鍵を拾う";
+        return key_pickup_interact_localize_key;
     }
 
     public bool ShouldHighlight() => true;

@@ -116,7 +116,8 @@ public class CrossHairController : Singleton<CrossHairController>
                     // (1) 文字列が空なら、常に非表示
                     if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null;
                     if (promptText) promptText.text = ""; 
-                    playerUIInfo.InteractBox.SetActive(false);
+                    // playerUIInfo.InteractBox.SetActive(false);
+                    playerUIInfo.InteractBoxCanvasGroup.alpha = 0.0f;
                 }
                 else if (needsLocalization)
                 {
@@ -126,7 +127,8 @@ public class CrossHairController : Singleton<CrossHairController>
                     {
                         promptLocalizeEvent.StringReference.TableReference = defaultInteractTableName;
                         promptLocalizeEvent.StringReference.TableEntryReference = displayString; // "ui_interact_talk"
-                        playerUIInfo.InteractBox.SetActive(true);
+                        // playerUIInfo.InteractBox.SetActive(true);
+                        playerUIInfo.InteractBoxCanvasGroup.alpha = 1f;
                     }
                 }
                 else
@@ -141,7 +143,8 @@ public class CrossHairController : Singleton<CrossHairController>
                     {
                         promptText.text = displayString; // "fawfwafaw" をそのまま表示
                     }
-                    playerUIInfo.InteractBox.SetActive(true);
+                    // playerUIInfo.InteractBox.SetActive(true);
+                    playerUIInfo.InteractBoxCanvasGroup.alpha = 1f;
                 }
                 
                 // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
@@ -170,17 +173,19 @@ public class CrossHairController : Singleton<CrossHairController>
              promptLocalizeEvent.StringReference.TableEntryReference = null; // キーをクリア
         }
         if (promptText) promptText.text = "";
-        if (playerUIInfo.InteractBox.activeSelf) playerUIInfo.InteractBox.SetActive(false);
+        if (playerUIInfo.InteractBox.activeSelf)  playerUIInfo.InteractBoxCanvasGroup.alpha = 0f;
+
         currentInteractable = null;
     }
 
     void SetHighlight(bool on)
     {
-        if (isHighlight == on) return;
+        // if (isHighlight == on) return;
         isHighlight = on;
         if (crosshairAnimator)
         {
             crosshairAnimator.SetBool("HighLight", isHighlight);
         }
     }
+
 }

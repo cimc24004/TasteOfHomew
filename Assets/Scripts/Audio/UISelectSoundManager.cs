@@ -48,10 +48,14 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
         submitAction.performed += OnSubmitPressed;
         clickAction.performed += OnSubmitPressed;
     }
+// ★ここが修正ポイント：オブジェクト破棄時にイベントを解除する
     void OnDestroy()
     {
-        Debug.Log("削除されます UISelectSoundManager" + SceneManager.GetActiveScene().name + "");
+        // イベントの解除 ( -= ) を忘れると、死んだ後に呼ばれてエラーになる
+        if (submitAction != null) submitAction.performed -= OnSubmitPressed;
+        if (clickAction != null) clickAction.performed -= OnSubmitPressed;
 
+        Debug.Log("削除されます UISelectSoundManager: " + SceneManager.GetActiveScene().name);
     }
     void Update()
     {

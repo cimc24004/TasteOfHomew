@@ -1,20 +1,33 @@
 using UnityEngine;
 using System; // Exceptionクラスのために必要
-
+using Sirenix.OdinInspector;
 /// <summary>
 /// PlayerPrefs を使った汎用セーブ・ロードコントローラー
 /// 継承元（Singleton<T>）がシングルトンとDontDestroyOnLoadを管理することを前提としています。
 /// </summary>
 public class SaveDataBaseController : Singleton<SaveDataBaseController> 
-    // public class SaveDataBaseController : MonoBehaviour から変更
 {
-    // --- シングルトン管理 ---
-    // 継承元の Singleton<T> が Instance プロパティと
-    // Awake() でのインスタンス管理（DontDestroyOnLoadも含む）を
-    // 行うため、このクラスでの実装はすべて不要。
-    
+    void Start()
+    {
+        DontDestroyOnLoad(this.gameObject);
+    }
     // --- セーブ（基本データ型） ---
+    [Button("【Debug】保存済みデータの確認 (JSON表示)", ButtonSizes.Large)]
+    public void DebugPrintSavedData()
+    {
+        // PhaseStepControllerで使っているキーと同じもの
+        string key = "PhaseStepController_VisitedHistory";
 
+        if (PlayerPrefs.HasKey(key))
+        {
+            string json = PlayerPrefs.GetString(key);
+            Debug.Log($"<color=cyan>【保存データあり】</color>\nKey: {key}\nJSON: {json}");
+        }
+        else
+        {
+            Debug.LogError($"<color=red>【データなし】</color>\nKey: '{key}' はまだ保存されていません。");
+        }
+    }
     public void SaveInt(string key, int value)
     {
         PlayerPrefs.SetInt(key, value);

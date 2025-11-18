@@ -2,14 +2,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DG.Tweening; // DOTweenを使用しているため
-using UnityEngine.EventSystems; // EventSystemを使用しているため
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
+using System.Linq; // EventSystemを使用しているため
 
-public class GameStartMenuController : MonoBehaviour
+public class GameStartMenuController : Singleton<GameStartMenuController>
 {
     [SerializeField] private Button QuitGameButton;
     [SerializeField] private Button GameStartFromBeginButton;
     [SerializeField] private Button GameContinueButton;
-    [SerializeField] private Button ContinueToTopBackButton;
+    [SerializeField] public Button ContinueToTopBackButton;
     [SerializeField] private Button SettingButton;
     [SerializeField] private Button CreditButton;
 
@@ -23,7 +25,7 @@ public class GameStartMenuController : MonoBehaviour
     private UIFlowManager uIFlowManager;
     private ConfigController configController;
     private ConfigMenuUIController configMenuUIController;
-
+    private ContinueController continueController;
     void Start()
     {
         // --- 参照の取得 ---
@@ -31,7 +33,7 @@ public class GameStartMenuController : MonoBehaviour
         sceneManagerController = SceneManagerController.Instance;
         configController = ConfigController.instance;
         configMenuUIController = ConfigMenuUIController.instance;
-
+        continueController = ContinueController.instance;
         // --- メニューの初期状態を設定 ---
         // スタートメニューは表示
         StartNavMenuCanvasGroup.alpha = 1;
@@ -65,15 +67,27 @@ public class GameStartMenuController : MonoBehaviour
         GameContinueButton.onClick.AddListener(() =>
         {
             // スタートメニューを操作不可に
-            StartNavMenuCanvasGroup.interactable = false;
+            StartNavMenuCanvasGroup.interactable = true;
             StartNavMenuCanvasGroup.blocksRaycasts = false;
             // コンティニューメニューへ切り替え
             uIFlowManager.SwitchToPanel("ContinueMenu");
+           Dictionary<Button, ContinueController.ContinueData>.KeyCollection continueSlotsKeys = continueController.continueSlots.Keys;
+           continueSlotsKeys.First();
+            if (continueSlotsKeys.First().interactable)
+            {
+                continueSlotsKeys.First().Select();
+            }
+            else
+            {
+                ContinueToTopBackButton.Select();
+            }
+           continueController.SetupContinueButtons();
         });
 
         // 「トップへ戻る」ボタン（スタートメニューを表示）
         ContinueToTopBackButton.onClick.AddListener(() =>
         {
+            
             // コンティニューメニューを操作不可に
             ContinueMenuCanvasGroup.interactable = false;
             ContinueMenuCanvasGroup.blocksRaycasts = false;

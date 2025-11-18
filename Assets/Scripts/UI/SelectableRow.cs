@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems; // EventTrigger のために必要
+using UnityEngine.EventSystems;
 using TMPro;
-using System.Collections; // ★ コルーチン (IEnumerator) のために復活
+using System.Collections;
 
 /// <summary>
 /// UIの「行」を管理するコンポーネント。
@@ -10,7 +10,6 @@ using System.Collections; // ★ コルーチン (IEnumerator) のために復�
 /// </summary>
 public class SelectableRow : MonoBehaviour
 {
-    // ... (SerializeField などの変数は変更なし) ...
     [Header("UI References")]
     [Tooltip("選択時に色を変えるテキスト (必須)")]
     [SerializeField]
@@ -32,9 +31,16 @@ public class SelectableRow : MonoBehaviour
     private TMP_Dropdown childDropdown; 
     private Coroutine checkDeselectionCoroutine; 
 
+    // ▼▼▼ ★★★ 追加: 有効化された瞬間に色をチェックする ★★★ ▼▼▼
+    private void OnEnable()
+    {
+        // パネルが表示された瞬間、もし自分が選択済みなら色を白にする
+        UpdateColorState();
+    }
+    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
+
     private void OnDisable()
     {
-        // (この関数は変更なし)
         if (checkDeselectionCoroutine != null)
         {
             StopCoroutine(checkDeselectionCoroutine);
@@ -48,7 +54,6 @@ public class SelectableRow : MonoBehaviour
 
     void Start()
     {
-        // ( ... 1. uiSelectableのnullチェック ... )
         if (uiSelectable == null)
         {
             Debug.LogWarning("uiSelectable が " + gameObject.name + " に設定されていません。", this);
@@ -59,47 +64,66 @@ public class SelectableRow : MonoBehaviour
             return;
         }
 
-        // ( ... Dropdownのキャッシュ ... )
         childDropdown = uiSelectable.GetComponent<TMP_Dropdown>();
 
-        // ( ... 2. EventTriggerの取得/追加 ... )
+        // EventTriggerの取得/追加
         EventTrigger trigger = uiSelectable.gameObject.GetComponent<EventTrigger>();
         if (trigger == null)
         {
             trigger = uiSelectable.gameObject.AddComponent<EventTrigger>();
         }
 
-        // ( ... 3. 「選択 (Select)」イベント ... )
+        // 「選択 (Select)」イベント
         EventTrigger.Entry selectEntry = new EventTrigger.Entry();
         selectEntry.eventID = EventTriggerType.Select;
         selectEntry.callback.AddListener((eventData) => { HandleChildSelect(); });
         
-        // ( ... 4. 「選択解除 (Deselect)」イベント ... )
+        // 「選択解除 (Deselect)」イベント
         EventTrigger.Entry deselectEntry = new EventTrigger.Entry();
         deselectEntry.eventID = EventTriggerType.Deselect;
         deselectEntry.callback.AddListener((eventData) => { HandleChildDeselect(); });
 
-        // ▼▼▼ ★★★ 5. 「ハイライト (PointerEnter)」イベントのエントリーを作成 ★★★ ▼▼▼
+        // 「ハイライト (PointerEnter)」イベント
         EventTrigger.Entry pointerEnterEntry = new EventTrigger.Entry();
         pointerEnterEntry.eventID = EventTriggerType.PointerEnter;
-        // ハイライト時に HandleChildPointerEnter メソッドを呼ぶように登録
         pointerEnterEntry.callback.AddListener((eventData) => { HandleChildPointerEnter(); });
-        // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
 
-
-        // 6. 作成したエントリーを EventTrigger に追加
+        // エントリーを追加
         trigger.triggers.Add(selectEntry);
         trigger.triggers.Add(deselectEntry);
-        trigger.triggers.Add(pointerEnterEntry); // ★追加
+        trigger.triggers.Add(pointerEnterEntry);
 
-        // ( ... 7. 初期色の設定 ... )
-        if (labelText != null)
-        {
-            labelText.color = normalColor;
-        }
+        // ▼▼▼ ★★★ 変更: 初期色の設定を修正 ★★★ ▼▼▼
+        // 単純に normalColor を入れるのではなく、今の状態を見て決める
+        UpdateColorState();
+        // ▲▲▲ ★★★ 変更ここまで ★★★ ▲▲▲
     }
 
-    // ▼▼▼ ★★★ この関数を新しく追加 ★★★ ▼▼▼
+    // ▼▼▼ ★★★ 追加: 現在の状態に合わせて色を適用するヘルパー関数 ★★★ ▼▼▼
+    /// <summary>
+    /// 現在のEventSystemの選択状態を確認して、テキストの色を初期化する
+    /// (StartやOnEnableのタイミングで、コントローラーによって既に選択されている可能性があるため)
+    /// </summary>
+    private void UpdateColorState()
+    {
+        if (labelText == null) return;
+
+        bool isSelected = false;
+
+        // EventSystem上で、このオブジェクトが現在選択されているかチェック
+        if (EventSystem.current != null && uiSelectable != null)
+        {
+            if (EventSystem.current.currentSelectedGameObject == uiSelectable.gameObject)
+            {
+                isSelected = true;
+            }
+        }
+
+        // 選択されていれば白、そうでなければグレー
+        labelText.color = isSelected ? selectedColor : normalColor;
+    }
+    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
+
     /// <summary>
     /// 子のUI (uiSelectable) がハイライトされた時 (マウスが乗った時) に呼ばれる
     /// </summary>
@@ -108,17 +132,14 @@ public class SelectableRow : MonoBehaviour
         // ★ここに「ハイライト時の音」を鳴らす処理を書く★
         // 例: SoundManager.Instance.PlayUISound(SoundType.UI_Highlight);
         
-        Debug.Log(gameObject.name + " がハイライトされました。");
+        // Debug.Log(gameObject.name + " がハイライトされました。");
     }
-    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
-
 
     /// <summary>
     /// 子のUI (uiSelectable) が選択された時に EventTrigger から呼ばれる
     /// </summary>
     public void HandleChildSelect()
     {
-        // (変更なし)
         if (checkDeselectionCoroutine != null)
         {
             StopCoroutine(checkDeselectionCoroutine);
@@ -139,7 +160,6 @@ public class SelectableRow : MonoBehaviour
     /// </summary>
     public void HandleChildDeselect()
     {
-        // (変更なし)
         if (checkDeselectionCoroutine != null)
         {
             StopCoroutine(checkDeselectionCoroutine);
@@ -147,13 +167,11 @@ public class SelectableRow : MonoBehaviour
         checkDeselectionCoroutine = StartCoroutine(CheckDeselectionRoutine());
     }
 
-
     /// <summary>
     /// 1フレーム待ってから、本当に選択解除されたかチェックする
     /// </summary>
     private IEnumerator CheckDeselectionRoutine()
     {
-        // (変更なし)
         yield return new WaitForEndOfFrame(); 
 
         if (EventSystem.current == null) 
@@ -181,15 +199,13 @@ public class SelectableRow : MonoBehaviour
         checkDeselectionCoroutine = null;
     }
 
-
     /// <summary>
     /// この行が管理する uiSelectable を EventSystem に選択させる
     /// (ConfigMenuUIController から呼ばれる)
     /// </summary>
     public void SelectChildElement()
     {
-        // (変更なし)
-        HandleChildSelect(); 
+        HandleChildSelect(); // 視覚的に選択状態にする
 
         if (uiSelectable != null && EventSystem.current != null)
         {

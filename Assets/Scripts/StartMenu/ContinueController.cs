@@ -1,239 +1,210 @@
 using UnityEngine;
-using UnityEngine.UI; // Button を使うために追加
-using TMPro; // TextMeshPro を使うために追加
-using Sirenix.OdinInspector; // Odin Inspector を使うために追加
-using System.Collections.Generic; // Dictionary を使うために追加
-using System.Linq; // ★ 追加： .FirstOrDefault() , .Contains() を使うために必要
+using UnityEngine.UI;
+using TMPro;
+using Sirenix.OdinInspector;
+using System.Collections.Generic;
+using System.Linq; // ソートに必要
+using Cysharp.Threading.Tasks;
 
-/// <summary>
-/// コンティニューボタンと、それに紐づくロード用データを管理するクラス
-/// ★ 変更：訪問履歴をチェックし、未訪問のスロットは無効化する機能を追加
-/// </summary>
 [ExecuteAlways]
-public class ContinueController : SerializedMonoBehaviour
+public class ContinueController : Singleton<ContinueController>
 {
-    /// <summary>
-    /// コンティニュー（セーブ）スロットごとの詳細データ
-    /// </summary>
     [System.Serializable]
     public class ContinueData
     {
-        [Tooltip("ボタンに表示するチャプター名")]
         public string ChapterName;
-        
-        [Tooltip("ロード時に遷移するシーン名")]
         public string SceneName;
-
-        [Tooltip("ロード時にDataShareControllerに予約するテレポートキー")]
         public string TeleportKey;
-
-        [Tooltip("ロード時にDataShareControllerに設定するEndingShareDictionaryのキー名")]
         public string EndingShareDictionaryKey;
-        
-        [Tooltip("ロード時にDataShareControllerに設定するCurrentPhaseStepの値")]
         public string CurrentPhaseStepKey; 
-
-        [Tooltip("ロード時にDataShareControllerに設定するCurrentPhase")]
         public GameFlowController.Phase CurrentPhase;
     }
+
+    [Title("UI設定")]
+    [Tooltip("一番下にある「戻る」ボタン（ナビゲーション連結用）")]
+    private Button backButton; // ★ 追加：ここに「戻る」ボタンを入れてください
+
     [Title("コンティニューデータスロット")]
-    [InfoBox("Key (Button): データをロードするUnityのButtonコンポーネント\nValue (ContinueData): そのボタンに紐づくセーブデータ")]
     [DictionaryDrawerSettings(KeyLabel = "Continue Button", ValueLabel = "Data")]
-    
-    [OnValueChanged("SetupContinueButtons")] // Inspectorでの値変更時に自動でこの関数を呼ぶ
-    
+    [OnValueChanged("SetupContinueButtons")]
     public Dictionary<Button, ContinueData> continueSlots = new Dictionary<Button, ContinueData>();
     
-    // ★ 変更：Start()はSetupContinueButtons()を呼ぶだけ（[ExecuteAlways]のため両モードで実行）
     void Start()
     {
+        if (Application.isPlaying) InitializeAsync().Forget();
+        else SetupContinueButtons();
+        backButton = GameStartMenuController.instance.ContinueToTopBackButton;
+    }
+
+    private async UniTaskVoid InitializeAsync()
+    {
+        await UniTask.NextFrame();
         SetupContinueButtons();
     }
-    
-    /// <summary>
-    /// ★ 全面的に書き換え ★
-    /// Dictionaryを走査し、各ボタンをセットアップします。
-    /// [Playモード時] 訪問履歴をチェックし、テキスト(ChapterName/???)、interactable、クリックイベントを設定します。
-    /// [Editモード時] デザイナーが見やすいよう、テキストをChapterNameに設定するだけです。
-    /// </summary>
-    [Button("コンティニューボタンのセットアップ（テキスト更新とクリックイベント設定）", ButtonSizes.Large)]
+
+    [Button("セットアップ実行", ButtonSizes.Large)]
     public void SetupContinueButtons()
     {
-        if (continueSlots == null || continueSlots.Count == 0)
-        {
-            return;
-        }
+        if (continueSlots == null || continueSlots.Count == 0) return;
 
-        // ★ 変更：ランタイム（Playモード）かどうかで処理を完全に分岐
         if (Application.isPlaying)
         {
-            // === プレイモード時の処理 ===
+            // --- Playモード: 履歴チェックとナビゲーション再構築 ---
             
-            // 1. ★ セーブコントローラーと履歴データを取得
+            // 1. データロード
             var saveController = SaveDataBaseController.instance;
-            if (saveController == null)
+            var visitedHistoryData = new PhaseStepController.PhaseStepSaveData();
+            if (saveController != null && saveController.HasKey("PhaseStepController_VisitedHistory"))
             {
-                Debug.LogError("[ContinueController] SaveDataBaseController.Instance が見つかりません！");
-                return;
-            }
-            
-            // 履歴データをロード
-            var visitedHistoryData = saveController.LoadData<PhaseStepController.PhaseStepSaveData>("PhaseStepController_VisitedHistory");
-            if (visitedHistoryData == null)
-            {
-                // まだセーブデータがない場合、ヌルチェックを避けるため空のインスタンスを生成
-                visitedHistoryData = new PhaseStepController.PhaseStepSaveData(); 
+                var loaded = saveController.LoadData<PhaseStepController.PhaseStepSaveData>("PhaseStepController_VisitedHistory");
+                if (loaded != null) visitedHistoryData = loaded;
             }
 
-            // 2. ★ 訪問済みかをチェックするための内部ヘルパー関数
-            bool CheckIfVisited(GameFlowController.Phase phase, string stepKey)
-            {
-                if (visitedHistoryData.visitedHistory == null) return false;
-                
-                // Phaseを文字列名に変換
-                string phaseName = phase.ToString();
-                
-                // セーブデータから該当するPhaseのエントリを探す
-                var phaseEntry = visitedHistoryData.visitedHistory.FirstOrDefault(entry => entry.phaseName == phaseName);
+            // 2. 有効なボタンを管理するリスト
+            List<Button> activeButtons = new List<Button>();
 
-                if (phaseEntry == null)
-                {
-                    // このPhaseの履歴がまだない
-                    return false; 
-                }
-
-                // 該当Phaseの履歴リストに、指定のstepKeyが含まれているかチェック
-                return phaseEntry.visitedStepKeys.Contains(stepKey);
-            }
-
-            // 3. ★ 各ボタンをセットアップ
             foreach (var (button, data) in continueSlots)
             {
                 if (button == null || data == null) continue;
 
                 TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
                 
-                // 3-1. 訪問履歴をチェック
-                bool isVisited = CheckIfVisited(data.CurrentPhase, data.CurrentPhaseStepKey);
+                // 訪問判定
+                string phaseName = data.CurrentPhase.ToString();
+                var phaseEntry = visitedHistoryData.visitedHistory?.FirstOrDefault(e => e.phaseName == phaseName);
+                bool isVisited = phaseEntry != null && phaseEntry.visitedStepKeys.Contains(data.CurrentPhaseStepKey);
 
                 if (isVisited)
                 {
-                    // 訪問済み
-                    if (buttonText != null) buttonText.text = data.ChapterName;
-                    button.interactable = true; // ★ クリック可能に
+                    // === 有効 ===
+                    if (buttonText) buttonText.text = data.ChapterName;
                     
-                    // リスナー設定
-                    button.onClick.RemoveAllListeners(); // 念のためクリア
-                    ContinueData dataToLoad = data; // ループ変数キャプチャ対策
+                    button.interactable = true;
+                    button.enabled = true; // コンポーネント復活
+                    if (button.image) button.image.raycastTarget = true;
+
+                    // ナビゲーション設定用にリストに追加
+                    activeButtons.Add(button);
+
+                    // クリックイベント設定
+                    button.onClick.RemoveAllListeners();
+                    ContinueData dataToLoad = data;
                     button.onClick.AddListener(() => LoadDataAndChangeScene(dataToLoad));
                 }
                 else
                 {
-                    // 未訪問
-                    if (buttonText != null) buttonText.text = "???"; // ★ テキストを"???"に
-                    button.interactable = false; // ★ クリック不可に
+                    // === 無効（???） ===
+                    if (buttonText) buttonText.text = "???";
                     
-                    // リスナーを削除
+                    button.interactable = false;
+                    button.enabled = false; // ボタンとして死んでもらう
+                    if (button.image) button.image.raycastTarget = false; // マウス無効
+                    
                     button.onClick.RemoveAllListeners();
                 }
             }
-            
-            Debug.Log("[ContinueController] コンティニューボタンのセットアップ（ランタイム・履歴チェック完了）");
+
+            // 3. ナビゲーションのリンクを繋ぎ直す（ここが解決策！）
+            SetupDynamicNavigation(activeButtons);
         }
         else
         {
-            // === エディットモード時の処理 ===
-            // (OnValueChangedや[ExecuteAlways]のStartで呼ばれる)
-            // デザイナーが見やすいように、テキストだけ設定する
+            // --- Editモード ---
             foreach (var (button, data) in continueSlots)
             {
-                if (button == null || data == null) continue;
-                
+                if (button == null) continue;
                 TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-                if (buttonText != null)
-                {
-                    // 履歴チェックはせず、設定されたChapterNameをそのまま表示
-                    buttonText.text = data.ChapterName;
-                }
-                // エディットモードではリスナーやinteractableは設定しない
+                if (buttonText != null) buttonText.text = data.ChapterName;
             }
         }
     }
 
-
     /// <summary>
-    /// 特定のContinueDataを使ってDataShareControllerを更新します。(変更なし)
+    /// 有効なボタンと「戻る」ボタンの間でナビゲーションを綺麗に繋ぐ
     /// </summary>
-    public void LoadData(ContinueData data, DataShareController dataManager = null)
+    private void SetupDynamicNavigation(List<Button> activeButtons)
     {
-        if (data == null)
-        {
-            Debug.LogError("ロードするデータがnullです。");
-            return;
-        }
+        // 画面上の順番（上から下）に並べ替える
+        // これをしないとDictionaryの順序依存になり、ナビゲーションがぐちゃぐちゃになる恐れがある
+        activeButtons = activeButtons.OrderBy(b => b.transform.GetSiblingIndex()).ToList();
 
-        if (dataManager == null)
+        for (int i = 0; i < activeButtons.Count; i++)
         {
-            dataManager = DataShareController.instance; // .instance
-            if (dataManager == null)
+            Button currentBtn = activeButtons[i];
+            Navigation nav = new Navigation();
+            nav.mode = Navigation.Mode.Explicit; // 明示的に指定するモード
+
+            // --- 上への移動 ---
+            if (i > 0)
             {
-                Debug.LogError("DataShareController.instance が見つかりません！ データロードに失敗しました。");
-                return;
-            }
-        }
-
-        Debug.Log($"データ設定を適用: {data.ChapterName}");
-                
-        // 進行度データを設定
-        dataManager.CurrentPhase = data.CurrentPhase;
-        dataManager.CurrentPhaseStep = data.CurrentPhaseStepKey;
-
-        // フラグを設定
-        if (!string.IsNullOrEmpty(data.EndingShareDictionaryKey))
-        {
-            dataManager.SetFlagToTrue(data.EndingShareDictionaryKey);
-        }
-
-        // テレポートキーを予約
-        if (!string.IsNullOrEmpty(data.TeleportKey))
-        {
-            dataManager.SetNextTeleportKey(data.TeleportKey);
-        }
-    }
-
-    /// <summary>
-    /// データロードとシーン遷移を実行する関数 (変更なし)
-    /// </summary>
-    public void LoadDataAndChangeScene(ContinueData data)
-    {
-        if (data == null)
-        {
-            Debug.LogError("ロードするデータがnullです。");
-            return;
-        }
-        
-        Debug.Log($"ボタンクリック: {data.ChapterName}");
-
-        // --- 1. データをロード（テレポート予約もここに含まれる） ---
-        LoadData(data); 
-
-        // --- 2. シーンを遷移 ---
-        if (!string.IsNullOrEmpty(data.SceneName))
-        {
-            SceneManagerController sm = SceneManagerController.Instance; 
-            if (sm != null)
-            {
-                Debug.Log($"シーン '{data.SceneName}' に遷移します。");
-                sm.LoadScene(data.SceneName); // .LoadScene() を呼び出す
+                // 一つ上の有効なボタンへ
+                nav.selectOnUp = activeButtons[i - 1];
             }
             else
             {
-                Debug.LogError("SceneManagerController.Instance が見つかりません！ シーン遷移できません。");
+                // 一番上のボタンの場合の挙動（必要ならループさせるなど）
+                nav.selectOnUp = null; 
             }
+
+            // --- 下への移動 ---
+            if (i < activeButtons.Count - 1)
+            {
+                // 一つ下の有効なボタンへ
+                nav.selectOnDown = activeButtons[i + 1];
+            }
+            else
+            {
+                // 有効なチャプターの最後なら -> 「戻るボタン」へ
+                if (backButton != null)
+                {
+                    nav.selectOnDown = backButton;
+                }
+            }
+
+            currentBtn.navigation = nav;
         }
-        else
+
+        // 「戻るボタン」側の設定（ここが重要！）
+        if (backButton != null)
         {
-            Debug.LogWarning($"ロードデータ '{data.ChapterName}' に SceneName が設定されていません。");
+            // 戻るボタンの既存設定を取得（左右移動などを維持したい場合のため）
+            Navigation backNav = backButton.navigation;
+            backNav.mode = Navigation.Mode.Explicit;
+
+            if (activeButtons.Count > 0)
+            {
+                // 「戻る」の上は -> 「一番下の有効なチャプター」にする
+                // これで間の "???" は完全にスキップされる
+                backNav.selectOnUp = activeButtons.Last();
+            }
+            else
+            {
+                // 有効なチャプターが一つもない場合
+                backNav.selectOnUp = null;
+            }
+
+            backButton.navigation = backNav;
         }
+        
+        Debug.Log($"[ContinueController] ナビゲーション再構築完了: 有効チャプター {activeButtons.Count} 個");
+    }
+
+    // ... LoadDataなどはそのまま ...
+    public void LoadDataAndChangeScene(ContinueData data)
+    {
+        if (data == null) return;
+        LoadData(data);
+        if (!string.IsNullOrEmpty(data.SceneName))
+            SceneManagerController.Instance.LoadScene(data.SceneName);
+    }
+    public void LoadData(ContinueData data, DataShareController dataManager = null)
+    {
+        if (dataManager == null) dataManager = DataShareController.instance;
+        if (dataManager == null) return;
+
+        dataManager.CurrentPhase = data.CurrentPhase;
+        dataManager.CurrentPhaseStep = data.CurrentPhaseStepKey;
+        if (!string.IsNullOrEmpty(data.EndingShareDictionaryKey)) dataManager.SetFlagToTrue(data.EndingShareDictionaryKey);
+        if (!string.IsNullOrEmpty(data.TeleportKey)) dataManager.SetNextTeleportKey(data.TeleportKey);
     }
 }

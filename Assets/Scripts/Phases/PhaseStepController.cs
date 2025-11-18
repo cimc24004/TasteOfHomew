@@ -10,6 +10,7 @@ using System.Linq;
 [DisallowMultipleComponent]
 public class PhaseStepController : Singleton<PhaseStepController>
 {
+    [SerializeField]
     private const string SAVE_KEY = "PhaseStepController_VisitedHistory";
 
     [Title("Phases（親：フェーズ / 子：ステップ）")]
@@ -513,26 +514,16 @@ public class PhaseStepController : Singleton<PhaseStepController>
 
         var newStep = phase.steps[stepIndex];
         var oldStepKey = CurrentStepKey;
-        var oldPhaseIndex = CurrentPhaseIndex; // ★ 古いフェーズのインデックス (Absence など) を取得
+        var oldPhaseIndex = CurrentPhaseIndex;
 
-        // ★ 修正：比較対象を CurrentPhaseIndex (古いフェーズ) にする
+        // 同一フェーズ・同一ステップなら何もしない
         if (string.Equals(newStep.key, oldStepKey, StringComparison.Ordinal) &&
             phaseIndex == oldPhaseIndex)
         {
-            // (Outside, "1") と (Absence, "1") の比較：
-            // newStep.key = "1"
-            // oldStepKey = "1"
-            // phaseIndex = Index(Outside)
-            // oldPhaseIndex = Index(Absence)
-            // -> ("1" == "1") && (Index(Outside) == Index(Absence))
-            // -> (true) && (false) = false
-            // よって、if 文は実行されず、正しくステップが切り替わる
             return false;
         }
 
-        // ★ 修正：古いステップの Exit 処理
-        // SwitchPhaseAsync が既に Exit を実行しているので、ここでは
-        //「同一フェーズ内の移動」の場合のみ Exit を実行する
+        // 同一フェーズ内の移動なら、古いステップのExit処理
         if (phaseIndex == oldPhaseIndex)
         {
             if (TryGetStep(oldPhaseIndex, FindStepIndex(oldPhaseIndex, oldStepKey), out var oldStep))
@@ -542,9 +533,12 @@ public class PhaseStepController : Singleton<PhaseStepController>
             }
         }
 
-        // === 以下、変更なし ===
-
+        // === 値の更新 ===
         CurrentStepKey = newStep.key;
+        
+        // ▼▼▼ ★修正：セーブの前に CurrentPhase をここで確定させる！ ▼▼▼
+        CurrentPhase = phase.phase; 
+        // ▲▲▲ これがないと、古いフェーズに対してセーブしてしまいます ▲▲▲
 
         SetActiveList(newStep.objectsToShow, true, this.gameObject);
         InvokeEvents(newStep.onEnterEvents);
@@ -554,6 +548,7 @@ public class PhaseStepController : Singleton<PhaseStepController>
         if (!string.IsNullOrEmpty(oldStepKey))
             onStepChanged?.Invoke(oldStepKey, CurrentStepKey);
 
+        // これで「新しいPhase」と「新しいStep」の組み合わせでセーブされる
         MarkVisitedAndSave();
 
         return true;

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Steamworks; // 必須
 
 [System.Serializable]
 public class KeyUnityEvent
@@ -46,7 +47,6 @@ public class EndController : MonoBehaviour
         // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
         // await UniTask.WaitForSeconds(1f);
         CheckKeys();
-
         ClickedJudgeButton.onClick.AddListener(() =>
         {
             if (WaitForPlayerInputClick)
@@ -175,6 +175,19 @@ public class EndController : MonoBehaviour
             {
                 Debug.LogWarning("[EndController] EndingNameTextUI がアタッチされていません。");
             }
+        }
+        if (SteamManager.Initialized)
+        {
+
+            // API初期化成功後（必須）
+            string endingKey = winner.EndingName.Contains("3") ? "ENDING3" : 
+                                winner.EndingName.Contains("2") ? "ENDING2" : "ENDING1";
+            SteamUserStats.GetAchievement(endingKey, out bool isUnlocked);
+            if (!isUnlocked)
+            {
+                SteamUserStats.SetAchievement(endingKey);
+            }
+            SteamUserStats.StoreStats();
         }
     }
     public void WaitForPlayerClick()
