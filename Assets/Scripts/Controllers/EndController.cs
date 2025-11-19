@@ -54,16 +54,35 @@ public class EndController : MonoBehaviour
         // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
         await UniTask.WaitForSeconds(0.1f);
         CheckKeys();
-        ClickedJudgeButton.onClick.AddListener(() =>
+        // ClickedJudgeButton.onClick.AddListener(() =>
+        // {
+        //     Debug.Log("EndingTimelinePlayback.IsPlayingFromSignal: " + EndingTimelinePlayback.IsPlayingFromSignal);
+        //     if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
+        //     {
+        //         EndingTimelinePlayback.Resume();
+        //         WaitForPlayerInputClick = false;
+        //         EventSystem.current.SetSelectedGameObject(null);
+        //     }
+        // });
+        playerInput.actions.FindAction("Click").performed += OnClickPerformed;
+    }
+    void OnDestroy()
+    {
+        // 【エラー原因の修正】
+        // シーン移動時は playerInput が先に死んでいることがあるため、nullチェック必須
+        if (playerInput == null) return;
+        
+        // アクション自体も念の為チェックして解除
+        var clickAction = playerInput.actions?.FindAction("Click");
+        if (clickAction != null)
         {
-            Debug.Log("EndingTimelinePlayback.IsPlayingFromSignal: " + EndingTimelinePlayback.IsPlayingFromSignal);
-            if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
-            {
-                EndingTimelinePlayback.Resume();
-                WaitForPlayerInputClick = false;
-                EventSystem.current.SetSelectedGameObject(null);
-            }
-        });
+            clickAction.performed -= OnClickPerformed;
+        }
+    }
+    // イベント受信用の中継メソッドを作成
+    private void OnClickPerformed(InputAction.CallbackContext ctx)
+    {
+        OnClickClickedJudgeButton();
     }
     public void OnClickClickedJudgeButton()
     {
