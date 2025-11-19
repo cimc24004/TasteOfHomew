@@ -45,6 +45,7 @@ public class ContinueController : Singleton<ContinueController>
     [Button("セットアップ実行", ButtonSizes.Large)]
     public void SetupContinueButtons()
     {
+        // リストが空なら何もしない
         if (continueSlots == null || continueSlots.Count == 0) return;
 
         if (Application.isPlaying)
@@ -54,10 +55,15 @@ public class ContinueController : Singleton<ContinueController>
             // 1. データロード
             var saveController = SaveDataBaseController.instance;
             var visitedHistoryData = new PhaseStepController.PhaseStepSaveData();
+            
+            // セーブデータがあれば読み込む
             if (saveController != null && saveController.HasKey("PhaseStepController_VisitedHistory"))
             {
                 var loaded = saveController.LoadData<PhaseStepController.PhaseStepSaveData>("PhaseStepController_VisitedHistory");
-                if (loaded != null) visitedHistoryData = loaded;
+                if (loaded != null) 
+                {
+                    visitedHistoryData = loaded;
+                }
             }
 
             // 2. 有効なボタンを管理するリスト
@@ -69,11 +75,43 @@ public class ContinueController : Singleton<ContinueController>
 
                 TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
                 
-                // 訪問判定
-                string phaseName = data.CurrentPhase.ToString();
-                var phaseEntry = visitedHistoryData.visitedHistory?.FirstOrDefault(e => e.phaseName == phaseName);
-                bool isVisited = phaseEntry != null && phaseEntry.visitedStepKeys.Contains(data.CurrentPhaseStepKey);
+                // --- 訪問判定ロジック (ここを修正) ---
+                string targetPhaseName = data.CurrentPhase.ToString();
+                string targetStepKey = data.CurrentPhaseStepKey; // Inspectorの値
 
+                // 現在のフェーズデータを探す
+                var phaseEntry = visitedHistoryData.visitedHistory?.FirstOrDefault(e => e.phaseName == targetPhaseName);
+                
+                bool isVisited = false;
+
+                if (phaseEntry != null && phaseEntry.visitedStepKeys != null)
+                {
+                    // A. 完全一致チェック (通常はこれでOK)
+                    if (phaseEntry.visitedStepKeys.Contains(targetStepKey))
+                    {
+                        isVisited = true;
+                    }
+                    // B. トリム一致チェック (空白問題対策)
+                    // "1 " と "1" の違いを吸収するために、空白を除去して比較する
+                    else
+                    {
+                        foreach (var savedKey in phaseEntry.visitedStepKeys)
+                        {
+                            if (string.IsNullOrEmpty(savedKey)) continue;
+
+                            // 両方の空白を削除(Trim)して比較
+                            if (savedKey.Trim() == targetStepKey.Trim())
+                            {
+                                isVisited = true;
+                                // 念のためログを出しておく
+                                Debug.LogWarning($"[ContinueController] 空白を含むキーを許容しました: JSON='{savedKey}' / Inspector='{targetStepKey}'");
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // --- ボタンの有効/無効化処理 ---
                 if (isVisited)
                 {
                     // === 有効 ===
@@ -88,7 +126,7 @@ public class ContinueController : Singleton<ContinueController>
 
                     // クリックイベント設定
                     button.onClick.RemoveAllListeners();
-                    ContinueData dataToLoad = data;
+                    ContinueData dataToLoad = data; // ローカル変数にキャプチャ
                     button.onClick.AddListener(() => LoadDataAndChangeScene(dataToLoad));
                 }
                 else
@@ -104,12 +142,12 @@ public class ContinueController : Singleton<ContinueController>
                 }
             }
 
-            // 3. ナビゲーションのリンクを繋ぎ直す（ここが解決策！）
+            // 3. ナビゲーションのリンクを繋ぎ直す
             SetupDynamicNavigation(activeButtons);
         }
         else
         {
-            // --- Editモード ---
+            // --- Editモード (表示更新のみ) ---
             foreach (var (button, data) in continueSlots)
             {
                 if (button == null) continue;
@@ -118,7 +156,6 @@ public class ContinueController : Singleton<ContinueController>
             }
         }
     }
-
     /// <summary>
     /// 有効なボタンと「戻る」ボタンの間でナビゲーションを綺麗に繋ぐ
     /// </summary>

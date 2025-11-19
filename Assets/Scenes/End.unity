@@ -1199,7 +1199,7 @@ PrefabInstance:
     - target: {fileID: 3227986575612960608, guid: 15e55eb96e00e5440ad3f6ce15f0dbc2, type: 3}
       propertyPath: m_PlayableAsset
       value: 
-      objectReference: {fileID: 11400000, guid: 1f770af9d54ab594e9169003d206c8e4, type: 2}
+      objectReference: {fileID: 11400000, guid: d647d837a8d7aa24192a8681786ec5cb, type: 2}
     - target: {fileID: 3227986575612960608, guid: 15e55eb96e00e5440ad3f6ce15f0dbc2, type: 3}
       propertyPath: m_SceneBindings.Array.size
       value: 151
@@ -1692,7 +1692,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -2004,6 +2004,7 @@ MonoBehaviour:
     priority: 0
     invoked: 0
   EndingTimelinePlayback: {fileID: 370559127}
+  playerInput: {fileID: 1023515666}
 --- !u!114 &466865895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2193,6 +2194,14 @@ PrefabInstance:
     - target: {fileID: 1422101149475117028, guid: 4aa307bc75829a944b6c98c5899134a5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7306108505800283295, guid: 4aa307bc75829a944b6c98c5899134a5, type: 3}
+      propertyPath: m_UIInputModule
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7306108505800283295, guid: 4aa307bc75829a944b6c98c5899134a5, type: 3}
+      propertyPath: m_DefaultActionMap
+      value: MenuOnGamePlay
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2904,6 +2913,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78bed79ff40d3f441b2026fe0382035d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameStateController
+--- !u!1001 &938625720
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1001.12585
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -349.15195
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1078821372640330211, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8689719768754437488, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
+      propertyPath: m_Name
+      value: EventSystem
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9476dc22fbe2f2640b65a2687c6011ad, type: 3}
 --- !u!1 &945050916
 GameObject:
   m_ObjectHideFlags: 0
@@ -3191,6 +3257,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5677320846998248276, guid: eb9f8be866bc504438a5e4c37d0b81b0, type: 3}
   m_PrefabInstance: {fileID: 369956407}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1023515666 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7306108505800283295, guid: 4aa307bc75829a944b6c98c5899134a5, type: 3}
+  m_PrefabInstance: {fileID: 570933770}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1037222658
 GameObject:
   m_ObjectHideFlags: 0
@@ -4643,6 +4720,10 @@ PrefabInstance:
     - target: {fileID: 5676534505628911655, guid: a3500b2b2a44b3c4b8f456cf033b5e1b, type: 3}
       propertyPath: m_Name
       value: Config (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5676534505628911655, guid: a3500b2b2a44b3c4b8f456cf033b5e1b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6128,7 +6209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -6682,6 +6763,7 @@ GameObject:
   - component: {fileID: 1804571987}
   - component: {fileID: 1804571988}
   - component: {fileID: 1804571989}
+  - component: {fileID: 1804571990}
   m_Layer: 0
   m_Name: MouseClickJudgeButton
   m_TagString: Untagged
@@ -6790,6 +6872,67 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1804571990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1804571984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates:
+  - eventID: 4
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 466865894}
+          m_TargetAssemblyTypeName: EndController, Assembly-CSharp
+          m_MethodName: OnClickClickedJudgeButton
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - eventID: 15
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 466865894}
+          m_TargetAssemblyTypeName: EndController, Assembly-CSharp
+          m_MethodName: OnClickClickedJudgeButton
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 466865894}
+          m_TargetAssemblyTypeName: EndController, Assembly-CSharp
+          m_MethodName: OnClickClickedJudgeButton
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!1001 &1817633725
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7574,6 +7717,14 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 4650138094079016596, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
+    - target: {fileID: 4902170238963510259, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 4902170238963510259, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
+    - target: {fileID: 6832281464194590785, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 6832281464194590785, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
     - target: {fileID: 7536213910991266192, guid: 13de1a2305c7133438b18d745f1f1f11, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -7988,22 +8139,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModifications.Array.size
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: 'serializationData.PrefabModifications.Array.data[0]'
-      value: '"path":"EndingShareDictionary.{\"EscapeFriendHouseEnd\"}","value":{"$id":0,"$type":"System.Boolean,
-        mscorlib",false}'
-      objectReference: {fileID: 0}
-    - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
-      propertyPath: 'serializationData.PrefabModifications.Array.data[1]'
       value: '"path":"EndingShareDictionary.{\"EscapeMyHouseEnd\"}","value":{"$id":0,"$type":"System.Boolean,
         mscorlib",true}'
-      objectReference: {fileID: 0}
-    - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
-      propertyPath: 'serializationData.PrefabModifications.Array.data[2]'
-      value: '"path":"EndingShareDictionary.{\"EscapeMyHouseMotherKilled\"}","value":{"$id":0,"$type":"System.Boolean,
-        mscorlib",false}'
       objectReference: {fileID: 0}
     - target: {fileID: -9020790437496653101, guid: 054373c8846598143a537cea765d8087, type: 3}
       propertyPath: serializationData.PrefabModificationsReferencedUnityObjects.Array.size
@@ -8224,6 +8365,7 @@ SceneRoots:
   - {fileID: 1400562975}
   - {fileID: 909252751}
   - {fileID: 613087062}
+  - {fileID: 938625720}
   - {fileID: 929371436}
   - {fileID: 344678299}
   - {fileID: 340564419}

@@ -12,7 +12,7 @@ public class TimelinePlayback : MonoBehaviour
     [Title("Refs")]
     [SerializeField] private GameFlowController flow;
     [SerializeField] public TimelineController registry;
-    [SerializeField] private PlayableDirector director;
+    [SerializeField] public PlayableDirector director;
 
     // ===== Play Options =====
     [Title("Play Options")]
@@ -51,7 +51,7 @@ public class TimelinePlayback : MonoBehaviour
     public string LastTimelineId { get; private set; }
     [FoldoutGroup("State"), ShowInInspector, ReadOnly]
     public bool IsPlaying => director && director.state == PlayState.Playing;
-
+    public bool IsPlayingFromSignal;
     // コールバック
     public event Action<string> OnTimelineStarted;
     public event Action<string> OnTimelineStopped;
@@ -151,6 +151,7 @@ public class TimelinePlayback : MonoBehaviour
     public void Stop()
     {
         if (director) director.Stop();
+        IsPlayingFromSignal = false;
     }
 
     /// <summary> 一時停止 </summary>
@@ -159,6 +160,7 @@ public class TimelinePlayback : MonoBehaviour
     {
         if (!director) return;
         var graph = director.playableGraph;
+        IsPlayingFromSignal = false;
         if (graph.IsValid())
         {
             var root = graph.GetRootPlayable(0);
@@ -172,6 +174,7 @@ public class TimelinePlayback : MonoBehaviour
     {
         if (!director) return;
         var graph = director.playableGraph;
+        IsPlayingFromSignal = true;
         if (graph.IsValid())
         {
             var root = graph.GetRootPlayable(0);
@@ -194,6 +197,7 @@ public class TimelinePlayback : MonoBehaviour
     /// </summary>
     void ApplyAndPlay(GameFlowController.Phase phase, string id, TimelineAsset asset)
     {
+        IsPlayingFromSignal = true;
         LastPhase = phase;
         LastTimelineId = id;
         ExecutePlayback(asset);

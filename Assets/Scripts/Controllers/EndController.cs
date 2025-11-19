@@ -5,7 +5,10 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Steamworks; // 必須
+using Steamworks;
+using UnityEngine.Playables;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI; // 必須
 
 [System.Serializable]
 public class KeyUnityEvent
@@ -28,6 +31,7 @@ public class KeyUnityEvent
 
 public class EndController : MonoBehaviour
 {
+    private PauseMenuController pauseMenuController;
     [SerializeField] private Button ClickedJudgeButton;
     [SerializeField] private bool WaitForPlayerInputClick;
     public enum ResolvePolicy
@@ -42,14 +46,18 @@ public class EndController : MonoBehaviour
 
     private DataShareController dataShareController;
     [SerializeField] private TimelinePlayback EndingTimelinePlayback;
+    [SerializeField] private PlayerInput playerInput;
     private async void Start()
     {
+        pauseMenuController = PauseMenuController.instance;
+        pauseMenuController.PauseMenuOpenPermit = false;
         // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
-        // await UniTask.WaitForSeconds(1f);
+        await UniTask.WaitForSeconds(0.1f);
         CheckKeys();
         ClickedJudgeButton.onClick.AddListener(() =>
         {
-            if (WaitForPlayerInputClick)
+            Debug.Log("EndingTimelinePlayback.IsPlayingFromSignal: " + EndingTimelinePlayback.IsPlayingFromSignal);
+            if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
             {
                 EndingTimelinePlayback.Resume();
                 WaitForPlayerInputClick = false;
@@ -57,7 +65,15 @@ public class EndController : MonoBehaviour
             }
         });
     }
-
+    public void OnClickClickedJudgeButton()
+    {
+        if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
+        {
+            EndingTimelinePlayback.Resume();
+            WaitForPlayerInputClick = false;
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
     [ContextMenu("Check Keys (Run)")]
     public void CheckKeys()
     {

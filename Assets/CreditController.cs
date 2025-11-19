@@ -14,12 +14,12 @@ public class CreditController : MonoBehaviour
         playerInput = PlayerDataHub.instance.CurrentplayerInput;
         sceneManagerController = SceneManagerController.Instance;
         backToStartButton.onClick.AddListener(SceneMove);
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
         if (playerInput.actions["RightClick"].triggered)
         {
             if (once) return;
