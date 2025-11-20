@@ -26,6 +26,7 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
     private ConfigController configController;
     private ConfigMenuUIController configMenuUIController;
     private ContinueController continueController;
+    private GameStateController gameStateController;
     void Start()
     {
         // --- 参照の取得 ---
@@ -34,6 +35,7 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         configController = ConfigController.instance;
         configMenuUIController = ConfigMenuUIController.instance;
         continueController = ContinueController.instance;
+        gameStateController = GameStateController.instance;
         // --- メニューの初期状態を設定 ---
         // スタートメニューは表示
         StartNavMenuCanvasGroup.alpha = 1;
@@ -146,6 +148,8 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
                 ContinueMenuCanvasGroup.blocksRaycasts = true;
             }
         });
+
+        gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
         // ▲▲▲ ★★★ 修正箇所 (ここまで) ★★★ ▲▲▲
     }
 

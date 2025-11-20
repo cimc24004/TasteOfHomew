@@ -106,7 +106,7 @@ public class GameStateController : Singleton<GameStateController>
         this.shouldShowCursorForKBM = visibleCursor; // ★ KBM時の表示フラグを記憶
         this.lastCheckedDeviceType = null; // ★リセット
 
-        playerDataHub.CurrentCMFPSController.LockView();
+        playerDataHub.CurrentCMFPSController?.LockView();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Enable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Disable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Disable();

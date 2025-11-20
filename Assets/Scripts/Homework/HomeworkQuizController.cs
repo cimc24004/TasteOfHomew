@@ -170,7 +170,7 @@ public class HomeworkQuizController : MonoBehaviour
         
         // ▼▼▼ 【修正】 DialogueController に任せるため、この行を削除またはコメントアウト ▼▼▼
         dlg.TryGetSequence(questionGroupKey, q.questionSequenceId, out var seqAsset);
-        homeWorkBodyText.text = seqAsset.steps[0].text;
+        homeWorkBodyText.text = seqAsset.steps[0].localizedText.GetLocalizedString();
         // ▲▲▲ 【修正】 ▲▲▲
 
         if (dlg != null && !string.IsNullOrWhiteSpace(q.questionSequenceId))

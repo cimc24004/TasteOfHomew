@@ -190,7 +190,15 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
 
         // 念のため、多重登録を防ぐために一度解除してから登録する
         UnsubscribeInputEvents(); 
-
+        var targetAction = playerInput.actions["E"]; 
+        if (targetAction != null && targetAction.actionMap != null)
+        {
+            if (!targetAction.actionMap.enabled)
+            {
+                Debug.Log($"[ConfigMenuUI] ActionMap '{targetAction.actionMap.name}' が無効だったため有効化しました。");
+                targetAction.actionMap.Enable();
+            }
+        }
         playerInput.actions["RightClick"].performed += HandleApply;
         playerInput.actions["R"].performed += HandleRevert;
         playerInput.actions["E"].performed += HandleNextTab;
@@ -269,17 +277,6 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
 
         resolutionDropdown.AddOptions(options);
     }
-    // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
-
-    // ▼▼▼ ★★★ (ここから削除) ★★★ ▼▼▼
-    // LocalizedDropdown スクリプトが処理するため、このメソッドは不要
-    // private void PopulateWindowModeDropdown()
-    // { ... }
-    // ▲▲▲ ★★★ (ここまで削除) ★★★ ▲▲▲
-
-    /// <summary>
-    /// ConfigControllerからロードした設定値をすべてのUIに反映させる
-    /// </summary>
     public void SetAllUIValues(GameSettings settings)
     {
         resolutionDropdown.onValueChanged.RemoveAllListeners();
