@@ -31,7 +31,7 @@ public class GameSettings
     public float mouseSensitivity;
     public bool invertCameraY;
     public float fov;
-
+    public int cameraBob;
     /// <summary>
     /// デフォルト設定で初期化するコンストラクタ
     /// </summary>
@@ -48,7 +48,7 @@ public class GameSettings
         masterVolume = 0.8f;
         // musicVolume = 0.8f;
         // sfxVolume = 0.8f;
-
+        cameraBob = 1;
         mouseSensitivity = 1.0f;
         invertCameraY = false;
         fov = 70f;
@@ -69,7 +69,7 @@ public class GameSettings
         masterVolume = other.masterVolume;
         // musicVolume = other.musicVolume;
         // sfxVolume = other.sfxVolume;
-
+        cameraBob = other.cameraBob;
         mouseSensitivity = other.mouseSensitivity;
         invertCameraY = other.invertCameraY;
         fov = other.fov;
@@ -112,7 +112,7 @@ public class ConfigController : SerializedMonoBehaviour
     /// UIで変更中だが、まだ「適用」されていない一時的な設定
     /// </summary>
     [SerializeField] private GameSettings pendingSettings;
-    
+    private FPSCameraBobExtension cameraBobExtension;
     void Awake()
     {
         if (instance == null)
@@ -296,6 +296,7 @@ public class ConfigController : SerializedMonoBehaviour
     
     private void ApplyGameplay(GameSettings settings)
     {
+
         // Start() で呼ばれるため、PlayerDataHub.instance が存在するはず
         if(PlayerDataHub.instance != null)
         {
@@ -313,6 +314,13 @@ public class ConfigController : SerializedMonoBehaviour
             var lens = playerVirtualCamera.Lens;
             lens.FieldOfView = settings.fov;
             playerVirtualCamera.Lens = lens;
+            var bobExtension = playerVirtualCamera.GetComponent<FPSCameraBobExtension>();
+            if (bobExtension != null)
+            {
+                // 設定が 0 なら true (ON), 1 なら false (OFF)
+                // コンポーネント自体の enabled を切ることで処理を完全に停止させます
+                bobExtension.enabled = (settings.cameraBob == 0);
+            }
         }
         else
         {
@@ -446,4 +454,5 @@ public class ConfigController : SerializedMonoBehaviour
     public void UpdatePendingMouseSensitivity(float value) { pendingSettings.mouseSensitivity = value; }
     public void UpdatePendingInvertY(bool isOn) { pendingSettings.invertCameraY = isOn; }
     public void UpdatePendingFOV(float value) { pendingSettings.fov = value; }
+    public void UpdatePendingCameraBob(int index) { pendingSettings.cameraBob = index; }
 }

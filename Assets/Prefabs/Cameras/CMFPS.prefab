@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 796288111440089965}
   - component: {fileID: 8914154347963393541}
   - component: {fileID: 114506207264804369}
+  - component: {fileID: 8662563627408511686}
   m_Layer: 0
   m_Name: CMFPS
   m_TagString: Untagged
@@ -264,3 +265,25 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!114 &8662563627408511686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7872613892398570348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3f3970850b08245b393a7ee9305537, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerMovement: {fileID: 0}
+  cmController: {fileID: 8914154347963393541}
+  walkSpeed: 8
+  walkAmount: 0.02
+  runSpeed: 17
+  runAmount: 0.04
+  horizontalMultiplier: 0.5
+  smoothTime: 8
+  movingThreshold: 0.1
+  showDebugStatus: 1

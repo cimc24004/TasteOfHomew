@@ -76,7 +76,8 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     [SerializeField] private Slider mouseSensitivitySlider;
     [SerializeField] private Toggle invertYToggle;
     [SerializeField] private Slider fovSlider;
-
+    [Tooltip("0: ON, 1: OFF の順番でOptionを設定してください")]
+    [SerializeField] private TMP_Dropdown cameraBobDropdown;
     public UnityEvent HandleApplyEvent;
     
     // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
@@ -289,7 +290,7 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         mouseSensitivitySlider.onValueChanged.RemoveAllListeners();
         invertYToggle.onValueChanged.RemoveAllListeners();
         fovSlider.onValueChanged.RemoveAllListeners();
-
+        if(cameraBobDropdown != null) cameraBobDropdown.onValueChanged.RemoveAllListeners();
         // ▼▼▼ ★★★ (ここから修正) インデックスの逆引き ★★★ ▼▼▼
         // 1. 保存されている「元のインデックス」(settings.resolutionIndex) を取得
         int originalIndexToFind = settings.resolutionIndex;
@@ -303,7 +304,11 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             dropdownIndex = 0; 
             Debug.LogWarning("保存された解像度インデックスが現在の16:9リストに見つかりません。デフォルト(0)に設定します。");
         }
-        
+        // ▼▼▼ ★★★ 追加: 値セット ★★★ ▼▼▼
+        if (cameraBobDropdown != null)
+        {
+            cameraBobDropdown.value = settings.cameraBob;
+        }
         resolutionDropdown.value = dropdownIndex;
         // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
         
@@ -332,6 +337,7 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
         mouseSensitivitySlider.onValueChanged.AddListener(OnMouseSensitivityChanged);
         invertYToggle.onValueChanged.AddListener(OnInvertYChanged);
         fovSlider.onValueChanged.AddListener(OnFOVChanged);
+        cameraBobDropdown.onValueChanged.AddListener(OnCameraBobChanged);
     }
 
 
@@ -593,4 +599,5 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
     {
         configController.UpdatePendingFOV(value);
     }
+    public void OnCameraBobChanged(int index) => configController.UpdatePendingCameraBob(index);
 }

@@ -52,7 +52,6 @@ MonoBehaviour:
     - {fileID: 2100000, guid: f2b5f3f20933f434e850db1b710542fd, type: 2}
     - {fileID: 2100000, guid: 8b7dd0809c7c6498789fa32a61eaa6cb, type: 2}
     - {fileID: 2100000, guid: 51b74d7bad397457d883c5940f7664d8, type: 2}
-    - {fileID: 2100000, guid: c494c335823f54b52b2e87e1b7a63a23, type: 2}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -123,7 +122,10 @@ MonoBehaviour:
         mscorlib
     - Name: 
       Entry: 12
-      Data: 1
+      Data: 2
+    - Name: 
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 6
       Data: 
@@ -144,10 +146,10 @@ MonoBehaviour:
       Data: 0
     - Name: applyFog
       Entry: 5
-      Data: false
+      Data: true
     - Name: useFog
       Entry: 5
-      Data: true
+      Data: false
     - Name: fogColor
       Entry: 7
       Data: UnityEngine.Color, UnityEngine.CoreModule
@@ -180,13 +182,13 @@ MonoBehaviour:
       Data: 100
     - Name: applyAmbient
       Entry: 5
-      Data: false
+      Data: true
     - Name: ambientMode
       Entry: 3
       Data: 0
     - Name: ambientIntensity
       Entry: 4
-      Data: 1
+      Data: 1.5
     - Name: ambientSkyColor
       Entry: 7
       Data: UnityEngine.Color, UnityEngine.CoreModule
@@ -280,7 +282,10 @@ MonoBehaviour:
         mscorlib
     - Name: 
       Entry: 12
-      Data: 1
+      Data: 2
+    - Name: 
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 6
       Data: 
@@ -301,10 +306,10 @@ MonoBehaviour:
       Data: 0
     - Name: applyFog
       Entry: 5
-      Data: false
+      Data: true
     - Name: useFog
       Entry: 5
-      Data: true
+      Data: false
     - Name: fogColor
       Entry: 7
       Data: UnityEngine.Color, UnityEngine.CoreModule
@@ -337,13 +342,13 @@ MonoBehaviour:
       Data: 100
     - Name: applyAmbient
       Entry: 5
-      Data: false
+      Data: true
     - Name: ambientMode
       Entry: 3
       Data: 0
     - Name: ambientIntensity
       Entry: 4
-      Data: 1
+      Data: 1.15
     - Name: ambientSkyColor
       Entry: 7
       Data: UnityEngine.Color, UnityEngine.CoreModule
@@ -478,7 +483,10 @@ MonoBehaviour:
         mscorlib
     - Name: 
       Entry: 12
-      Data: 1
+      Data: 2
+    - Name: 
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 6
       Data: 
@@ -489,14 +497,27 @@ MonoBehaviour:
       Entry: 8
       Data: 
     - Name: addVolumes
+      Entry: 7
+      Data: 14|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
       Entry: 6
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 
     - Name: applySkybox
       Entry: 5
       Data: true
     - Name: skybox
-      Entry: 6
-      Data: 
+      Entry: 10
+      Data: 1
     - Name: applyFog
       Entry: 5
       Data: false
@@ -628,10 +649,29 @@ MonoBehaviour:
       Data: 1
     - Name: $v
       Entry: 7
-      Data: 14|TimeOfDayRenderer+Profile, Assembly-CSharp
+      Data: 15|TimeOfDayRenderer+Profile, Assembly-CSharp
     - Name: activeRoots
       Entry: 7
-      Data: 15|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+      Data: 16|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 2
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: addVolumes
+      Entry: 7
+      Data: 17|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
         mscorlib
     - Name: 
       Entry: 12
@@ -644,9 +684,6 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 8
-      Data: 
-    - Name: addVolumes
-      Entry: 6
       Data: 
     - Name: applySkybox
       Entry: 5
@@ -797,14 +834,14 @@ MonoBehaviour:
       Data: 2
     - Name: $v
       Entry: 7
-      Data: 16|TimeOfDayRenderer+LocationProfiles, Assembly-CSharp
+      Data: 18|TimeOfDayRenderer+LocationProfiles, Assembly-CSharp
     - Name: ProfilesByLocation
       Entry: 7
-      Data: 17|System.Collections.Generic.Dictionary`2[[PlayerLocation+Location,
+      Data: 19|System.Collections.Generic.Dictionary`2[[PlayerLocation+Location,
         Assembly-CSharp],[TimeOfDayRenderer+Profile, Assembly-CSharp]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 18|System.Collections.Generic.EnumEqualityComparer`1[[PlayerLocation+Location,
+      Data: 20|System.Collections.Generic.EnumEqualityComparer`1[[PlayerLocation+Location,
         Assembly-CSharp]], mscorlib
     - Name: 
       Entry: 12
@@ -826,14 +863,17 @@ MonoBehaviour:
       Data: 0
     - Name: $v
       Entry: 7
-      Data: 19|TimeOfDayRenderer+Profile, Assembly-CSharp
+      Data: 21|TimeOfDayRenderer+Profile, Assembly-CSharp
     - Name: activeRoots
       Entry: 7
-      Data: 20|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+      Data: 22|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
         mscorlib
     - Name: 
       Entry: 12
-      Data: 0
+      Data: 1
+    - Name: 
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 13
       Data: 
@@ -841,7 +881,20 @@ MonoBehaviour:
       Entry: 8
       Data: 
     - Name: addVolumes
+      Entry: 7
+      Data: 23|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
       Entry: 6
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 
     - Name: applySkybox
       Entry: 5
@@ -851,10 +904,10 @@ MonoBehaviour:
       Data: 2
     - Name: applyFog
       Entry: 5
-      Data: false
+      Data: true
     - Name: useFog
       Entry: 5
-      Data: true
+      Data: false
     - Name: fogColor
       Entry: 7
       Data: UnityEngine.Color, UnityEngine.CoreModule
@@ -980,14 +1033,17 @@ MonoBehaviour:
       Data: 1
     - Name: $v
       Entry: 7
-      Data: 21|TimeOfDayRenderer+Profile, Assembly-CSharp
+      Data: 24|TimeOfDayRenderer+Profile, Assembly-CSharp
     - Name: activeRoots
       Entry: 7
-      Data: 22|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+      Data: 25|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
         mscorlib
     - Name: 
       Entry: 12
-      Data: 0
+      Data: 1
+    - Name: 
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 13
       Data: 
@@ -995,14 +1051,27 @@ MonoBehaviour:
       Entry: 8
       Data: 
     - Name: addVolumes
+      Entry: 7
+      Data: 26|System.Collections.Generic.List`1[[UnityEngine.GameObject, UnityEngine.CoreModule]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
       Entry: 6
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 
     - Name: applySkybox
       Entry: 5
       Data: true
     - Name: skybox
       Entry: 10
-      Data: 3
+      Data: 2
     - Name: applyFog
       Entry: 5
       Data: true

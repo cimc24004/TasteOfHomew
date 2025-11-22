@@ -39,7 +39,7 @@ public class PlayerMovement : SerializedMonoBehaviour
 
     [Header("参照コンポーネント")]
     [SerializeField] private FootStepController playerFootStepController;
-    [SerializeField] private GroundCheck groundCheck;
+    [SerializeField] public GroundCheck groundCheck;
     private CharacterController controller;
     private Vector3 velocity;
     private Camera mainCamera;
