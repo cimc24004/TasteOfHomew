@@ -65,6 +65,7 @@ public class EndController : MonoBehaviour
         //     }
         // });
         playerInput.actions.FindAction("Click").performed += OnClickPerformed;
+        playerInput.actions.FindAction("Submit").performed += OnClickPerformed;
     }
     void OnDestroy()
     {
@@ -74,9 +75,14 @@ public class EndController : MonoBehaviour
         
         // アクション自体も念の為チェックして解除
         var clickAction = playerInput.actions?.FindAction("Click");
+        var submitAction = playerInput.actions?.FindAction("Submit");
         if (clickAction != null)
         {
             clickAction.performed -= OnClickPerformed;
+        }
+        if (submitAction != null)
+        {
+            submitAction.performed -= OnClickPerformed;
         }
     }
     // イベント受信用の中継メソッドを作成
