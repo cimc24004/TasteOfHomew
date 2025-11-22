@@ -48,7 +48,7 @@ public class GameSettings
         masterVolume = 0.8f;
         // musicVolume = 0.8f;
         // sfxVolume = 0.8f;
-        cameraBob = 1;
+        cameraBob = 0;
         mouseSensitivity = 1.0f;
         invertCameraY = false;
         fov = 70f;
