@@ -36,9 +36,13 @@ public class PauseMenuUIController : MonoBehaviour
         // 最初は非表示にしておく
         pauseMenuPanel.SetActive(false);
         configController = ConfigController.instance;
-        configMenuUIController = configController.uiController;
-        configPanel = configMenuUIController.SettingCanvas;
-        configPanel.gameObject.SetActive(false);
+        if(configController != null)
+        {
+            configMenuUIController = configController.uiController;
+            configPanel = configMenuUIController.SettingCanvas;
+            configPanel.gameObject.SetActive(false);
+        }
+
         SceneManager.sceneLoaded += SceneLoaded;
     }
     private void SceneLoaded(Scene scene, LoadSceneMode mode)

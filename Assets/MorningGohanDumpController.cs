@@ -5,6 +5,7 @@ public class MorningGohanDumpController : MonoBehaviour
     [SerializeField] private ItemEquipController itemEquipController;
     [SerializeField] private string ItemEquipMeatKey = "Meat";
     [SerializeField] private InteractEventRelay meatforHaveInteractEventRelay;
+    [SerializeField] private PlayerableCall DumpPlayableCall;
     private PhaseStepController phaseStepController;
     [SerializeField]
     private GameObject Meat;
@@ -22,6 +23,7 @@ public class MorningGohanDumpController : MonoBehaviour
     public void MeatDumpEventStart()
     {
         meatforHaveInteractEventRelay.gameObject.SetActive(true);
+        DumpPlayableCall.gameObject.SetActive(false);
     }
     public void MeatGohanGet()
     {
@@ -29,6 +31,7 @@ public class MorningGohanDumpController : MonoBehaviour
         MeatGetAudioSource.Play();
         itemEquipController.SetHasItem(ItemEquipMeatKey, true);
         Meat.SetActive(false);
+        DumpPlayableCall.gameObject.SetActive(true);
     }
     public void MeatGohanDump()
     {
