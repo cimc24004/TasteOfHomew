@@ -74,8 +74,8 @@ public class PlayerMovement : SerializedMonoBehaviour
     {
         if(playerStatus == null)  playerStatus = PlayerStatus.instance;
         if (playerStatus == null) return;
-        if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
-            playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 1;
+        // if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
+        //     playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 1;
         playerStatus.crossHairController.enabled = true;
     }
     void Start()

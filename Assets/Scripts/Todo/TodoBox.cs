@@ -72,6 +72,7 @@ public class TodoBox : MonoBehaviour
         if (labelLocalizeEvent)
         {
             labelLocalizeEvent.StringReference = locText;
+            SetText(locText.GetLocalizedString()); // 即座に反映
         }
         else
         {
