@@ -3,7 +3,11 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Sirenix.OdinInspector;
 using UnityEngine.Events;
-
+using UnityEditor.SceneManagement;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 [ExecuteAlways]
 [DisallowMultipleComponent]
 public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
@@ -131,7 +135,24 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         }
     }
 
-    void OnValidate() => BuildCaches();
+    void OnValidate(){
+        BuildCaches();
+        #if UNITY_EDITOR
+            // ゲーム実行中以外なら、強制的に保存対象にする
+            if (!Application.isPlaying)
+            {
+                // usingを追加しなくても動く書き方です
+                UnityEditor.EditorUtility.SetDirty(this);
+
+                // シーンが有効な場合のみシーン全体もDirtyにする（エラー回避版）
+                var scene = gameObject.scene;
+                if (scene.isLoaded) 
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+                }
+            }
+        #endif
+    }
 
     // ▼▼▼ 変更: 新しいaddVolumesリストもキャッシュするように修正 ▼▼▼
     void BuildCaches()
