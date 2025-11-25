@@ -63,8 +63,9 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         GameStartFromBeginButton.onClick.AddListener(() =>
         {
             sceneManagerController.LoadScene("LeaveSchool");
+            GameStartFromBeginButton.enabled = false; // 二重クリック防止
         });
-
+        
         // 「つづける」ボタン（コンティニューメニューを表示）
         GameContinueButton.onClick.AddListener(() =>
         {

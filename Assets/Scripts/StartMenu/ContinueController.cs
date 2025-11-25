@@ -127,7 +127,9 @@ public class ContinueController : Singleton<ContinueController>
                     // クリックイベント設定
                     button.onClick.RemoveAllListeners();
                     ContinueData dataToLoad = data; // ローカル変数にキャプチャ
-                    button.onClick.AddListener(() => LoadDataAndChangeScene(dataToLoad));
+                    button.onClick.AddListener(() => {
+                        LoadDataAndChangeScene(dataToLoad); button.enabled = false; 
+                    });
                 }
                 else
                 {

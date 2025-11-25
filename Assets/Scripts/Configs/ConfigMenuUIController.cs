@@ -255,7 +255,7 @@ public class ConfigMenuUIController : Singleton<ConfigMenuUIController>
             if (Mathf.Abs(currentRatio - targetRatio) < epsilon)
             {
                 // ConfigControllerのロジックに合わせてリフレッシュレートも表示
-                string option = $"{res.width} x {res.height}";
+                string option = $"{res.width} x {res.height} @ {res.refreshRateRatio.value:F0} Hz";
                 options.Add(option);
                 
                 // ★重要★: ドロップダウンのN番目が、元のリストの「i」番目であることを記録

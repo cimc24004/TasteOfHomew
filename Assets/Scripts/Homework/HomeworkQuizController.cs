@@ -154,6 +154,7 @@ public class HomeworkQuizController : MonoBehaviour
         }
         else
         {
+            
             if (horrorBgmSource && horrorBgmSource.isPlaying)
             {
                 currentBgmTween = horrorBgmSource.DOFade(0, bgmFadeDuration)
@@ -195,6 +196,7 @@ public class HomeworkQuizController : MonoBehaviour
             revealClickCatcher.onClick.AddListener(OnRevealChoicesClicked);
             revealClickCatcher.gameObject.SetActive(true);
             revealClickCatcher.transform.SetAsLastSibling();
+            EventSystem.current.SetSelectedGameObject(revealClickCatcher.gameObject);
         }
     }
 
