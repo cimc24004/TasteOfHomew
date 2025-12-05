@@ -5,6 +5,7 @@ using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq; // ソートに必要
 using Cysharp.Threading.Tasks;
+using UnityEngine.Localization;
 
 [ExecuteAlways]
 public class ContinueController : Singleton<ContinueController>
@@ -12,7 +13,7 @@ public class ContinueController : Singleton<ContinueController>
     [System.Serializable]
     public class ContinueData
     {
-        public string ChapterName;
+        public LocalizedString chapterName;
         public string SceneName;
         public string TeleportKey;
         public string EndingShareDictionaryKey;
@@ -74,7 +75,6 @@ public class ContinueController : Singleton<ContinueController>
                 if (button == null || data == null) continue;
 
                 TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-                
                 // --- 訪問判定ロジック (ここを修正) ---
                 string targetPhaseName = data.CurrentPhase.ToString();
                 string targetStepKey = data.CurrentPhaseStepKey; // Inspectorの値
@@ -115,7 +115,7 @@ public class ContinueController : Singleton<ContinueController>
                 if (isVisited)
                 {
                     // === 有効 ===
-                    if (buttonText) buttonText.text = data.ChapterName;
+                    if (buttonText) buttonText.text = data.chapterName.GetLocalizedString();
                     
                     button.interactable = true;
                     button.enabled = true; // コンポーネント復活
@@ -154,7 +154,7 @@ public class ContinueController : Singleton<ContinueController>
             {
                 if (button == null) continue;
                 TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-                if (buttonText != null) buttonText.text = data.ChapterName;
+                if (buttonText != null) buttonText.text = data.chapterName.GetLocalizedString();
             }
         }
     }

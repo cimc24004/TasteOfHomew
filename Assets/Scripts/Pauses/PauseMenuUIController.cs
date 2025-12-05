@@ -48,8 +48,12 @@ public class PauseMenuUIController : MonoBehaviour
     private void SceneLoaded(Scene scene, LoadSceneMode mode)
     {
         configController = ConfigController.instance;
-        configMenuUIController = configController.uiController;
-        configPanel = configMenuUIController.SettingCanvas;
+        if(configController != null)
+        {
+            configMenuUIController = configController.uiController;
+            configPanel = configMenuUIController.SettingCanvas;
+
+        }
 
     }
     // --- PauseMenuControllerから呼び出されるメソッド ---
