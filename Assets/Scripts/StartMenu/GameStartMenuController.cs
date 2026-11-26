@@ -1,13 +1,28 @@
+using System.Collections.Generic;
+using System.Linq;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using DG.Tweening; // DOTweenを使用しているため
-using UnityEngine.EventSystems;
-using System.Collections.Generic;
-using System.Linq; // EventSystemを使用しているため
 
+/// <summary>
+/// タイトル画面のメニュー。
+/// スタートメニュー（はじめから / つづける / 設定 / クレジット / 終了）と、
+/// セーブ地点を選ぶコンティニューメニューの切り替えを担当する。
+/// </summary>
 public class GameStartMenuController : Singleton<GameStartMenuController>
 {
+    // UIFlowManager に登録されているパネル名
+    private const string StartNavPanelName = "StartNavMenu";
+    private const string ContinuePanelName = "ContinueMenu";
+
+    // 遷移先のシーン名
+    private const string FirstSceneName = "LeaveSchool";
+    private const string CreditSceneName = "Credit";
+
+    // ===== Inspector =====
+
     [SerializeField] private Button QuitGameButton;
     [SerializeField] private Button GameStartFromBeginButton;
     [SerializeField] private Button GameContinueButton;
@@ -19,136 +34,135 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
     [SerializeField] private CanvasGroup StartNavMenuCanvasGroup;
     [SerializeField] private CanvasGroup ContinueMenuCanvasGroup;
 
-    // --- 各種コントローラーへの参照 ---
+    // ===== 他のコントローラーへの参照 =====
+
     private SceneManagerController sceneManagerController;
     private UIFlowManager uIFlowManager;
     private ConfigController configController;
     private ConfigMenuUIController configMenuUIController;
     private ContinueController continueController;
     private GameStateController gameStateController;
-    void Start()
+
+    // ===== Unity ライフサイクル =====
+
+    private void Start()
     {
-        // --- 参照の取得 ---
         uIFlowManager = UIFlowManager.instance;
         sceneManagerController = SceneManagerController.Instance;
         configController = ConfigController.instance;
         configMenuUIController = ConfigMenuUIController.instance;
         continueController = ContinueController.instance;
         gameStateController = GameStateController.instance;
-        // --- メニューの初期状態を設定 ---
-        // スタートメニューは表示
+
+        // 最初はスタートメニューだけを表示する
         StartNavMenuCanvasGroup.alpha = 1;
-        StartNavMenuCanvasGroup.interactable = true;
-        StartNavMenuCanvasGroup.blocksRaycasts = true;
-        // コンティニューメニューは非表示
+        SetInteractive(StartNavMenuCanvasGroup, true);
         ContinueMenuCanvasGroup.alpha = 0;
-        ContinueMenuCanvasGroup.interactable = false;
-        ContinueMenuCanvasGroup.blocksRaycasts = false;
-        // ------------------------------
+        SetInteractive(ContinueMenuCanvasGroup, false);
 
-        // --- ボタンリスナーの登録 ---
+        QuitGameButton.onClick.AddListener(QuitGame);
+        GameStartFromBeginButton.onClick.AddListener(StartFromBeginning);
+        GameContinueButton.onClick.AddListener(OpenContinueMenu);
+        ContinueToTopBackButton.onClick.AddListener(BackToStartMenu);
+        CreditButton.onClick.AddListener(OpenCredit);
+        SettingButton.onClick.AddListener(OpenSettings);
+        configMenuUIController.HandleApplyEvent.AddListener(OnSettingsClosed);
 
-        // ゲーム終了ボタン
-        QuitGameButton.onClick.AddListener(() =>
-        {
-            #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;//ゲームプレイ終了
-            #else
-                Application.Quit();//ゲームプレイ終了
-            #endif
-        });
-
-        // 「はじめから」ボタン
-        GameStartFromBeginButton.onClick.AddListener(() =>
-        {
-            sceneManagerController.LoadScene("LeaveSchool");
-            GameStartFromBeginButton.enabled = false; // 二重クリック防止
-        });
-
-        // 「つづける」ボタン（コンティニューメニューを表示）
-        GameContinueButton.onClick.AddListener(() =>
-        {
-            // スタートメニューを操作不可に
-            StartNavMenuCanvasGroup.interactable = true;
-            StartNavMenuCanvasGroup.blocksRaycasts = false;
-            // コンティニューメニューへ切り替え
-            uIFlowManager.SwitchToPanel("ContinueMenu");
-           Dictionary<Button, ContinueController.ContinueData>.KeyCollection continueSlotsKeys = continueController.continueSlots.Keys;
-           continueSlotsKeys.First();
-            if (continueSlotsKeys.First().interactable)
-            {
-                continueSlotsKeys.First().Select();
-            }
-            else
-            {
-                ContinueToTopBackButton.Select();
-            }
-           continueController.SetupContinueButtons();
-        });
-
-        // 「トップへ戻る」ボタン（スタートメニューを表示）
-        ContinueToTopBackButton.onClick.AddListener(() =>
-        {
-            // コンティニューメニューを操作不可に
-            ContinueMenuCanvasGroup.interactable = false;
-            ContinueMenuCanvasGroup.blocksRaycasts = false;
-            // スタートメニューへ切り替え
-            uIFlowManager.SwitchToPanel("StartNavMenu");
-            // フォーカスを「はじめから」ボタンに戻す
-            if (EventSystem.current != null)
-            {
-                EventSystem.current.SetSelectedGameObject(GameStartFromBeginButton.gameObject);
-            }
-        });
-        CreditButton.onClick.AddListener(() =>
-        {
-            sceneManagerController.LoadScene("Credit");
-        });
-        // 最初のフォーカスを設定
         GameStartFromBeginButton.Select();
-
-        // 設定画面との連携 (修正箇所)
-
-        // --- 設定ボタンのリスナー ---
-        SettingButton.onClick.AddListener(() =>
-        {
-            // 1. 設定画面を開く
-            configMenuUIController.OpenSettingCanvas();
-
-            // 2. メインメニュー（両方）の操作を無効化する
-            // これにより、設定画面が開いている間はボタンが選択できなくなる
-            StartNavMenuCanvasGroup.interactable = false;
-            StartNavMenuCanvasGroup.blocksRaycasts = false;
-            ContinueMenuCanvasGroup.interactable = false;
-            ContinueMenuCanvasGroup.blocksRaycasts = false;
-        });
-
-        // --- 設定を閉じるイベントのリスナー ---
-        configMenuUIController.HandleApplyEvent.AddListener(() =>
-        {
-            // 1. 設定画面を閉じる
-            configMenuUIController.CloseSettingCanvas();
-
-            // 2. ConfigControllerに閉じたことを通知し、フォーカスを設定ボタンに戻す
-            configController.OnCloseConfig(SettingButton.gameObject);
-
-            // 3. メインメニューの操作を有効化する
-            // alpha値を見て、表示されている方だけを操作可能に戻す
-            if (StartNavMenuCanvasGroup.alpha > 0.5f) // 0 or 1 の想定
-            {
-                StartNavMenuCanvasGroup.interactable = true;
-                StartNavMenuCanvasGroup.blocksRaycasts = true;
-            }
-
-            if (ContinueMenuCanvasGroup.alpha > 0.5f)
-            {
-                ContinueMenuCanvasGroup.interactable = true;
-                ContinueMenuCanvasGroup.blocksRaycasts = true;
-            }
-        });
 
         gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
     }
 
-    // Updateは現在使用していない
+    // ===== ボタンの処理 =====
+
+    private void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    private void StartFromBeginning()
+    {
+        sceneManagerController.LoadScene(FirstSceneName);
+        GameStartFromBeginButton.enabled = false; // 二重クリック防止
+    }
+
+    private void OpenContinueMenu()
+    {
+        // スタートメニューはクリックだけ通さないようにする（interactable は true のまま）
+        StartNavMenuCanvasGroup.interactable = true;
+        StartNavMenuCanvasGroup.blocksRaycasts = false;
+
+        uIFlowManager.SwitchToPanel(ContinuePanelName);
+
+        // 先頭のセーブスロットが選べるならそこに、選べなければ「戻る」ボタンにフォーカスを置く
+        Button firstSlotButton = continueController.continueSlots.Keys.First();
+        if (firstSlotButton.interactable)
+        {
+            firstSlotButton.Select();
+        }
+        else
+        {
+            ContinueToTopBackButton.Select();
+        }
+
+        continueController.SetupContinueButtons();
+    }
+
+    private void BackToStartMenu()
+    {
+        SetInteractive(ContinueMenuCanvasGroup, false);
+
+        uIFlowManager.SwitchToPanel(StartNavPanelName);
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(GameStartFromBeginButton.gameObject);
+        }
+    }
+
+    private void OpenCredit()
+    {
+        sceneManagerController.LoadScene(CreditSceneName);
+    }
+
+    // ===== 設定画面との連携 =====
+
+    private void OpenSettings()
+    {
+        configMenuUIController.OpenSettingCanvas();
+
+        // 設定画面を開いている間は、後ろのメニューを操作できないようにする
+        SetInteractive(StartNavMenuCanvasGroup, false);
+        SetInteractive(ContinueMenuCanvasGroup, false);
+    }
+
+    /// <summary>設定画面で「適用」されたとき。設定画面を閉じて、メニューを操作できる状態に戻す。</summary>
+    private void OnSettingsClosed()
+    {
+        configMenuUIController.CloseSettingCanvas();
+
+        // フォーカスを設定ボタンに戻す
+        configController.OnCloseConfig(SettingButton.gameObject);
+
+        // 表示されている方（alpha が 1 の方）のメニューだけ操作可能に戻す
+        if (StartNavMenuCanvasGroup.alpha > 0.5f)
+        {
+            SetInteractive(StartNavMenuCanvasGroup, true);
+        }
+
+        if (ContinueMenuCanvasGroup.alpha > 0.5f)
+        {
+            SetInteractive(ContinueMenuCanvasGroup, true);
+        }
+    }
+
+    private static void SetInteractive(CanvasGroup canvasGroup, bool interactive)
+    {
+        canvasGroup.interactable = interactive;
+        canvasGroup.blocksRaycasts = interactive;
+    }
 }

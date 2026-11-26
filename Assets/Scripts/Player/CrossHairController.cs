@@ -1,15 +1,24 @@
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem; // PlayerInput用に必要
+using UnityEngine.InputSystem;
 using UnityEngine.Localization.Components;
 
+/// <summary>
+/// 画面中央のクロスヘア。
+/// 毎フレーム、視線の先にインタラクト可能なもの（IInteractable）があるかを調べ、
+/// あれば操作ガイド（「話す」「読む」など）を表示し、入力があればインタラクトを実行する。
+/// </summary>
 public class CrossHairController : Singleton<CrossHairController>
 {
+    private const string InteractActionName = "InteractAction";
+    private const string HighlightAnimatorParameter = "HighLight";
+
+    // ===== Inspector =====
+
     [Title("Ray 設定")]
     [SerializeField, Min(0.01f)] private float maxDistance = 2.0f;
     [SerializeField] private LayerMask targetLayerMask = ~0;
-    private Camera mainCamera;
 
     [Title("当てやすさ")]
     [SerializeField] private bool useSphereCast = false;
@@ -27,62 +36,36 @@ public class CrossHairController : Singleton<CrossHairController>
     [Tooltip("promptText にアタッチされている Localize String Event")]
     [SerializeField] private LocalizeStringEvent promptLocalizeEvent;
 
-    [Title("Animator")]
+    // ===== 実行時の状態 =====
+
+    private Camera mainCamera;
     private Animator crosshairAnimator;
-
-    private bool isHighlight;
-    private IInteractable currentInteractable;
-
     private PlayerInput playerInput;
     private InputAction interactAction;
-    private GameController gameController;
-    private PlayerUIInfo playerUIInfo;
 
-    void Start()
+    // ===== Unity ライフサイクル =====
+
+    private void Start()
     {
         if (!mainCamera) mainCamera = Camera.main;
         SetHighlight(false);
 
-        // シングルトンや他のクラスへの参照取得
         if (PlayerDataHub.instance != null)
         {
             playerInput = PlayerDataHub.instance.CurrentplayerInput;
-            if (playerInput != null) interactAction = playerInput.actions.FindAction("InteractAction");
+            if (playerInput != null) interactAction = playerInput.actions.FindAction(InteractActionName);
         }
 
         if (GameController.instance != null)
         {
-            gameController = GameController.instance;
-            playerUIInfo = gameController.playerUIInfo;
-
-            if (playerUIInfo != null)
-            {
-                if (playerUIInfo.crosshair != null)
-                    crosshairAnimator = playerUIInfo.crosshair.GetComponent<Animator>();
-
-                promptText = playerUIInfo.promptText;
-                InteractBox = playerUIInfo.InteractBox;
-                InteractBoxCanvasGroup = playerUIInfo.InteractBoxCanvasGroup;
-
-                // PlayerUIInfo の設定を優先して上書き
-                if (playerUIInfo.promptLocalizeEvent != null)
-                {
-                    this.promptLocalizeEvent = playerUIInfo.promptLocalizeEvent;
-                }
-                if (!string.IsNullOrEmpty(playerUIInfo.defaultInteractTableName))
-                {
-                    this.defaultInteractTableName = playerUIInfo.defaultInteractTableName;
-                }
-            }
+            ApplyPlayerUIInfo(GameController.instance.playerUIInfo);
         }
 
-        // (フォールバック) コンポーネント取得
         if (promptText != null && promptLocalizeEvent == null)
         {
             promptLocalizeEvent = promptText.GetComponent<LocalizeStringEvent>();
         }
 
-        // エラーチェック
         if (promptLocalizeEvent == null)
         {
             Debug.LogError("[CrossHairController] promptLocalizeEvent が設定されていません！翻訳機能が動作しません。");
@@ -93,123 +76,121 @@ public class CrossHairController : Singleton<CrossHairController>
         }
     }
 
-    void Update()
+    private void Update()
     {
         if (!mainCamera) return;
 
+        IInteractable interactable = FindInteractableUnderCrosshair();
+        if (interactable == null)
+        {
+            SetHighlight(false);
+            HidePrompt();
+            return;
+        }
+
+        SetHighlight(interactable.ShouldHighlight());
+        ShowPrompt(interactable.GetDisplayText());
+
+        if (interactAction != null && interactAction.triggered)
+        {
+            Interact(interactable);
+        }
+    }
+
+    // ===== 初期化 =====
+
+    /// <summary>シーンの PlayerUIInfo が持つ UI 参照で、Inspector の設定を上書きする。</summary>
+    private void ApplyPlayerUIInfo(PlayerUIInfo playerUIInfo)
+    {
+        if (playerUIInfo == null) return;
+
+        if (playerUIInfo.crosshair != null)
+        {
+            crosshairAnimator = playerUIInfo.crosshair.GetComponent<Animator>();
+        }
+
+        promptText = playerUIInfo.promptText;
+        InteractBox = playerUIInfo.InteractBox;
+        InteractBoxCanvasGroup = playerUIInfo.InteractBoxCanvasGroup;
+
+        if (playerUIInfo.promptLocalizeEvent != null)
+        {
+            promptLocalizeEvent = playerUIInfo.promptLocalizeEvent;
+        }
+        if (!string.IsNullOrEmpty(playerUIInfo.defaultInteractTableName))
+        {
+            defaultInteractTableName = playerUIInfo.defaultInteractTableName;
+        }
+    }
+
+    // ===== 視線の先の判定とインタラクト =====
+
+    /// <summary>画面中央から Ray を飛ばし、最初に当たったものが持つ IInteractable を返す（なければ null）。</summary>
+    private IInteractable FindInteractableUnderCrosshair()
+    {
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         RaycastHit hit;
         bool hitAny = useSphereCast
             ? Physics.SphereCast(ray, sphereRadius, out hit, maxDistance, targetLayerMask)
             : Physics.Raycast(ray, out hit, maxDistance, targetLayerMask);
 
-        if (hitAny && hit.collider)
+        if (!hitAny || !hit.collider) return null;
+
+        return hit.collider.GetComponentInParent<IInteractable>();
+    }
+
+    private void Interact(IInteractable interactable)
+    {
+        // ドアだけは「誰が開けたか」が必要なので、プレイヤーを渡す
+        if (interactable is DoorController door)
         {
-            var interactable = hit.collider.GetComponentInParent<IInteractable>();
-            if (interactable != null)
-            {
-                SetHighlight(interactable.ShouldHighlight());
-                string displayString = interactable.GetDisplayText();
+            if (playerInput != null) door.Interact(playerInput.gameObject);
+        }
+        else
+        {
+            interactable.Interact();
+        }
+    }
 
-                // 型判定ロジック
+    // ===== 操作ガイドの表示 =====
 
-                // (A) 基本は「翻訳が必要(true)」とする
-                bool needsLocalization = true;
-
-                // もし「翻訳不要なクラス（生のテキストを表示するクラス）」なら false にする
-                // ※ ここに実際のクラス名を入れてください。例としてコメントにあった名前を使用しています。
-                // if (interactable is InteractEventRelay || interactable is PlayerableCall)
-                // {
-                //     needsLocalization = false;
-                // }
-
-                // ※もし逆のロジック（特定のクラスだけ翻訳する）が良い場合は以下のように書き換えてください
-                /*
-                bool needsLocalization = false;
-                if (interactable is NpcDialogueCaller) needsLocalization = true;
-                */
-
-                // ---------------------------------------------------------
-
-                if (string.IsNullOrEmpty(displayString))
-                {
-                    // (1) 文字列が空なら、常に非表示
-                    if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null;
-                    if (promptText) promptText.text = "";
-                    if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 0.0f;
-                }
-                else if (needsLocalization)
-                {
-                    // (2) 翻訳が必要なクラスの場合 (キーとして扱う)
-                    if (promptLocalizeEvent != null && !string.IsNullOrEmpty(defaultInteractTableName))
-                    {
-                        // テーブル名とキーを設定して、翻訳システムに任せる
-                        promptLocalizeEvent.StringReference.TableReference = defaultInteractTableName;
-                        promptLocalizeEvent.StringReference.TableEntryReference = displayString;
-
-                        if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 1f;
-                    }
-                }
-                else
-                {
-                    // (3) 翻訳が不要なクラスの場合 (生のテキストとして扱う)
-
-                    // 重要: LocalizeEventが生きていると上書きされるため、参照を切る
-                    if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null;
-
-                    if (promptText != null)
-                    {
-                        promptText.text = displayString; // displayString をそのまま表示
-                    }
-                    if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 1f;
-                }
-
-                currentInteractable = interactable;
-
-                if (interactAction != null && interactAction.triggered)
-                {
-                    // DoorController など特定の型に対する処理があればここに
-                    if (interactable is DoorController door)
-                    {
-                        if(playerInput != null) door.Interact(playerInput.gameObject);
-                    }
-                    else
-                    {
-                        interactable.Interact();
-                    }
-                }
-                return;
-            }
+    /// <summary>操作ガイドを表示する。displayKey はローカライズテーブルのキーとして扱い、翻訳して表示する。</summary>
+    private void ShowPrompt(string displayKey)
+    {
+        if (string.IsNullOrEmpty(displayKey))
+        {
+            HidePrompt();
+            return;
         }
 
-        // 何もヒットしなかった場合
-        SetHighlight(false);
+        if (promptLocalizeEvent != null && !string.IsNullOrEmpty(defaultInteractTableName))
+        {
+            promptLocalizeEvent.StringReference.TableReference = defaultInteractTableName;
+            promptLocalizeEvent.StringReference.TableEntryReference = displayKey;
 
-        // 表示を消す処理
+            if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 1f;
+        }
+    }
+
+    private void HidePrompt()
+    {
         if (promptLocalizeEvent != null)
         {
-             promptLocalizeEvent.StringReference.TableEntryReference = null; // キーをクリア
+            promptLocalizeEvent.StringReference.TableEntryReference = null;
         }
         if (promptText) promptText.text = "";
 
-        // CanvasGroupで消す
         if (InteractBoxCanvasGroup != null && InteractBoxCanvasGroup.alpha > 0f)
         {
             InteractBoxCanvasGroup.alpha = 0f;
         }
-
-        currentInteractable = null;
     }
 
-    void SetHighlight(bool on)
+    private void SetHighlight(bool on)
     {
-        // ハイライト状態が変わった時だけ叩くガードを入れても良いが、Animatorの仕様による
-        // if (isHighlight == on) return;
-
-        isHighlight = on;
         if (crosshairAnimator)
         {
-            crosshairAnimator.SetBool("HighLight", isHighlight);
+            crosshairAnimator.SetBool(HighlightAnimatorParameter, on);
         }
     }
 }

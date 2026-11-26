@@ -1,12 +1,31 @@
 using System.Collections;
-using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
+/// <summary>
+/// オブジェクトを揺らす汎用コンポーネント。位置・回転・スケールのどれを揺らすかと、揺れ方を選べる。
+///
+/// 揺れ方（ShakeMode）:
+///   ・Garagara … 一定間隔でランダムな姿勢に切り替える（ガタガタ）
+///   ・Perlin   … パーリンノイズによる滑らかで不規則な揺れ
+///   ・Impulse  … 最初に強く動いて、だんだん収まる
+///   ・Sine     … 規則的な往復
+/// </summary>
 [DisallowMultipleComponent]
 public class ObjectShaker : SerializedMonoBehaviour
 {
     public enum ShakeMode { Garagara, Perlin, Impulse, Sine }
     public enum ShakeTarget { Position, Rotation, Scale, All }
+
+    /// <summary>1 フレーム分の揺れ（初期姿勢からのずれ）。</summary>
+    private struct ShakeOffsets
+    {
+        public Vector3 position;
+        public Vector3 rotation;
+        public Vector3 scale;
+    }
+
+    // ===== Inspector =====
 
     [Header("Target")]
     public Transform target;
@@ -28,7 +47,7 @@ public class ObjectShaker : SerializedMonoBehaviour
 
     [Header("Garagara (ランダムステップ)")]
     [LabelText("ステップ間隔")]
-    public float garagaraInterval = 0.15f; // 間隔（秒）
+    public float garagaraInterval = 0.15f;
     [LabelText("ステップを補間して切替を滑らかにする")]
     public bool garagaraSmooth = true;
     [LabelText("補間の速さ（Inspectorで調整）")]
@@ -50,69 +69,92 @@ public class ObjectShaker : SerializedMonoBehaviour
     [LabelText("Garagara以外の1ステップの長さ(秒)")]
     public float stepDuration = 0.12f;
 
-    // 内部
-    private Vector3 initialLocalPos;
-    private Vector3 initialLocalRot;
-    private Vector3 initialLocalScale;
+    // ===== 実行時の状態 =====
+
+    // 揺らす前の姿勢（useLocal ならローカル、そうでなければワールド座標系）
+    private Vector3 initialPosition;
+    private Vector3 initialEulerAngles;
+    private Vector3 initialScale;
     private Coroutine shakeRoutine;
 
-    // Garagara 補間状態
-    private Vector3 garagaraCurrentPos = Vector3.zero;
-    private Vector3 garagaraTargetPos = Vector3.zero;
-    private Vector3 garagaraCurrentRot = Vector3.zero;
-    private Vector3 garagaraTargetRot = Vector3.zero;
-    private Vector3 garagaraCurrentScale = Vector3.zero;
-    private Vector3 garagaraTargetScale = Vector3.zero;
-    private float garagaraTimerForLerp = 0f;
+    // Garagara: 「ひとつ前の姿勢 → 次の姿勢」へ補間しながら切り替える
+    private ShakeOffsets garagaraFrom;
+    private ShakeOffsets garagaraTo;
+    private float garagaraStepTimer;
+    private float garagaraLerpTimer;
 
-    void Reset()
+    // Impulse: 開始時に決めたランダムな方向へ動き、時間とともに減衰する
+    private Vector3 impulseDirectionPosition;
+    private Vector3 impulseDirectionRotation;
+    private Vector3 impulseDirectionScale;
+    private float impulseElapsed;
+
+    private float TimeNow => useUnscaledTime ? Time.unscaledTime : Time.time;
+    private float DeltaTime => useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+
+    // ===== Unity ライフサイクル =====
+
+    private void Reset()
     {
         if (target == null) target = this.transform;
     }
 
-    void Awake()
+    private void Awake()
     {
-        if (target == null) target = this.transform;
         CacheInitial();
     }
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (target == null) target = this.transform;
+        if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            CacheInitial();
+        }
+    }
+#endif
+
+    // ===== 公開 API =====
+
+    /// <summary>現在の姿勢を「揺らす前の姿勢」として覚える。</summary>
     [Button(ButtonSizes.Medium)]
     public void CacheInitial()
     {
         if (target == null) target = this.transform;
+
         if (useLocal)
         {
-            initialLocalPos = target.localPosition;
-            initialLocalRot = target.localEulerAngles;
-            initialLocalScale = target.localScale;
+            initialPosition = target.localPosition;
+            initialEulerAngles = target.localEulerAngles;
         }
         else
         {
-            initialLocalPos = target.position;
-            initialLocalRot = target.eulerAngles;
-            initialLocalScale = target.localScale;
+            initialPosition = target.position;
+            initialEulerAngles = target.eulerAngles;
         }
+        initialScale = target.localScale;
     }
 
     [Button(ButtonSizes.Large)]
     public void StartShakeButton() => StartShake();
-    [Button] public void StopShakeButton() => StopShake();
+
+    [Button]
+    public void StopShakeButton() => StopShake();
 
     public void StartShake()
     {
-        if (target == null) target = this.transform;
         CacheInitial();
         if (shakeRoutine != null) StopCoroutine(shakeRoutine);
 
-        // reset garagara interpolation state
-        garagaraCurrentPos = garagaraTargetPos = Vector3.zero;
-        garagaraCurrentRot = garagaraTargetRot = Vector3.zero;
-        garagaraCurrentScale = garagaraTargetScale = Vector3.zero;
-        garagaraTimerForLerp = 0f;
+        garagaraFrom = default;
+        garagaraTo = default;
+        garagaraLerpTimer = 0f;
 
         shakeRoutine = StartCoroutine(ShakeCoroutine());
     }
 
+    /// <summary>揺れを止めて、揺らす前の姿勢に戻す。</summary>
     public void StopShake()
     {
         if (shakeRoutine != null)
@@ -123,168 +165,190 @@ public class ObjectShaker : SerializedMonoBehaviour
         RestoreInitial();
     }
 
-    private void RestoreInitial()
-    {
-        if (target == null) return;
-        if (useLocal)
-        {
-            target.localPosition = initialLocalPos;
-            target.localEulerAngles = initialLocalRot;
-            target.localScale = initialLocalScale;
-        }
-        else
-        {
-            target.position = initialLocalPos;
-            target.eulerAngles = initialLocalRot;
-            target.localScale = initialLocalScale;
-        }
-    }
-
-    private float TimeNow => useUnscaledTime ? Time.unscaledTime : Time.time;
-    private float DeltaTime => useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+    // ===== 揺れの本体 =====
 
     private IEnumerator ShakeCoroutine()
     {
         float startTime = TimeNow;
         float elapsed = 0f;
-        float garagaraTimer = 0f;
 
-        Vector3 impulseDirPos = Random.onUnitSphere;
-        Vector3 impulseDirRot = Random.onUnitSphere;
-        Vector3 impulseDirScale = Random.onUnitSphere;
-        float impulseElapsed = 0f;
+        garagaraStepTimer = 0f;
+        impulseDirectionPosition = Random.onUnitSphere;
+        impulseDirectionRotation = Random.onUnitSphere;
+        impulseDirectionScale = Random.onUnitSphere;
+        impulseElapsed = 0f;
 
-        float effectiveDuration = duration;
-        if (useCount && shakeCount > 0)
-        {
-            effectiveDuration = (mode == ShakeMode.Garagara) ? garagaraInterval * shakeCount : stepDuration * shakeCount;
-        }
+        float totalDuration = GetTotalDuration();
 
-        while (loop || effectiveDuration <= 0f || elapsed < effectiveDuration)
+        // loop 指定、または持続時間が 0 以下のときは、StopShake されるまで揺らし続ける
+        while (loop || totalDuration <= 0f || elapsed < totalDuration)
         {
             elapsed = TimeNow - startTime;
-            Vector3 posOffset = Vector3.zero;
-            Vector3 rotOffset = Vector3.zero;
-            Vector3 scaleOffset = Vector3.zero;
-
-            switch (mode)
-            {
-                case ShakeMode.Garagara:
-                {
-                    // 既存の処理（そのまま）
-                    garagaraTimer += DeltaTime;
-                    if (garagaraTimer >= garagaraInterval)
-                    {
-                        garagaraTimer = 0f;
-                        garagaraTimerForLerp = 0f;
-                        garagaraCurrentPos = garagaraTargetPos;
-                        garagaraCurrentRot = garagaraTargetRot;
-                        garagaraCurrentScale = garagaraTargetScale;
-
-                        garagaraTargetPos = Vector3.Scale(RandomVector3(-1f, 1f), positionIntensity);
-                        garagaraTargetRot = Vector3.Scale(RandomVector3(-1f, 1f), rotationIntensity);
-                        garagaraTargetScale = Vector3.Scale(RandomVector3(-0.5f, 0.5f), scaleIntensity);
-                    }
-                    else
-                    {
-                        garagaraTimerForLerp += DeltaTime;
-                    }
-
-                    if (garagaraSmooth && garagaraInterval > 0f)
-                    {
-                        float rawT = Mathf.Clamp01(garagaraTimerForLerp / Mathf.Max(garagaraInterval, 0.0001f));
-                        float lerpT = Mathf.Clamp01(rawT * garagaraLerpSpeed);
-                        posOffset = Vector3.Lerp(garagaraCurrentPos, garagaraTargetPos, lerpT);
-                        rotOffset = Vector3.Lerp(garagaraCurrentRot, garagaraTargetRot, lerpT);
-                        scaleOffset = Vector3.Lerp(garagaraCurrentScale, garagaraTargetScale, lerpT);
-                    }
-                    else
-                    {
-                        posOffset = garagaraTargetPos;
-                        rotOffset = garagaraTargetRot;
-                        scaleOffset = garagaraTargetScale;
-                    }
-                    break;
-                }
-
-                case ShakeMode.Perlin:
-                {
-                    // 変数名を perlinT にして衝突回避
-                    float perlinT = TimeNow * frequency;
-                    posOffset = new Vector3(
-                        (Mathf.PerlinNoise(perlinT, 0) * 2f - 1f) * positionIntensity.x,
-                        (Mathf.PerlinNoise(0, perlinT) * 2f - 1f) * positionIntensity.y,
-                        (Mathf.PerlinNoise(perlinT * 0.5f, perlinT * 0.4f) * 2f - 1f) * positionIntensity.z
-                    );
-                    rotOffset = new Vector3(
-                        (Mathf.PerlinNoise(perlinT * 1.3f, 10) * 2f - 1f) * rotationIntensity.x,
-                        (Mathf.PerlinNoise(10, perlinT * 1.6f) * 2f - 1f) * rotationIntensity.y,
-                        (Mathf.PerlinNoise(perlinT * 0.9f, perlinT * 1.1f) * 2f - 1f) * rotationIntensity.z
-                    );
-                    scaleOffset = new Vector3(
-                        (Mathf.PerlinNoise(perlinT * 2.1f, 5) * 2f - 1f) * scaleIntensity.x,
-                        (Mathf.PerlinNoise(7, perlinT * 2.3f) * 2f - 1f) * scaleIntensity.y,
-                        (Mathf.PerlinNoise(perlinT * 1.7f, 3) * 2f - 1f) * scaleIntensity.z
-                    );
-                    break;
-                }
-
-                case ShakeMode.Impulse:
-                {
-                    float decayFactor = Mathf.Exp(-impulseDecay * impulseElapsed);
-                    posOffset = Vector3.Scale(impulseDirPos, positionIntensity) * impulseStrength * decayFactor;
-                    rotOffset = Vector3.Scale(impulseDirRot, rotationIntensity) * impulseStrength * decayFactor;
-                    scaleOffset = Vector3.Scale(impulseDirScale, scaleIntensity) * impulseStrength * decayFactor;
-                    impulseElapsed += DeltaTime;
-                    break;
-                }
-
-                case ShakeMode.Sine:
-                {
-                    // 変数名を sineT にして衝突回避
-                    float sineT = TimeNow;
-                    posOffset = new Vector3(
-                        Mathf.Sin(sineT * sineFreq.x) * positionIntensity.x,
-                        Mathf.Sin(sineT * sineFreq.y + 1.2f) * positionIntensity.y,
-                        Mathf.Sin(sineT * sineFreq.z + 2.8f) * positionIntensity.z
-                    );
-                    rotOffset = new Vector3(
-                        Mathf.Sin(sineT * (sineFreq.x * 0.8f)) * rotationIntensity.x,
-                        Mathf.Sin(sineT * (sineFreq.y * 1.1f) + 0.3f) * rotationIntensity.y,
-                        Mathf.Sin(sineT * (sineFreq.z * 0.9f) + 1.7f) * rotationIntensity.z
-                    );
-                    scaleOffset = new Vector3(
-                        Mathf.Sin(sineT * (sineFreq.x * 1.4f)) * scaleIntensity.x,
-                        Mathf.Sin(sineT * (sineFreq.y * 1.2f)) * scaleIntensity.y,
-                        Mathf.Sin(sineT * (sineFreq.z * 1.0f)) * scaleIntensity.z
-                    );
-                    break;
-                }
-            }
-
-            // Apply only selected targets
-            if (shakeTarget == ShakeTarget.Position || shakeTarget == ShakeTarget.All)
-            {
-                if (useLocal) target.localPosition = initialLocalPos + posOffset;
-                else target.position = initialLocalPos + posOffset;
-            }
-
-            if (shakeTarget == ShakeTarget.Rotation || shakeTarget == ShakeTarget.All)
-            {
-                if (useLocal) target.localEulerAngles = initialLocalRot + rotOffset;
-                else target.eulerAngles = initialLocalRot + rotOffset;
-            }
-
-            if (shakeTarget == ShakeTarget.Scale || shakeTarget == ShakeTarget.All)
-            {
-                target.localScale = initialLocalScale + scaleOffset;
-            }
-
+            ApplyOffsets(ComputeOffsets());
             yield return null;
         }
 
         RestoreInitial();
         shakeRoutine = null;
+    }
+
+    /// <summary>揺れの長さ。回数指定が有効なら「1 ステップの長さ × 回数」、そうでなければ duration。</summary>
+    private float GetTotalDuration()
+    {
+        if (!useCount || shakeCount <= 0) return duration;
+
+        float stepSeconds = mode == ShakeMode.Garagara ? garagaraInterval : stepDuration;
+        return stepSeconds * shakeCount;
+    }
+
+    private ShakeOffsets ComputeOffsets()
+    {
+        switch (mode)
+        {
+            case ShakeMode.Garagara: return ComputeGaragaraOffsets();
+            case ShakeMode.Perlin:   return ComputePerlinOffsets();
+            case ShakeMode.Impulse:  return ComputeImpulseOffsets();
+            case ShakeMode.Sine:     return ComputeSineOffsets();
+            default:                 return default;
+        }
+    }
+
+    private ShakeOffsets ComputeGaragaraOffsets()
+    {
+        // 一定間隔ごとに、次のランダムな姿勢を決める
+        garagaraStepTimer += DeltaTime;
+        if (garagaraStepTimer >= garagaraInterval)
+        {
+            garagaraStepTimer = 0f;
+            garagaraLerpTimer = 0f;
+            garagaraFrom = garagaraTo;
+
+            garagaraTo.position = Vector3.Scale(RandomVector3(-1f, 1f), positionIntensity);
+            garagaraTo.rotation = Vector3.Scale(RandomVector3(-1f, 1f), rotationIntensity);
+            garagaraTo.scale = Vector3.Scale(RandomVector3(-0.5f, 0.5f), scaleIntensity);
+        }
+        else
+        {
+            garagaraLerpTimer += DeltaTime;
+        }
+
+        // 補間なし: 次の姿勢へ瞬時に切り替える
+        if (!garagaraSmooth || garagaraInterval <= 0f) return garagaraTo;
+
+        float stepProgress = Mathf.Clamp01(garagaraLerpTimer / Mathf.Max(garagaraInterval, 0.0001f));
+        float lerpT = Mathf.Clamp01(stepProgress * garagaraLerpSpeed);
+
+        ShakeOffsets offsets;
+        offsets.position = Vector3.Lerp(garagaraFrom.position, garagaraTo.position, lerpT);
+        offsets.rotation = Vector3.Lerp(garagaraFrom.rotation, garagaraTo.rotation, lerpT);
+        offsets.scale = Vector3.Lerp(garagaraFrom.scale, garagaraTo.scale, lerpT);
+        return offsets;
+    }
+
+    private ShakeOffsets ComputePerlinOffsets()
+    {
+        // 軸ごとにノイズの読み取り位置と速さをずらして、動きが揃わないようにしている
+        float t = TimeNow * frequency;
+
+        ShakeOffsets offsets;
+        offsets.position = new Vector3(
+            SignedPerlin(t, 0) * positionIntensity.x,
+            SignedPerlin(0, t) * positionIntensity.y,
+            SignedPerlin(t * 0.5f, t * 0.4f) * positionIntensity.z
+        );
+        offsets.rotation = new Vector3(
+            SignedPerlin(t * 1.3f, 10) * rotationIntensity.x,
+            SignedPerlin(10, t * 1.6f) * rotationIntensity.y,
+            SignedPerlin(t * 0.9f, t * 1.1f) * rotationIntensity.z
+        );
+        offsets.scale = new Vector3(
+            SignedPerlin(t * 2.1f, 5) * scaleIntensity.x,
+            SignedPerlin(7, t * 2.3f) * scaleIntensity.y,
+            SignedPerlin(t * 1.7f, 3) * scaleIntensity.z
+        );
+        return offsets;
+    }
+
+    private ShakeOffsets ComputeImpulseOffsets()
+    {
+        float decayFactor = Mathf.Exp(-impulseDecay * impulseElapsed);
+        impulseElapsed += DeltaTime;
+
+        ShakeOffsets offsets;
+        offsets.position = Vector3.Scale(impulseDirectionPosition, positionIntensity) * impulseStrength * decayFactor;
+        offsets.rotation = Vector3.Scale(impulseDirectionRotation, rotationIntensity) * impulseStrength * decayFactor;
+        offsets.scale = Vector3.Scale(impulseDirectionScale, scaleIntensity) * impulseStrength * decayFactor;
+        return offsets;
+    }
+
+    private ShakeOffsets ComputeSineOffsets()
+    {
+        // 軸ごとに周波数と位相をずらして、動きが揃わないようにしている
+        float t = TimeNow;
+
+        ShakeOffsets offsets;
+        offsets.position = new Vector3(
+            Mathf.Sin(t * sineFreq.x) * positionIntensity.x,
+            Mathf.Sin(t * sineFreq.y + 1.2f) * positionIntensity.y,
+            Mathf.Sin(t * sineFreq.z + 2.8f) * positionIntensity.z
+        );
+        offsets.rotation = new Vector3(
+            Mathf.Sin(t * (sineFreq.x * 0.8f)) * rotationIntensity.x,
+            Mathf.Sin(t * (sineFreq.y * 1.1f) + 0.3f) * rotationIntensity.y,
+            Mathf.Sin(t * (sineFreq.z * 0.9f) + 1.7f) * rotationIntensity.z
+        );
+        offsets.scale = new Vector3(
+            Mathf.Sin(t * (sineFreq.x * 1.4f)) * scaleIntensity.x,
+            Mathf.Sin(t * (sineFreq.y * 1.2f)) * scaleIntensity.y,
+            Mathf.Sin(t * (sineFreq.z * 1.0f)) * scaleIntensity.z
+        );
+        return offsets;
+    }
+
+    /// <summary>揺れを、選択されている対象（位置 / 回転 / スケール）にだけ反映する。</summary>
+    private void ApplyOffsets(ShakeOffsets offsets)
+    {
+        if (shakeTarget == ShakeTarget.Position || shakeTarget == ShakeTarget.All)
+        {
+            if (useLocal) target.localPosition = initialPosition + offsets.position;
+            else target.position = initialPosition + offsets.position;
+        }
+
+        if (shakeTarget == ShakeTarget.Rotation || shakeTarget == ShakeTarget.All)
+        {
+            if (useLocal) target.localEulerAngles = initialEulerAngles + offsets.rotation;
+            else target.eulerAngles = initialEulerAngles + offsets.rotation;
+        }
+
+        if (shakeTarget == ShakeTarget.Scale || shakeTarget == ShakeTarget.All)
+        {
+            target.localScale = initialScale + offsets.scale;
+        }
+    }
+
+    private void RestoreInitial()
+    {
+        if (target == null) return;
+
+        if (useLocal)
+        {
+            target.localPosition = initialPosition;
+            target.localEulerAngles = initialEulerAngles;
+        }
+        else
+        {
+            target.position = initialPosition;
+            target.eulerAngles = initialEulerAngles;
+        }
+        target.localScale = initialScale;
+    }
+
+    // ===== 小さなヘルパー =====
+
+    /// <summary>パーリンノイズ（0 〜 1）を -1 〜 1 に引き伸ばしたもの。</summary>
+    private static float SignedPerlin(float x, float y)
+    {
+        return Mathf.PerlinNoise(x, y) * 2f - 1f;
     }
 
     private Vector3 RandomVector3(float min, float max)
@@ -295,15 +359,4 @@ public class ObjectShaker : SerializedMonoBehaviour
             Random.Range(min, max)
         );
     }
-
-#if UNITY_EDITOR
-    void OnValidate()
-    {
-        if (target == null) target = this.transform;
-        if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            CacheInitial();
-        }
-    }
-#endif
 }

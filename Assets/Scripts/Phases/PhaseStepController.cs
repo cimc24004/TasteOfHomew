@@ -18,7 +18,8 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class PhaseStepController : Singleton<PhaseStepController>
 {
-    private const string VisitedHistorySaveKey = "PhaseStepController_VisitedHistory";
+    /// <summary>訪問履歴のセーブキー（コンティニュー画面からも参照する）。</summary>
+    public const string VisitedHistorySaveKey = "PhaseStepController_VisitedHistory";
 
     // ===== Inspector =====
 
