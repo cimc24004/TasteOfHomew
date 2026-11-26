@@ -1,15 +1,18 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Steamworks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Steamworks;
-using UnityEngine.Playables;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI; // 必須
+using UnityEngine.InputSystem.UI;
+using UnityEngine.Playables;
+using UnityEngine.UI;
 
+/// <summary>
+/// 「このフラグが立っていたら、このエンディング」という対応 1 件分。
+/// </summary>
 [System.Serializable]
 public class KeyUnityEvent
 {
@@ -29,76 +32,71 @@ public class KeyUnityEvent
     [HideInInspector] public bool invoked = false;
 }
 
+/// <summary>
+/// エンディングシーンの進行役。
+///
+/// ・DataShareController のフラグを見て、どのエンディングを再生するかを決める
+/// ・エンディング名の表示と、Steam 実績の解除
+/// ・タイムラインが一時停止している間、プレイヤーのクリックで再開させる
+/// </summary>
 public class EndController : MonoBehaviour
 {
-    private PauseMenuController pauseMenuController;
-    [SerializeField] private Button ClickedJudgeButton;
-    [SerializeField] private bool WaitForPlayerInputClick;
     public enum ResolvePolicy
     {
         HighestPriorityOnly, // 最も高い priority の1件だけ実行（同点はリスト順）
         InvokeAllTrue        // true のものは全部実行
     }
+
+    // ===== Inspector =====
+
+    [SerializeField] private Button ClickedJudgeButton;
+    [SerializeField] private bool WaitForPlayerInputClick;
     [SerializeField] private TextMeshProUGUI EndingNameTextUI;
     [SerializeField] private ResolvePolicy resolvePolicy = ResolvePolicy.HighestPriorityOnly;
 
     [SerializeField] private List<KeyUnityEvent> keyEvents = new List<KeyUnityEvent>();
 
-    private DataShareController dataShareController;
     [SerializeField] private TimelinePlayback EndingTimelinePlayback;
     [SerializeField] private PlayerInput playerInput;
+
+    // ===== 実行時の状態 =====
+
+    private PauseMenuController pauseMenuController;
+    private DataShareController dataShareController;
+
+    // ===== Unity ライフサイクル =====
+
     private async void Start()
     {
+        // エンディング中はポーズメニューを開けないようにする
         pauseMenuController = PauseMenuController.instance;
         pauseMenuController.PauseMenuOpenPermit = false;
-        // 必要に応じて待機（君の現行仕様を尊重して1秒のまま）
+
+        // 他のコントローラーの初期化を少し待ってから、エンディングを決める
         await UniTask.WaitForSeconds(0.1f);
         CheckKeys();
-        // ClickedJudgeButton.onClick.AddListener(() =>
-        // {
-        //     Debug.Log("EndingTimelinePlayback.IsPlayingFromSignal: " + EndingTimelinePlayback.IsPlayingFromSignal);
-        //     if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
-        //     {
-        //         EndingTimelinePlayback.Resume();
-        //         WaitForPlayerInputClick = false;
-        //         EventSystem.current.SetSelectedGameObject(null);
-        //     }
-        // });
+
         playerInput.actions.FindAction("Click").performed += OnClickPerformed;
         playerInput.actions.FindAction("Submit").performed += OnClickPerformed;
     }
-    void OnDestroy()
+
+    private void OnDestroy()
     {
-        // エラー原因の修正
-        // シーン移動時は playerInput が先に死んでいることがあるため、nullチェック必須
+        // シーン移動時は playerInput が先に破棄されていることがある
         if (playerInput == null) return;
 
-        // アクション自体も念の為チェックして解除
         var clickAction = playerInput.actions?.FindAction("Click");
         var submitAction = playerInput.actions?.FindAction("Submit");
-        if (clickAction != null)
-        {
-            clickAction.performed -= OnClickPerformed;
-        }
-        if (submitAction != null)
-        {
-            submitAction.performed -= OnClickPerformed;
-        }
+        if (clickAction != null) clickAction.performed -= OnClickPerformed;
+        if (submitAction != null) submitAction.performed -= OnClickPerformed;
     }
-    // イベント受信用の中継メソッドを作成
-    private void OnClickPerformed(InputAction.CallbackContext ctx)
-    {
-        OnClickClickedJudgeButton();
-    }
-    public void OnClickClickedJudgeButton()
-    {
-        if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
-        {
-            EndingTimelinePlayback.Resume();
-            WaitForPlayerInputClick = false;
-            EventSystem.current.SetSelectedGameObject(null);
-        }
-    }
+
+    // ===== 公開 API: エンディングの決定 =====
+
+    /// <summary>
+    /// フラグが true のエンディングを探して、そのイベントを実行する。
+    /// resolvePolicy に応じて、優先度が最も高い 1 件だけ、または該当するものすべてを実行する。
+    /// </summary>
     [ContextMenu("Check Keys (Run)")]
     public void CheckKeys()
     {
@@ -112,100 +110,40 @@ public class EndController : MonoBehaviour
             }
         }
 
-        // true かつ 実行可能（invokeOnlyOnceが立っていたら未実行）な候補を集める
-        var candidates = new List<KeyUnityEvent>();
-        for (int i = 0; i < keyEvents.Count; i++)
-        {
-            var ke = keyEvents[i];
-            if (string.IsNullOrEmpty(ke.key)) continue;
-
-            bool val = dataShareController.GetFlag(ke.key);
-            if (!val) continue;
-
-            if (ke.invokeOnlyOnce && ke.invoked) continue;
-
-            candidates.Add(ke);
-        }
-
+        var candidates = CollectTrueEvents(skipAlreadyInvoked: true);
         if (candidates.Count == 0) return;
 
         if (resolvePolicy == ResolvePolicy.InvokeAllTrue)
         {
-            // すべて実行
-            foreach (var ke in candidates)
+            foreach (var keyEvent in candidates)
             {
-                ke.onTrue?.Invoke();
-                ke.invoked = true;
+                InvokeEvent(keyEvent);
             }
         }
-        else // HighestPriorityOnly
+        else
         {
-            // 最高 priority を選ぶ（同点は keyEvents の並びが早い方を優先）
-            KeyUnityEvent winner = null;
-            int bestPriority = int.MinValue;
-
-            // リストの順番＝Inspectorの並び順を優先に使いたいので keyEvents を基準に走査
-            for (int i = 0; i < keyEvents.Count; i++)
-            {
-                var ke = keyEvents[i];
-                if (!candidates.Contains(ke)) continue;
-
-                if (ke.priority > bestPriority)
-                {
-                    bestPriority = ke.priority;
-                    winner = ke;
-                }
-            }
-
-            // 実行
+            var winner = SelectHighestPriority(candidates);
             if (winner != null)
             {
-                winner.onTrue?.Invoke();
-                winner.invoked = true;
+                InvokeEvent(winner);
             }
         }
     }
+
+    /// <summary>成立したエンディングの名前を画面に表示し、対応する Steam 実績を解除する。</summary>
     public void EndingNameSet()
     {
         EventSystem.current.SetSelectedGameObject(null);
-        var candidates = new List<KeyUnityEvent>();
-        for (int i = 0; i < keyEvents.Count; i++)
-        {
-            var ke = keyEvents[i];
-            if (string.IsNullOrEmpty(ke.key)) continue;
 
-            bool val = dataShareController.GetFlag(ke.key);
-            if (!val) continue;
-
-            // 注意: 名前を表示するだけなので、CheckKeysと違って
-            // 「invokeOnlyOnce」や「invoked」はチェックしない
-            candidates.Add(ke);
-        }
-
+        // 名前を表示するだけなので、CheckKeys と違って「実行済みかどうか」は見ない
+        var candidates = CollectTrueEvents(skipAlreadyInvoked: false);
         if (candidates.Count == 0)
         {
             Debug.LogWarning("[EndController] EndingNameSet: 表示すべき True のエンディングフラグが見つかりません。");
-            return; // trueのフラグが1つもなかった
+            return;
         }
 
-        // 最高 priority を選ぶ（同点は keyEvents の並びが早い方を優先）
-        KeyUnityEvent winner = null;
-        int bestPriority = int.MinValue;
-
-        // リストの順番＝Inspectorの並び順を優先に使う
-        for (int i = 0; i < keyEvents.Count; i++)
-        {
-            var ke = keyEvents[i];
-            if (!candidates.Contains(ke)) continue; // true 候補に含まれていなければスキップ
-
-            if (ke.priority > bestPriority)
-            {
-                bestPriority = ke.priority;
-                winner = ke;
-            }
-        }
-
-        // 最終的な勝者のエンディング名を設定
+        var winner = SelectHighestPriority(candidates);
         if (winner != null)
         {
             if (EndingNameTextUI != null)
@@ -217,22 +155,95 @@ public class EndController : MonoBehaviour
                 Debug.LogWarning("[EndController] EndingNameTextUI がアタッチされていません。");
             }
         }
+
         if (SteamManager.Initialized)
         {
-            // API初期化成功後（必須）
-            string endingKey = winner.EndingName.Contains("3") ? "ENDING3" :
-                                winner.EndingName.Contains("2") ? "ENDING2" : "ENDING1";
-            SteamUserStats.GetAchievement(endingKey, out bool isUnlocked);
-            if (!isUnlocked)
-            {
-                SteamUserStats.SetAchievement(endingKey);
-            }
-            SteamUserStats.StoreStats();
+            UnlockSteamAchievement(GetAchievementKey(winner.EndingName));
         }
     }
+
+    // ===== 公開 API: クリック待ち =====
+
+    /// <summary>タイムラインを止めて、プレイヤーのクリックを待つ状態にする（タイムラインのシグナルから呼ばれる）。</summary>
     public void WaitForPlayerClick()
     {
         EventSystem.current.SetSelectedGameObject(ClickedJudgeButton.gameObject);
-        this.WaitForPlayerInputClick = true;
+        WaitForPlayerInputClick = true;
+    }
+
+    /// <summary>クリック待ちの状態でクリックされたら、タイムラインを再開する。</summary>
+    public void OnClickClickedJudgeButton()
+    {
+        if (WaitForPlayerInputClick && !EndingTimelinePlayback.IsPlayingFromSignal)
+        {
+            EndingTimelinePlayback.Resume();
+            WaitForPlayerInputClick = false;
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
+    private void OnClickPerformed(InputAction.CallbackContext context)
+    {
+        OnClickClickedJudgeButton();
+    }
+
+    // ===== エンディング判定の内部処理 =====
+
+    /// <summary>フラグが true になっているエンディングを、Inspector の並び順のまま集める。</summary>
+    private List<KeyUnityEvent> CollectTrueEvents(bool skipAlreadyInvoked)
+    {
+        var result = new List<KeyUnityEvent>();
+        foreach (var keyEvent in keyEvents)
+        {
+            if (string.IsNullOrEmpty(keyEvent.key)) continue;
+            if (!dataShareController.GetFlag(keyEvent.key)) continue;
+            if (skipAlreadyInvoked && keyEvent.invokeOnlyOnce && keyEvent.invoked) continue;
+
+            result.Add(keyEvent);
+        }
+        return result;
+    }
+
+    /// <summary>priority が最も高いものを返す。同点なら先に並んでいる方。</summary>
+    private static KeyUnityEvent SelectHighestPriority(List<KeyUnityEvent> candidates)
+    {
+        KeyUnityEvent winner = null;
+        int bestPriority = int.MinValue;
+
+        foreach (var candidate in candidates)
+        {
+            if (candidate.priority > bestPriority)
+            {
+                bestPriority = candidate.priority;
+                winner = candidate;
+            }
+        }
+        return winner;
+    }
+
+    private static void InvokeEvent(KeyUnityEvent keyEvent)
+    {
+        keyEvent.onTrue?.Invoke();
+        keyEvent.invoked = true;
+    }
+
+    // ===== Steam 実績 =====
+
+    /// <summary>エンディング名に含まれる番号から、Steam 実績の API 名を決める。</summary>
+    private static string GetAchievementKey(string endingName)
+    {
+        if (endingName.Contains("3")) return "ENDING3";
+        if (endingName.Contains("2")) return "ENDING2";
+        return "ENDING1";
+    }
+
+    private static void UnlockSteamAchievement(string achievementKey)
+    {
+        SteamUserStats.GetAchievement(achievementKey, out bool isUnlocked);
+        if (!isUnlocked)
+        {
+            SteamUserStats.SetAchievement(achievementKey);
+        }
+        SteamUserStats.StoreStats();
     }
 }
