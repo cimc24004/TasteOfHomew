@@ -1,28 +1,28 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Rendering;
 using Sirenix.OdinInspector;
+using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Rendering;
 
+/// <summary>
+/// 時間帯（朝 / 夕方 / 夜）とプレイヤーの場所（家の中 / 外）の組み合わせごとに、
+/// 見た目の設定（表示するライト類、追加 Volume、Skybox、Fog、環境光）を切り替える。
+///
+/// プレイヤーの場所が変わったときは、現在の時間帯のまま、その場所用の設定を適用し直す。
+/// </summary>
 [ExecuteAlways]
 [DisallowMultipleComponent]
 public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
 {
-    /// <summary>
-    /// 時間帯を定義します。
-    /// </summary>
     public enum TimeOfDay { Morning, Evening, Night }
 
-    /// <summary>
-    /// レンダリング設定をまとめたプロファイルです。
-    /// </summary>
+    /// <summary>1 つの「時間帯 × 場所」に対する見た目の設定。</summary>
     [System.Serializable]
     public class Profile
     {
         [Tooltip("この時間帯で SetActive(true) にするルート（ライトは Light を持つGameObjectをここへ）")]
         public List<GameObject> activeRoots = new();
 
-        // 追加ボリュームを管理するためのリストを追加
         [Header("Additional Volumes (任意)")]
         [Tooltip("このプロファイル適用時に有効化する追加Volumeを持つGameObject")]
         public List<GameObject> addVolumes = new();
@@ -45,7 +45,7 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [ShowIf(nameof(applyAmbient))] public AmbientMode ambientMode = AmbientMode.Skybox;
         [ShowIf(nameof(applyAmbient)), Range(0, 8)] public float ambientIntensity = 1f;
 
-        // Gradient (Trilight) モード用の色設定
+        // Gradient (Trilight) モード用の色
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
         [ColorUsage(false, true)] public Color ambientSkyColor = new(0.21f, 0.23f, 0.26f);
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
@@ -53,19 +53,12 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Trilight")]
         [ColorUsage(false, true)] public Color ambientGroundColor = new(0.05f, 0.05f, 0.05f);
 
-        // Color (Flat) モード用の色設定
+        // Color (Flat) モード用の色
         [ShowIf("@this.applyAmbient && this.ambientMode == UnityEngine.Rendering.AmbientMode.Flat")]
         [ColorUsage(false, true)] public Color ambientLight = new(0.21f, 0.23f, 0.26f);
-
-        // URP Volume Profile の設定を削除
-        // [Header("URP Volume Profile (任意)")]
-        // public bool applyVolume = false;
-        // [ShowIf(nameof(applyVolume))] public VolumeProfile volumeProfile;
     }
 
-    /// <summary>
-    /// 場所ごとのプロファイルを格納するためのヘルパークラスです。
-    /// </summary>
+    /// <summary>ある時間帯の、場所ごとのプロファイル。</summary>
     [System.Serializable]
     public class LocationProfiles
     {
@@ -73,12 +66,14 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         public Dictionary<PlayerLocation.Location, Profile> ProfilesByLocation = new();
     }
 
+    // ===== Inspector =====
+
     [Header("Auto Apply")]
     public bool applyOnEnable = true;
     public TimeOfDay initialTime = TimeOfDay.Morning;
 
     [Header("URP Global Volume (任意)")]
-    public Volume globalVolume; // 任意（切替えたい時だけアサイン）
+    public Volume globalVolume;
     public UnityEvent ApplingEvent;
 
     [Title("Profiles")]
@@ -89,37 +84,35 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
     [ReadOnly, ShowInInspector, LabelText("現在の時間帯")]
     public TimeOfDay Current { get; private set; }
 
+    // ===== 実行時の状態 =====
+
+    // 全プロファイルに登場するオブジェクトの一覧。切り替え時に、いったん全部 OFF にするために使う
     private readonly HashSet<GameObject> allRoots = new();
-    // 全ての追加ボリュームをキャッシュするためのHashSetを追加
     private readonly HashSet<GameObject> allAddVolumes = new();
 
-    protected override void Awake()
-    {
-        base.Awake();
-    }
+    // ===== Unity ライフサイクル =====
 
-    void OnEnable()
+    private void OnEnable()
     {
         BuildCaches();
         if (applyOnEnable) Apply(initialTime);
     }
 
-    void Start()
+    private void Start()
     {
-        if (Application.isPlaying)
+        if (!Application.isPlaying) return;
+
+        if (PlayerLocation.instance != null)
         {
-            if (PlayerLocation.instance != null)
-            {
-                PlayerLocation.instance.SetLocationEvent.AddListener(ApplyCurrentStateWithCurrentTime);
-            }
-            else
-            {
-                Debug.LogWarning("[TimeOfDayRenderer] PlayerLocation instance not found. Location changes won't trigger profile updates.");
-            }
+            PlayerLocation.instance.SetLocationEvent.AddListener(ApplyCurrentStateWithCurrentTime);
+        }
+        else
+        {
+            Debug.LogWarning("[TimeOfDayRenderer] PlayerLocation instance not found. Location changes won't trigger profile updates.");
         }
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         if (Application.isPlaying && PlayerLocation.instance != null)
         {
@@ -127,47 +120,108 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         }
     }
 
-    void OnValidate() => BuildCaches();
+    private void OnValidate() => BuildCaches();
 
-    // 新しいaddVolumesリストもキャッシュするように修正
-    void BuildCaches()
+    // ===== 公開 API =====
+
+    /// <summary>指定の時間帯の設定を、プレイヤーの現在の場所に合わせて適用する。</summary>
+    public void Apply(TimeOfDay t)
     {
-        allRoots.Clear();
-        allAddVolumes.Clear(); // キャッシュをクリア
+        Current = t;
 
-        void Collect(Profile p)
+        var profile = GetProfile(t);
+        if (profile == null)
         {
-            if (p == null) return;
-
-            // activeRoots をキャッシュ
-            if (p.activeRoots != null)
-            {
-                foreach (var go in p.activeRoots) if (go) allRoots.Add(go);
-            }
-
-            // addVolumes をキャッシュ
-            if (p.addVolumes != null)
-            {
-                foreach (var go in p.addVolumes) if (go) allAddVolumes.Add(go);
-            }
+            Debug.LogError($"[TimeOfDayRenderer] Apply failed because no matching profile was found for Time: {t} and the current location.");
+            return;
         }
 
-        if (profiles == null) return;
+        ApplingEvent.Invoke();
 
-        foreach(var locationProfiles in profiles.Values)
+        // いったん全部 OFF にしてから、このプロファイルのものだけ ON にする
+        SetActiveAll(allRoots, false);
+        SetActiveAll(allAddVolumes, false);
+        SetActiveAll(profile.activeRoots, true);
+        SetActiveAll(profile.addVolumes, true);
+
+        ApplySkybox(profile);
+        ApplyFog(profile);
+        ApplyAmbientLight(profile);
+
+        // Skybox / 環境光の変更を反映する
+        DynamicGI.UpdateEnvironment();
+    }
+
+    // ===== プロファイルの適用 =====
+
+    private static void ApplySkybox(Profile profile)
+    {
+        if (profile.applySkybox && profile.skybox)
         {
-            if (locationProfiles?.ProfilesByLocation == null) continue;
-            foreach(var profile in locationProfiles.ProfilesByLocation.Values)
-            {
-                Collect(profile);
-            }
+            RenderSettings.skybox = profile.skybox;
         }
     }
 
+    private static void ApplyFog(Profile profile)
+    {
+        if (!profile.applyFog) return;
+
+        RenderSettings.fog = profile.useFog;
+        RenderSettings.fogColor = profile.fogColor;
+        RenderSettings.fogMode = profile.fogMode;
+
+        if (profile.fogMode == FogMode.Linear)
+        {
+            RenderSettings.fogStartDistance = profile.fogStart;
+            RenderSettings.fogEndDistance = profile.fogEnd;
+        }
+        else
+        {
+            RenderSettings.fogDensity = profile.fogDensity;
+        }
+    }
+
+    private static void ApplyAmbientLight(Profile profile)
+    {
+        if (!profile.applyAmbient) return;
+
+        RenderSettings.ambientMode = profile.ambientMode;
+        RenderSettings.ambientIntensity = profile.ambientIntensity;
+
+        switch (profile.ambientMode)
+        {
+            case AmbientMode.Trilight: // Inspector 上の表記は Gradient
+                RenderSettings.ambientSkyColor = profile.ambientSkyColor;
+                RenderSettings.ambientEquatorColor = profile.ambientEquatorColor;
+                RenderSettings.ambientGroundColor = profile.ambientGroundColor;
+                break;
+
+            case AmbientMode.Flat: // Inspector 上の表記は Color
+                RenderSettings.ambientLight = profile.ambientLight;
+                break;
+
+            case AmbientMode.Skybox:
+                break;
+        }
+    }
+
+    private static void SetActiveAll(IEnumerable<GameObject> objects, bool active)
+    {
+        if (objects == null) return;
+
+        foreach (var obj in objects)
+        {
+            if (obj) obj.SetActive(active);
+        }
+    }
+
+    // ===== プロファイルの検索 =====
+
     /// <summary>
-    /// 現在の時間帯と場所に基づいて、適用すべきプロファイルを取得します。
+    /// 指定の時間帯 × プレイヤーの現在の場所 に対応するプロファイルを返す。
+    /// エディタ編集中や PlayerLocation がないときは「外」として扱う。
     /// </summary>
-    Profile GetProfile(TimeOfDay t)
+    private Profile GetProfile(TimeOfDay t)
     {
         PlayerLocation.Location currentLocation = PlayerLocation.Location.Outside;
         if (Application.isPlaying && PlayerLocation.instance != null)
@@ -175,9 +229,9 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
             currentLocation = PlayerLocation.instance.currentLocation;
         }
 
-        if (profiles.TryGetValue(t, out LocationProfiles locProfiles) && locProfiles?.ProfilesByLocation != null)
+        if (profiles.TryGetValue(t, out LocationProfiles locationProfiles) && locationProfiles?.ProfilesByLocation != null)
         {
-            if (locProfiles.ProfilesByLocation.TryGetValue(currentLocation, out Profile profile))
+            if (locationProfiles.ProfilesByLocation.TryGetValue(currentLocation, out Profile profile))
             {
                 return profile;
             }
@@ -187,90 +241,39 @@ public class TimeOfDayRenderer : Singleton<TimeOfDayRenderer>
         return null;
     }
 
-    /// <summary>
-    /// 指定された時間帯のプロファイルを、現在の場所に応じて適用します。
-    /// </summary>
-    public void Apply(TimeOfDay t)
+    /// <summary>全プロファイルから、切り替え対象のオブジェクトを集め直す。</summary>
+    private void BuildCaches()
     {
-        Current = t;
-        var p = GetProfile(t);
+        allRoots.Clear();
+        allAddVolumes.Clear();
 
-        if (p == null)
+        if (profiles == null) return;
+
+        foreach (var locationProfiles in profiles.Values)
         {
-            Debug.LogError($"[TimeOfDayRenderer] Apply failed because no matching profile was found for Time: {t} and the current location.");
-            return;
-        }
+            if (locationProfiles?.ProfilesByLocation == null) continue;
 
-        ApplingEvent.Invoke();
-
-        // 1) まず全ルートをOFF
-        foreach (var go in allRoots) if (go) go.SetActive(false);
-
-        // 全ての追加ボリュームを非アクティブ化
-        // 2) 次に全追加VolumeをOFFにしてリセット
-        foreach (var go in allAddVolumes) if (go) go.SetActive(false);
-
-        // 3) 対象プロファイルのルートだけON
-        if (p.activeRoots != null)
-            foreach (var go in p.activeRoots) if (go) go.SetActive(true);
-
-        // 対象プロファイルの追加ボリュームをアクティブ化
-        // 4) 対象プロファイルの追加VolumeだけON
-        if (p.addVolumes != null)
-            foreach (var go in p.addVolumes) if (go) go.SetActive(true);
-
-        // 5) Skybox
-        if (p.applySkybox && p.skybox)
-            RenderSettings.skybox = p.skybox;
-
-        // 6) Fog
-        if (p.applyFog)
-        {
-            RenderSettings.fog = p.useFog;
-            RenderSettings.fogColor = p.fogColor;
-            RenderSettings.fogMode = p.fogMode;
-            if (p.fogMode == FogMode.Linear)
+            foreach (var profile in locationProfiles.ProfilesByLocation.Values)
             {
-                RenderSettings.fogStartDistance = p.fogStart;
-                RenderSettings.fogEndDistance   = p.fogEnd;
-            }
-            else
-            {
-                RenderSettings.fogDensity = p.fogDensity;
+                if (profile == null) continue;
+
+                AddAll(allRoots, profile.activeRoots);
+                AddAll(allAddVolumes, profile.addVolumes);
             }
         }
-
-        // 7) Ambient Light
-        if (p.applyAmbient)
-        {
-            RenderSettings.ambientMode = p.ambientMode;
-            RenderSettings.ambientIntensity = p.ambientIntensity;
-            switch (p.ambientMode)
-            {
-                case AmbientMode.Trilight: // Gradient
-                    RenderSettings.ambientSkyColor = p.ambientSkyColor;
-                    RenderSettings.ambientEquatorColor = p.ambientEquatorColor;
-                    RenderSettings.ambientGroundColor = p.ambientGroundColor;
-                    break;
-                case AmbientMode.Flat: // Color
-                    RenderSettings.ambientLight = p.ambientLight;
-                    break;
-                case AmbientMode.Skybox:
-                    break;
-            }
-        }
-
-        // URP Volume Profile の切り替え処理を削除
-        // if (p.applyVolume && globalVolume && p.volumeProfile)
-        //     globalVolume.sharedProfile = p.volumeProfile;
-
-        // 8) 環境反映（Skybox/Ambient）
-        DynamicGI.UpdateEnvironment();
     }
 
-    /// <summary>
-    /// 場所が変更されたときに呼び出され、現在の時間帯設定を再適用します。
-    /// </summary>
+    private static void AddAll(HashSet<GameObject> destination, List<GameObject> objects)
+    {
+        if (objects == null) return;
+
+        foreach (var obj in objects)
+        {
+            if (obj) destination.Add(obj);
+        }
+    }
+
+    /// <summary>プレイヤーの場所が変わったとき。現在の時間帯のまま、その場所用の設定を適用し直す。</summary>
     private void ApplyCurrentStateWithCurrentTime()
     {
         Debug.Log($"[TimeOfDayRenderer] Location changed. Re-applying profile for current time: {Current}");

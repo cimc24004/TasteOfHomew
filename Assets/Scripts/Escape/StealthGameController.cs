@@ -94,35 +94,7 @@ public class StealthGameController : SerializedMonoBehaviour
     [ListDrawerSettings(Expanded = true, DraggableItems = true, ShowIndexLabels = true)]
     public List<GuardEntry> guards = new();
 
-    [FoldoutGroup("Gizmos", expanded: true), PropertySpace] public bool gizmoAlways = true;
-    [FoldoutGroup("Gizmos")] public bool gizmoDrawFOV = true;
-    [FoldoutGroup("Gizmos")] public bool gizmoDrawHearing = true;
-    [FoldoutGroup("Gizmos")] public bool gizmoDrawPatrol = true;
-    [FoldoutGroup("Gizmos")] public bool gizmoDrawNavPath = true;
-    [FoldoutGroup("Gizmos")] public bool gizmoShowAllRandomLinks = false;
-    [FoldoutGroup("Gizmos")] public Color gizmoFOVFillColor = new Color(1f, 1f, 0f, 0.15f);
-    [FoldoutGroup("Gizmos")] public Color gizmoFOVEdgeColor = new Color(1f, 1f, 0f, 0.65f);
-    [FoldoutGroup("Gizmos")] public Color gizmoHearingColor = new Color(0f, 0.5f, 1f, 0.15f);
-    [FoldoutGroup("Gizmos")] public Color gizmoHearingEdgeColor = new Color(0f, 0.5f, 1f, 0.5f);
-    [FoldoutGroup("Gizmos")] public Color gizmoSightRayVisible = Color.red;
-    [FoldoutGroup("Gizmos")] public Color gizmoSightRayBlocked = Color.gray;
-    [FoldoutGroup("Gizmos")] public Color gizmoPatrolPointColor = Color.cyan;
-    [FoldoutGroup("Gizmos")] public Color gizmoPatrolLinkColor = new Color(0f, 1f, 1f, 0.8f);
-    [FoldoutGroup("Gizmos")] public Color gizmoRandomLinkColor = new Color(0f, 1f, 1f, 0.15f);
-    [FoldoutGroup("Gizmos")] public Color gizmoNextLinkColor = new Color(0f, 1f, 0.5f, 1f);
-    [FoldoutGroup("Gizmos")] public Color gizmoNavPathColor = new Color(0.9f, 0.5f, 1f, 0.9f);
-    [FoldoutGroup("Gizmos")] public float gizmoPointRadius = 0.23f;
-    [FoldoutGroup("Gizmos")] public float gizmoArrowSize = 0.35f;
-    [FoldoutGroup("Gizmos")] public bool gizmoLabelPoints = true;
-
-    // ===== 実行時の状態 =====
-
-    private PlayerStatus playerStatus;
-    private Coroutine timerCo;
-    private Coroutine randomDialogueCo;
-    private DialogueSequenceAsset randomDialogueSequence;
-
-    // ===== Inspector ボタン / 公開 API =====
+    // ===== Inspector ボタン =====
 
     [TitleGroup("Controls"), ButtonGroup("Controls/Row1"), GUIColor(0.2f, 0.75f, 0.2f)]
     [Button("Start Stealth", ButtonSizes.Large)]
@@ -193,6 +165,38 @@ public class StealthGameController : SerializedMonoBehaviour
         Debug.Log($"Guard[0] に {points.Count} 個のポイントを採用");
 #endif
     }
+
+    // ===== Inspector: Gizmos の表示設定 =====
+
+    [FoldoutGroup("Gizmos", expanded: true), PropertySpace] public bool gizmoAlways = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoDrawFOV = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoDrawHearing = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoDrawPatrol = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoDrawNavPath = true;
+    [FoldoutGroup("Gizmos")] public bool gizmoShowAllRandomLinks = false;
+    [FoldoutGroup("Gizmos")] public Color gizmoFOVFillColor = new Color(1f, 1f, 0f, 0.15f);
+    [FoldoutGroup("Gizmos")] public Color gizmoFOVEdgeColor = new Color(1f, 1f, 0f, 0.65f);
+    [FoldoutGroup("Gizmos")] public Color gizmoHearingColor = new Color(0f, 0.5f, 1f, 0.15f);
+    [FoldoutGroup("Gizmos")] public Color gizmoHearingEdgeColor = new Color(0f, 0.5f, 1f, 0.5f);
+    [FoldoutGroup("Gizmos")] public Color gizmoSightRayVisible = Color.red;
+    [FoldoutGroup("Gizmos")] public Color gizmoSightRayBlocked = Color.gray;
+    [FoldoutGroup("Gizmos")] public Color gizmoPatrolPointColor = Color.cyan;
+    [FoldoutGroup("Gizmos")] public Color gizmoPatrolLinkColor = new Color(0f, 1f, 1f, 0.8f);
+    [FoldoutGroup("Gizmos")] public Color gizmoRandomLinkColor = new Color(0f, 1f, 1f, 0.15f);
+    [FoldoutGroup("Gizmos")] public Color gizmoNextLinkColor = new Color(0f, 1f, 0.5f, 1f);
+    [FoldoutGroup("Gizmos")] public Color gizmoNavPathColor = new Color(0.9f, 0.5f, 1f, 0.9f);
+    [FoldoutGroup("Gizmos")] public float gizmoPointRadius = 0.23f;
+    [FoldoutGroup("Gizmos")] public float gizmoArrowSize = 0.35f;
+    [FoldoutGroup("Gizmos")] public bool gizmoLabelPoints = true;
+
+    // ===== 実行時の状態 =====
+
+    private PlayerStatus playerStatus;
+    private Coroutine timerCo;
+    private Coroutine randomDialogueCo;
+    private DialogueSequenceAsset randomDialogueSequence;
+
+    // ===== 公開 API =====
 
     public void StopTimer()
     {

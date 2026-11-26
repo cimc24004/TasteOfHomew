@@ -259,25 +259,6 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         }
     }
 
-    [Button("即座に開ける (音・アニメなし)")]
-    public void ForceOpen()
-    {
-        nowDoorStatus = DoorStatus.Opened;
-
-        if (open_type == OpenType.SideOpen)
-        {
-            transform.localPosition = openLocalPosition;
-        }
-        else if (open_type == OpenType.Rotate)
-        {
-            transform.localEulerAngles = TargetRotateVector;
-            if (TriggerChangeModeOpenClose && doorCollider) doorCollider.isTrigger = false;
-        }
-
-        animationCompleted = true;
-        OpenCompleted?.Invoke();
-    }
-
     // ===== 閉める =====
 
     [Button]
@@ -316,6 +297,27 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
                 FinishClosing();
             });
         }
+    }
+
+    // ===== 即座に開閉（音・アニメなし） =====
+
+    [Button("即座に開ける (音・アニメなし)")]
+    public void ForceOpen()
+    {
+        nowDoorStatus = DoorStatus.Opened;
+
+        if (open_type == OpenType.SideOpen)
+        {
+            transform.localPosition = openLocalPosition;
+        }
+        else if (open_type == OpenType.Rotate)
+        {
+            transform.localEulerAngles = TargetRotateVector;
+            if (TriggerChangeModeOpenClose && doorCollider) doorCollider.isTrigger = false;
+        }
+
+        animationCompleted = true;
+        OpenCompleted?.Invoke();
     }
 
     [Button("即座に閉める (音・アニメなし)")]
