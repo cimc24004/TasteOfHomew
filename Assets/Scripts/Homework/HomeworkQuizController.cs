@@ -1,19 +1,30 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
-using DG.Tweening;
 using UnityEngine.EventSystems;
-using UnityEngine.Localization; // ← 【追加】
-using UnityEngine.Localization.Components; // ← 【追加】
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
+using UnityEngine.UI;
 
+/// <summary>
+/// 宿題クイズのミニゲームを進行する。
+///
+/// 1 問の流れ:
+///   1. 問題文を会話（DialogueController）として流す
+///   2. 前置きのセリフを表示したまま、画面クリックを待つ
+///   3. クリックされたら選択肢ボタンを並べる
+///   4. 回答されたら ○× の演出と効果音を出し、次の問題へ進む
+/// 問題ごとの設定で、ホラー演出（専用 BGM、○× 演出なし）にも切り替わる。
+/// </summary>
 [DisallowMultipleComponent]
 public class HomeworkQuizController : MonoBehaviour
 {
-    // ... (UI, Feedback, SFX Fields are omitted) ...
+    // ===== Inspector =====
+
     [Header("UI (SetActive 切替)")]
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private Transform choicesRoot;
@@ -21,14 +32,14 @@ public class HomeworkQuizController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI homeWorkBodyText;
 
     [Header("Feedback UI")]
-    [SerializeField] private Image correctFeedbackImage; 
-    [SerializeField] private Image wrongFeedbackImage;   
+    [SerializeField] private Image correctFeedbackImage;
+    [SerializeField] private Image wrongFeedbackImage;
 
     [Header("Feedback Animation Settings")]
-    [SerializeField] private float feedbackDuration = 0.3f; 
-    [SerializeField] private float correctScaleFactor = 1.5f; 
-    [SerializeField] private float wrongScaleFactor = 1.2f;  
-    [SerializeField] private Ease feedbackEase = Ease.OutBack; 
+    [SerializeField] private float feedbackDuration = 0.3f;
+    [SerializeField] private float correctScaleFactor = 1.5f;
+    [SerializeField] private float wrongScaleFactor = 1.2f;
+    [SerializeField] private Ease feedbackEase = Ease.OutBack;
 
     [Header("問題セット")]
     [SerializeField] private List<QuizQuestionAsset> questions = new();
@@ -45,7 +56,7 @@ public class HomeworkQuizController : MonoBehaviour
 
     [Header("BGM")]
     [SerializeField] private AudioSource horrorBgmSource;
-    [SerializeField] private float bgmFadeDuration = 1.0f; 
+    [SerializeField] private float bgmFadeDuration = 1.0f;
 
     [Header("進行")]
     [SerializeField] private bool autoProceedNext = true;
@@ -66,12 +77,16 @@ public class HomeworkQuizController : MonoBehaviour
     [Tooltip("全ての問題に回答し終えた瞬間に発火（即クローズ後）")]
     public UnityEvent onAllQuestionsAnswered;
 
+    // ===== 実行時の状態 =====
+
     private int currentIndex = -1;
-    private readonly List<Button> spawned = new();
+    private readonly List<Button> spawnedChoiceButtons = new();
     private Tween currentFeedbackTween;
     private Tween currentBgmTween;
 
-    void Awake()
+    // ===== Unity ライフサイクル =====
+
+    private void Awake()
     {
         if (!panelRoot) Debug.LogError("[HomeworkQuiz] panelRoot 未設定");
         if (!choicesRoot) Debug.LogError("[HomeworkQuiz] choicesRoot 未設定");
@@ -83,22 +98,18 @@ public class HomeworkQuizController : MonoBehaviour
             revealClickCatcher.gameObject.SetActive(false);
         }
 
-        SetupFeedbackImage(correctFeedbackImage);
-        SetupFeedbackImage(wrongFeedbackImage);
+        HideFeedbackImage(correctFeedbackImage);
+        HideFeedbackImage(wrongFeedbackImage);
 
         ShowPanel(false);
     }
 
-    private void SetupFeedbackImage(Image image)
-    {
-        if (image == null) return;
-        image.gameObject.SetActive(false);
-        image.color = new Color(image.color.r, image.color.g, image.color.b, 0f);
-        image.transform.localScale = Vector3.one;
-    }
+    // ===== 公開 API =====
 
     [ContextMenu("StartQuiz")]
     public void StartQuiz() => StartQuizAsync().Forget();
+
+    // ===== クイズ全体の進行 =====
 
     private async UniTaskVoid StartQuizAsync()
     {
@@ -125,248 +136,15 @@ public class HomeworkQuizController : MonoBehaviour
             return;
         }
 
-        var q = questions[currentIndex];
+        var question = questions[currentIndex];
         onQuestionStarted?.Invoke(currentIndex);
 
-        currentBgmTween?.Kill();
-
-        // --- BGM ロジックは省略 (変更なし) ---
-        if (q.horrorDirection)
-        {
-            if (horrorBgmSource)
-            {
-                if (q.horrorSound != null && horrorBgmSource.clip != q.horrorSound)
-                {
-                    horrorBgmSource.clip = q.horrorSound;
-                    horrorBgmSource.volume = 0;
-                    horrorBgmSource.Play();
-                }
-                
-                if (!horrorBgmSource.isPlaying && horrorBgmSource.clip != null)
-                {
-                    horrorBgmSource.volume = 0;
-                    horrorBgmSource.Play();
-                }
-
-                currentBgmTween = horrorBgmSource.DOFade(q.horrorVolume, bgmFadeDuration)
-                    .SetEase(Ease.Linear);
-            }
-        }
-        else
-        {
-            
-            if (horrorBgmSource && horrorBgmSource.isPlaying)
-            {
-                currentBgmTween = horrorBgmSource.DOFade(0, bgmFadeDuration)
-                    .SetEase(Ease.Linear)
-                    .OnComplete(() => {
-                        horrorBgmSource.Stop();
-                        horrorBgmSource.clip = null;
-                    });
-            }
-        }
-        // --- BGM ロジックここまで ---
-
-        var dlg = DialogueController.instance;
-        
-        // ▼▼▼ 【修正】 DialogueController に任せるため、この行を削除またはコメントアウト ▼▼▼
-        dlg.TryGetSequence(questionGroupKey, q.questionSequenceId, out var seqAsset);
-        homeWorkBodyText.text = seqAsset.steps[0].localizedText.GetLocalizedString();
-        // ▲▲▲ 【修正】 ▲▲▲
-
-        if (dlg != null && !string.IsNullOrWhiteSpace(q.questionSequenceId))
-        {
-            // 問題文の表示 (DialogueControllerが翻訳済みテキストを流してくれる)
-            await dlg.StartDialogueAsync(questionGroupKey, q.questionSequenceId);
-        }
-
-        if (dlg != null && !string.IsNullOrWhiteSpace(prelineGroupKey) && !string.IsNullOrWhiteSpace(prelineSequenceId))
-        {
-            dlg.PauseAdvance(true);
-            dlg.StartDialogueAsync(prelineGroupKey, prelineSequenceId).Forget();
-        }
-
-        if (!revealClickCatcher)
-        {
-            Debug.LogError("[HomeworkQuiz] RevealClickCatcher が未アサインです");
-        }
-        else
-        {
-            revealClickCatcher.onClick.RemoveAllListeners();
-            revealClickCatcher.onClick.AddListener(OnRevealChoicesClicked);
-            revealClickCatcher.gameObject.SetActive(true);
-            revealClickCatcher.transform.SetAsLastSibling();
-            EventSystem.current.SetSelectedGameObject(revealClickCatcher.gameObject);
-        }
+        UpdateHorrorBgm(question);
+        await PresentQuestionAsync(question);
+        WaitForClickToRevealChoices();
     }
 
-    // ... (Feedback Images and OnRevealChoicesClicked are omitted) ...
-    private void ResetFeedbackImages()
-    {
-        currentFeedbackTween?.Kill();
-
-        if (correctFeedbackImage)
-        {
-            correctFeedbackImage.gameObject.SetActive(false);
-            correctFeedbackImage.color = new Color(correctFeedbackImage.color.r, correctFeedbackImage.color.g, correctFeedbackImage.color.b, 0f);
-            correctFeedbackImage.transform.localScale = Vector3.one;
-        }
-        if (wrongFeedbackImage)
-        {
-            wrongFeedbackImage.gameObject.SetActive(false);
-            wrongFeedbackImage.color = new Color(wrongFeedbackImage.color.r, wrongFeedbackImage.color.g, wrongFeedbackImage.color.b, 0f);
-            wrongFeedbackImage.transform.localScale = Vector3.one;
-        }
-    }
-
-    private void OnRevealChoicesClicked()
-    {
-        if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
-        var q = questions[currentIndex];
-        BuildChoices(q);
-    }
-    // ... (omitted) ...
-
-    private void BuildChoices(QuizQuestionAsset q)
-    {
-        ClearChoices();
-
-        // ▼▼▼ 【移行ロジック】 LocalizedString リストを使うか、古い string リストを使うか判断 ▼▼▼
-        List<LocalizedString> locChoices = q.localizedChoices;
-        List<string> oldChoices = q.choices;
-        
-        bool useLocalized = (locChoices != null && locChoices.Count > 0);
-
-        if (!useLocalized && (oldChoices == null || oldChoices.Count == 0))
-        {
-            Debug.LogError("[HomeworkQuiz] choices が空");
-            return;
-        }
-        
-        int count = useLocalized ? locChoices.Count : oldChoices.Count;
-
-        for (int i = 0; i < count; i++)
-        {
-            var btn = Instantiate(choiceButtonPrefab, choicesRoot);
-            if (!btn.gameObject.activeSelf) btn.gameObject.SetActive(true);
-            btn.interactable = true;
-            if (btn.targetGraphic) btn.targetGraphic.raycastTarget = true;
-            if(i == 0) 
-                EventSystem.current.SetSelectedGameObject(btn.gameObject);
-            
-            // TextMeshProUGUI と LocalizeStringEvent を取得
-            var label = btn.GetComponentInChildren<TextMeshProUGUI>(true);
-            var localizeEvent = btn.GetComponentInChildren<LocalizeStringEvent>(true); 
-
-            if (useLocalized)
-            {
-                // New system: LocalizedStringを Localize Event に渡す
-                if (localizeEvent)
-                {
-                    localizeEvent.StringReference = locChoices[i];
-                }
-                else if (label)
-                {
-                    label.text = "[LOCALIZE COMPONENT MISSING]"; // Error fallback
-                }
-            }
-            else
-            {
-                // Old system: 古い string をそのまま代入
-                if (localizeEvent) localizeEvent.StringReference = null; // Localizerを無効化
-                if (label) label.text = oldChoices[i]; // 生の文字列を代入
-            }
-
-            int idx = i;
-            btn.onClick.AddListener(() => OnClickChoice(idx, btn));
-            spawned.Add(btn);
-        }
-        choicesRoot.SetAsLastSibling();
-    }
-
-    private void HideChoices(Button clicked = null)
-    {
-        if (hideAllChoicesOnClick)
-        {
-            foreach (var b in spawned)
-                if (b) b.gameObject.SetActive(false);
-        }
-        else
-        {
-            if (clicked) clicked.gameObject.SetActive(false);
-        }
-    }
-
-    private void OnClickChoice(int choiceIndex, Button clickedButton)
-    {
-        HideChoices(clickedButton);
-        
-        var q = questions[currentIndex];
-        bool isCorrect = (choiceIndex == q.correctIndex);
-        EventSystem.current.SetSelectedGameObject(null);
-        
-        // --- Feedback and SFX logic is omitted (no change) ---
-        if (!q.horrorDirection)
-        {
-            Image targetImage = null;
-            float targetScale = 1f;
-
-            if (isCorrect)
-            {
-                targetImage = correctFeedbackImage;
-                targetScale = correctScaleFactor;
-            }
-            else
-            {
-                targetImage = wrongFeedbackImage;
-                targetScale = wrongScaleFactor;
-            }
-
-            if (targetImage != null)
-            {
-                currentFeedbackTween?.Kill();
-
-                targetImage.gameObject.SetActive(true);
-                targetImage.transform.localScale = Vector3.one;
-                targetImage.color = new Color(targetImage.color.r, targetImage.color.g, targetImage.color.b, 0f);
-
-                currentFeedbackTween = DOTween.Sequence()
-                    .Append(targetImage.DOFade(1f, feedbackDuration))
-                    .Join(targetImage.transform.DOScale(targetScale, feedbackDuration).SetEase(feedbackEase))
-                    .SetLink(targetImage.gameObject)
-                    .Play();
-            }
-        }
-
-        if (!q.muteSfxForThisQuestion && sfxSource)
-        {
-            var clip = isCorrect
-                ? (q.correctSfxOverride ? q.correctSfxOverride : defaultCorrectSfx)
-                : (q.wrongSfxOverride ? q.wrongSfxOverride : defaultWrongSfx);
-            if (clip) sfxSource.PlayOneShot(clip);
-        }
-
-        onAnswered?.Invoke(currentIndex, isCorrect);
-
-        var dlg = DialogueController.instance;
-        if (dlg != null)
-        {
-            dlg.PauseAdvance(false);
-            dlg.StopCurrent();
-        }
-
-        bool isLast = (currentIndex == questions.Count - 1);
-        if (isLast)
-        {
-            CompleteQuiz();
-        }
-        else if (autoProceedNext)
-        {
-            Proceed().Forget();
-        }
-    }
-
-    private async UniTaskVoid Proceed()
+    private async UniTaskVoid ProceedToNextQuestionAfterDelay()
     {
         await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, proceedDelaySeconds)));
         await NextQuestionAsync();
@@ -375,14 +153,13 @@ public class HomeworkQuizController : MonoBehaviour
     private void CompleteQuiz()
     {
         if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
-        
-        currentBgmTween?.Kill();
 
+        currentBgmTween?.Kill();
         if (horrorBgmSource && horrorBgmSource.isPlaying)
         {
             horrorBgmSource.DOFade(0, bgmFadeDuration).OnComplete(() => horrorBgmSource.Stop());
         }
-        
+
         ResetFeedbackImages();
         ShowPanel(false);
 
@@ -390,20 +167,268 @@ public class HomeworkQuizController : MonoBehaviour
         onQuizCompleted?.Invoke();
     }
 
+    // ===== 1 問の出題 =====
+
+    /// <summary>問題文を宿題の紙面に書き、会話として読み上げたあと、前置きのセリフを出したままにする。</summary>
+    private async UniTask PresentQuestionAsync(QuizQuestionAsset question)
+    {
+        var dialogue = DialogueController.instance;
+
+        dialogue.TryGetSequence(questionGroupKey, question.questionSequenceId, out var questionSequence);
+        homeWorkBodyText.text = questionSequence.steps[0].localizedText.GetLocalizedString();
+
+        if (dialogue != null && !string.IsNullOrWhiteSpace(question.questionSequenceId))
+        {
+            await dialogue.StartDialogueAsync(questionGroupKey, question.questionSequenceId);
+        }
+
+        // 前置きのセリフは、選択肢が選ばれるまで表示したままにする（「進む」入力を止めておく）
+        if (dialogue != null && !string.IsNullOrWhiteSpace(prelineGroupKey) && !string.IsNullOrWhiteSpace(prelineSequenceId))
+        {
+            dialogue.PauseAdvance(true);
+            dialogue.StartDialogueAsync(prelineGroupKey, prelineSequenceId).Forget();
+        }
+    }
+
+    /// <summary>画面全体を覆うクリック受けを有効にし、クリックされたら選択肢を出す。</summary>
+    private void WaitForClickToRevealChoices()
+    {
+        if (!revealClickCatcher)
+        {
+            Debug.LogError("[HomeworkQuiz] RevealClickCatcher が未アサインです");
+            return;
+        }
+
+        revealClickCatcher.onClick.RemoveAllListeners();
+        revealClickCatcher.onClick.AddListener(OnRevealChoicesClicked);
+        revealClickCatcher.gameObject.SetActive(true);
+        revealClickCatcher.transform.SetAsLastSibling();
+        EventSystem.current.SetSelectedGameObject(revealClickCatcher.gameObject);
+    }
+
+    private void OnRevealChoicesClicked()
+    {
+        if (revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
+
+        BuildChoices(questions[currentIndex]);
+    }
+
+    // ===== 選択肢 =====
+
+    private void BuildChoices(QuizQuestionAsset question)
+    {
+        ClearChoices();
+
+        // ローカライズ済みの選択肢があればそちらを、なければ旧データ（生の文字列）を使う
+        List<LocalizedString> localizedChoices = question.localizedChoices;
+        List<string> plainChoices = question.choices;
+        bool useLocalized = localizedChoices != null && localizedChoices.Count > 0;
+
+        if (!useLocalized && (plainChoices == null || plainChoices.Count == 0))
+        {
+            Debug.LogError("[HomeworkQuiz] choices が空");
+            return;
+        }
+
+        int choiceCount = useLocalized ? localizedChoices.Count : plainChoices.Count;
+        for (int i = 0; i < choiceCount; i++)
+        {
+            var button = Instantiate(choiceButtonPrefab, choicesRoot);
+            if (!button.gameObject.activeSelf) button.gameObject.SetActive(true);
+            button.interactable = true;
+            if (button.targetGraphic) button.targetGraphic.raycastTarget = true;
+
+            // 先頭の選択肢を選択状態にしておく（キーボード/ゲームパッド操作用）
+            if (i == 0) EventSystem.current.SetSelectedGameObject(button.gameObject);
+
+            var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            var localizeEvent = button.GetComponentInChildren<LocalizeStringEvent>(true);
+
+            if (useLocalized)
+            {
+                if (localizeEvent)
+                {
+                    localizeEvent.StringReference = localizedChoices[i];
+                }
+                else if (label)
+                {
+                    label.text = "[LOCALIZE COMPONENT MISSING]";
+                }
+            }
+            else
+            {
+                // 生の文字列を出すときは、ローカライズ側に上書きされないよう参照を外す
+                if (localizeEvent) localizeEvent.StringReference = null;
+                if (label) label.text = plainChoices[i];
+            }
+
+            int choiceIndex = i;
+            button.onClick.AddListener(() => OnClickChoice(choiceIndex, button));
+            spawnedChoiceButtons.Add(button);
+        }
+
+        choicesRoot.SetAsLastSibling();
+    }
+
+    private void OnClickChoice(int choiceIndex, Button clickedButton)
+    {
+        HideChoices(clickedButton);
+
+        var question = questions[currentIndex];
+        bool isCorrect = choiceIndex == question.correctIndex;
+        EventSystem.current.SetSelectedGameObject(null);
+
+        // ホラー演出の問題では ○× を出さない
+        if (!question.horrorDirection)
+        {
+            PlayFeedbackAnimation(isCorrect);
+        }
+        PlayAnswerSfx(question, isCorrect);
+
+        onAnswered?.Invoke(currentIndex, isCorrect);
+
+        // 表示したままにしていた前置きのセリフを片付ける
+        var dialogue = DialogueController.instance;
+        if (dialogue != null)
+        {
+            dialogue.PauseAdvance(false);
+            dialogue.StopCurrent();
+        }
+
+        bool isLastQuestion = currentIndex == questions.Count - 1;
+        if (isLastQuestion)
+        {
+            CompleteQuiz();
+        }
+        else if (autoProceedNext)
+        {
+            ProceedToNextQuestionAfterDelay().Forget();
+        }
+    }
+
+    private void HideChoices(Button clicked = null)
+    {
+        if (!hideAllChoicesOnClick)
+        {
+            if (clicked) clicked.gameObject.SetActive(false);
+            return;
+        }
+
+        foreach (var button in spawnedChoiceButtons)
+        {
+            if (button) button.gameObject.SetActive(false);
+        }
+    }
+
     private void ClearChoices()
     {
-        for (int i = spawned.Count - 1; i >= 0; i--)
+        for (int i = spawnedChoiceButtons.Count - 1; i >= 0; i--)
         {
-            if (spawned[i]) Destroy(spawned[i].gameObject);
+            if (spawnedChoiceButtons[i]) Destroy(spawnedChoiceButtons[i].gameObject);
         }
-        spawned.Clear();
+        spawnedChoiceButtons.Clear();
     }
+
+    // ===== ○× の演出・効果音 =====
+
+    /// <summary>○ または × の画像を、フェードインしながら拡大して見せる。</summary>
+    private void PlayFeedbackAnimation(bool isCorrect)
+    {
+        Image image = isCorrect ? correctFeedbackImage : wrongFeedbackImage;
+        float targetScale = isCorrect ? correctScaleFactor : wrongScaleFactor;
+        if (image == null) return;
+
+        currentFeedbackTween?.Kill();
+
+        image.gameObject.SetActive(true);
+        image.transform.localScale = Vector3.one;
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 0f);
+
+        currentFeedbackTween = DOTween.Sequence()
+            .Append(image.DOFade(1f, feedbackDuration))
+            .Join(image.transform.DOScale(targetScale, feedbackDuration).SetEase(feedbackEase))
+            .SetLink(image.gameObject)
+            .Play();
+    }
+
+    private void PlayAnswerSfx(QuizQuestionAsset question, bool isCorrect)
+    {
+        if (question.muteSfxForThisQuestion || !sfxSource) return;
+
+        // 問題ごとの上書き指定があればそれを、なければデフォルトの効果音を鳴らす
+        var clip = isCorrect
+            ? (question.correctSfxOverride ? question.correctSfxOverride : defaultCorrectSfx)
+            : (question.wrongSfxOverride ? question.wrongSfxOverride : defaultWrongSfx);
+        if (clip) sfxSource.PlayOneShot(clip);
+    }
+
+    private void ResetFeedbackImages()
+    {
+        currentFeedbackTween?.Kill();
+
+        HideFeedbackImage(correctFeedbackImage);
+        HideFeedbackImage(wrongFeedbackImage);
+    }
+
+    /// <summary>○× の画像を非表示・透明・等倍の初期状態に戻す。</summary>
+    private void HideFeedbackImage(Image image)
+    {
+        if (image == null) return;
+
+        image.gameObject.SetActive(false);
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 0f);
+        image.transform.localScale = Vector3.one;
+    }
+
+    // ===== ホラー BGM =====
+
+    /// <summary>ホラー演出の問題なら専用 BGM をフェードインし、通常の問題ならフェードアウトして止める。</summary>
+    private void UpdateHorrorBgm(QuizQuestionAsset question)
+    {
+        currentBgmTween?.Kill();
+
+        if (!question.horrorDirection)
+        {
+            if (horrorBgmSource && horrorBgmSource.isPlaying)
+            {
+                currentBgmTween = horrorBgmSource.DOFade(0, bgmFadeDuration)
+                    .SetEase(Ease.Linear)
+                    .OnComplete(() =>
+                    {
+                        horrorBgmSource.Stop();
+                        horrorBgmSource.clip = null;
+                    });
+            }
+            return;
+        }
+
+        if (!horrorBgmSource) return;
+
+        // 曲が変わるとき、または止まっているときは、無音から再生を始める
+        if (question.horrorSound != null && horrorBgmSource.clip != question.horrorSound)
+        {
+            horrorBgmSource.clip = question.horrorSound;
+            horrorBgmSource.volume = 0;
+            horrorBgmSource.Play();
+        }
+
+        if (!horrorBgmSource.isPlaying && horrorBgmSource.clip != null)
+        {
+            horrorBgmSource.volume = 0;
+            horrorBgmSource.Play();
+        }
+
+        currentBgmTween = horrorBgmSource.DOFade(question.horrorVolume, bgmFadeDuration)
+            .SetEase(Ease.Linear);
+    }
+
+    // ===== パネル表示 =====
 
     private void ShowPanel(bool show)
     {
         if (!panelRoot) return;
-        panelRoot.SetActive(show);
 
+        panelRoot.SetActive(show);
         if (!show && revealClickCatcher) revealClickCatcher.gameObject.SetActive(false);
     }
 }
