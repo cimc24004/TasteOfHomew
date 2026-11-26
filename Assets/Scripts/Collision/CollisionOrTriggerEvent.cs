@@ -41,7 +41,6 @@ public class CollisionOrTriggerEvent : MonoBehaviour
                 onExit?.Invoke();
                 onExitByUnityEvent2?.Invoke();
             }
-
         }
     }
 

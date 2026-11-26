@@ -31,7 +31,7 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
 
     [BoxGroup("Evening", showLabel: false)]
     public LightSettingsProfile eveningSettings = new LightSettingsProfile();
-    
+
     [BoxGroup("Night", showLabel: false)]
     public LightSettingsProfile nightSettings = new LightSettingsProfile { isEnabled = true }; // 夜はデフォルトでON
 
@@ -59,13 +59,11 @@ public class LightManageTimeOfDay : SerializedMonoBehaviour
         // ゲーム開始時に現在の時間帯に合わせた設定を即時適用
     }
 
-
     /// <summary>
     /// TimeOfDayRendererの状態を監視し、変更があればライトに設定を適用する
     /// </summary>
     private void CheckAndUpdateLight()
     {
-
         TimeOfDayRenderer.TimeOfDay currentState = timeOfDayRenderer.Current;
 
         // 状態が前回から変わっていなければ何もしない（効率化）

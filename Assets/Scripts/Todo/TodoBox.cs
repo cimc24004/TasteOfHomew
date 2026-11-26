@@ -1,21 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.Localization; // ← 【追加】
-using UnityEngine.Localization.Components; // ← 【追加】
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 
 public class TodoBox : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI labelTMP;
     [SerializeField] private Text labelUGUI;     // TMP 無い人向けフォールバック
-    [SerializeField] private Image checkImage;   // ← チェック画像（ONで表示）
+    [SerializeField] private Image checkImage;   // チェック画像（ONで表示）
 
-    // ▼▼▼ 【追加】 LocalizeStringEvent への参照 ▼▼▼
+    // LocalizeStringEvent への参照
     [Header("Localization (NEW)")]
     [Tooltip("テキストのTMP/Labelについている Localize String Event")]
     [SerializeField] private LocalizeStringEvent labelLocalizeEvent;
-    // ▲▲▲ 【追加ここまで】 ▲▲▲
 
     [Header("見た目オプション")]
     [SerializeField, Range(0f, 1f)] private float uncheckedAlpha = 1f;
@@ -58,7 +57,7 @@ public class TodoBox : MonoBehaviour
     {
         // LocalizeEvent がある場合は無効化する
         if (labelLocalizeEvent) labelLocalizeEvent.StringReference = null;
-        
+
         var t = text ?? "";
         if (labelTMP) labelTMP.text = t;
         if (labelUGUI) labelUGUI.text = t;

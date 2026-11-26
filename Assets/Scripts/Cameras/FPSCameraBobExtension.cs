@@ -1,5 +1,5 @@
 using UnityEngine;
-using Unity.Cinemachine; 
+using Unity.Cinemachine;
 
 /// <summary>
 /// CMFPSオブジェクトにアタッチ。
@@ -23,7 +23,7 @@ public class FPSCameraBobExtension : CinemachineExtension
     [Header("Sensitivity")]
     [SerializeField] private float movingThreshold = 0.1f;
     [Tooltip("チェックを入れると画面左上に現在の判定状況を表示します")]
-    [SerializeField] private bool showDebugStatus = true; // ★うまくいったらチェックを外してください
+    [SerializeField] private bool showDebugStatus = true; // うまくいったらチェックを外してください
     public bool BobEnabled = true; // 将来的にオンオフ切り替えを実装する場合用
     // 内部変数
     private float _timer = 0f;
@@ -34,7 +34,7 @@ public class FPSCameraBobExtension : CinemachineExtension
     void Start()
     {
         cmController = GetComponent<CMFPSController>();
-        
+
         if (PlayerStatus.instance != null)
         {
             playerMovement = PlayerStatus.instance.GetComponent<PlayerMovement>();
@@ -60,7 +60,7 @@ public class FPSCameraBobExtension : CinemachineExtension
         Vector3 delta = currentPos - _lastPosition;
         // 水平成分のみ抽出
         delta.y = 0f;
-        
+
         // 瞬間移動などでdeltaTimeが0の時は計算しない
         if (deltaTime > 0.0001f)
         {
@@ -116,7 +116,7 @@ public class FPSCameraBobExtension : CinemachineExtension
             if (!playerMovement.groundCheck.IsGrounded) return false;
         }
         // 予備：CCの接地判定（ただしMove2回呼び出し問題で不安定な可能性あり）
-        else 
+        else
         {
              var cc = playerMovement.GetComponent<CharacterController>();
              if (cc != null && !cc.isGrounded) return false;
@@ -130,6 +130,4 @@ public class FPSCameraBobExtension : CinemachineExtension
 
         return true;
     }
-
-
 }

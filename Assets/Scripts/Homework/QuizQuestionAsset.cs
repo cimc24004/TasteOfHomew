@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization;
 
 [CreateAssetMenu(menuName = "Homework/Quiz Question", fileName = "QQA_")]
 public class QuizQuestionAsset : SerializedScriptableObject
@@ -14,12 +14,11 @@ public class QuizQuestionAsset : SerializedScriptableObject
     [Header("選択肢（2〜4個程度）")]
     [Tooltip("移行用：古い文字列データ。このデータは残したままにしてください。")]
     public List<string> choices = new List<string>();
-    
-    // ▼▼▼ 【新しいフィールドを追加】 ▼▼▼
+
+    // 新しいフィールドを追加
     [Tooltip("（優先）翻訳が必要な場合にLocalizeキーを割り当てます。")]
     public List<LocalizedString> localizedChoices = new List<LocalizedString>();
-    // ▲▲▲ 【新しいフィールドを追加】 ▲▲▲
-    
+
     [Tooltip("正解のインデックス（0始まり）")]
     public int correctIndex = 0;
 
@@ -35,11 +34,9 @@ public class QuizQuestionAsset : SerializedScriptableObject
     [ShowIf("horrorDirection")]
     [Tooltip("ホラー演出時に流すBGM")]
     public AudioClip horrorSound;
-    
-    // ★ ここから追加
+
     [ShowIf("horrorDirection")]
     [Range(0f, 1f)]
     [Tooltip("ホラー演出時のBGMの目標音量")]
     public float horrorVolume = 1.0f;
-    // ★ ここまで追加
 }

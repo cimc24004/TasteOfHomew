@@ -1,4 +1,3 @@
-// ForceLookAtExtension.cs
 // ライブVCamに付いている間だけ、指定ターゲット方向へAimを上書きする拡張
 using UnityEngine;
 using Unity.Cinemachine;
@@ -30,7 +29,7 @@ public class ForceLookAtExtension : CinemachineExtension
         if (Weight <= 0f) return;
 
         // CM3 では GetFinalPosition() が使える。もしコンパイルエラーなら RawPosition か FinalPosition に差し替えてOK
-        Vector3 camPos = state.GetFinalPosition(); 
+        Vector3 camPos = state.GetFinalPosition();
         Vector3 targetPos = Target.position + WorldOffset;
         Vector3 dir = targetPos - camPos;
         if (dir.sqrMagnitude < 0.0001f) return;

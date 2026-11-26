@@ -40,7 +40,6 @@ public class AgentMoveToTarget : SerializedMonoBehaviour
     [SerializeField]
     private bool trackDestination = false;
 
-
     [Title("Events", "到着時イベント")]
     [Tooltip("目的地に到着したときに呼び出されるUnityEvent")]
     [SerializeField]
@@ -53,12 +52,11 @@ public class AgentMoveToTarget : SerializedMonoBehaviour
     [ReadOnly]
     [PropertyOrder(50)] // 表示順を調整
     private bool hasReached = false;
-    
+
     [ShowInInspector]
     [ReadOnly]
     [PropertyOrder(51)]
     private bool isPaused = false;
-
 
     /// <summary>
     /// コンポーネント初期化時
@@ -93,7 +91,7 @@ public class AgentMoveToTarget : SerializedMonoBehaviour
         {
             return;
         }
-        
+
         // 一時停止中、または既に到着済みの場合は処理しない
         if (isPaused || hasReached)
         {
@@ -146,7 +144,7 @@ public class AgentMoveToTarget : SerializedMonoBehaviour
         agent.isStopped = false; // NavMeshAgentの停止を解除
         agent.SetDestination(destinationTransform.position);
     }
-    
+
     /// <summary>
     /// エージェントの移動を一時停止します。
     /// </summary>
@@ -161,7 +159,7 @@ public class AgentMoveToTarget : SerializedMonoBehaviour
         agent.isStopped = true;
         isPaused = true;
     }
-    
+
     /// <summary>
     /// エージェントの移動を再開します。
     /// </summary>

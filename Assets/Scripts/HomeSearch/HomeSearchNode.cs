@@ -6,7 +6,7 @@ using UnityEngine.Timeline; // ----- 追加: PlayableDirectorを使用するた�
 
 // ----- 変更: CollisionOrTriggerEventを必須コンポーネントに追加
 [RequireComponent(typeof(BoxCollider))]
-[RequireComponent(typeof(CollisionOrTriggerEvent))] 
+[RequireComponent(typeof(CollisionOrTriggerEvent))]
 [DisallowMultipleComponent]
 public class HomeSearchNode : MonoBehaviour
 {
@@ -23,7 +23,7 @@ public class HomeSearchNode : MonoBehaviour
     [SerializeField, Min(0f)] private float volume = 1f;
     [SerializeField, Min(0.1f)] private float pingIntervalMin = 1.2f;
     [SerializeField, Min(0.1f)] private float pingIntervalMax = 2.2f;
-    
+
     // ----- 追加ここから -----
     [Header("Timeline")]
     [Tooltip("プレイヤーが到達した時に再生するTimeline")]
@@ -59,7 +59,7 @@ public class HomeSearchNode : MonoBehaviour
     private AudioSource audioSource;
     private Coroutine pingRoutine;
     private BoxCollider box;
-    
+
     // ----- 追加ここから -----
     private CollisionOrTriggerEvent collisionOrTriggerEvent;
     // ----- 追加ここまで -----
@@ -68,13 +68,13 @@ public class HomeSearchNode : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         box = GetComponent<BoxCollider>();
-        
+
         // ----- 追加ここから -----
         // 同じGameObjectにアタッチされたCollisionOrTriggerEventを取得
         collisionOrTriggerEvent = GetComponent<CollisionOrTriggerEvent>();
         GhostDisapperanceTrigger.onEnter.AddListener(() =>
         {
-            // ★ 指定されたTimelineを再生
+            // 指定されたTimelineを再生
             if (ghost.GhostTimelinePlayback != null)
             {
                 ghost.GhostTimelinePlayback.Resume();
@@ -111,7 +111,7 @@ public class HomeSearchNode : MonoBehaviour
         player = playerTransform;
         isActive = true;
         hasArrived = false;
-        // ★ 指定されたTimelineを再生
+        // 指定されたTimelineを再生
         if (ghost.GhostTimelinePlayback != null)
         {
             ghost.GhostTimelinePlayback.Play(timeline);
@@ -124,11 +124,10 @@ public class HomeSearchNode : MonoBehaviour
         if (audioSource != null && (pingClip != null || audioSource.clip != null) && pingRoutine == null)
             pingRoutine = StartCoroutine(PingLoop());
     }
-    
+
     // ----- Deactivate は変更なし -----
     public void Deactivate()
     {
-
         isActive = false;
         if (pingRoutine != null)
         {
@@ -157,10 +156,9 @@ public class HomeSearchNode : MonoBehaviour
     {
         if (!isActive || hasArrived) return;
 
-        // ★ 到達
+        // 到達
         hasArrived = true;
         onArrive?.Invoke(); // 既存のonArriveイベントも実行
-
 
         // 進行は従来通り、UnityEventから HomeSearchGameController.AdvanceToNextNode() を呼んでください
         // 必要なら onArrive に HomeSearchNode.Deactivate() を設定してピン音を停止してください
@@ -176,7 +174,6 @@ public class HomeSearchNode : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(pingIntervalMin, pingIntervalMax));
         }
     }
-    
 
     // ===== Gizmos / Handles =====
     private void OnDrawGizmos()

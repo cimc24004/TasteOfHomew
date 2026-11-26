@@ -73,7 +73,7 @@ public class HomeSearchGameController : Singleton<HomeSearchGameController>
             return;
         }
 
-        // ★ 排他表示：現在ノードだけ true、他は false
+        // 排他表示：現在ノードだけ true、他は false
         for (int i = 0; i < nodes.Count; i++)
         {
             var node = nodes[i];

@@ -11,7 +11,6 @@ public class TeleportDataController : Singleton<TeleportDataController>
     public Dictionary<string, bool> teleportData = new Dictionary<string, bool>();
     public void teleportDataAdd(string keyName)
     {
-
         if (!teleportData.ContainsKey(keyName))
         {
             teleportData.Add(keyName, false);
@@ -31,8 +30,7 @@ public class TeleportDataController : Singleton<TeleportDataController>
     {
         if (teleportData.ContainsKey(keyName))
         {
-            teleportData[keyName] = isUse; // ← ここが問題！
+            teleportData[keyName] = isUse; // ここが問題！
         }
     }
-
 }

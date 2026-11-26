@@ -18,7 +18,6 @@ public class UISwitcher : Singleton<UISwitcher>
         SetActiveSafe(PlayerUIs, kind == UIKind.Player);
         SetActiveSafe(ArchiveUIs, kind == UIKind.Archive);
         SetActiveSafe(DialogueUIs, kind == UIKind.Dialogue);
-
     }
 
     // ボタンクリック等のUnityEvent用（引数をintで受けてもOK）

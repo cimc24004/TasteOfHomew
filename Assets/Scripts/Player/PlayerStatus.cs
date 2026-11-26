@@ -9,16 +9,9 @@ public class PlayerStatus : Singleton<PlayerStatus>
     public CrossHairController crossHairController;
     public CMFPSController cMFPSController;
     public FootStepController playerFootStepController;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         cMFPSController = CMFPSController.instance;
         PlayerDataHub.instance.RegisterPlayer(this, cMFPSController);
     }
-
-    // // Update is called once per frame
-    // void Update()
-    // {
-        
-    // }
 }

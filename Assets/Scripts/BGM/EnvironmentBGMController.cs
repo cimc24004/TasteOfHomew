@@ -24,7 +24,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
 
     private Coroutine _fadeCoroutine;
     private PlayerLocation _playerLocation;
-    
+
     // 現在再生中のAudioSourceを管理するリスト
     private List<AudioSource> _currentlyPlayingSources = new List<AudioSource>();
     // 各AudioSourceの初期音量をキャッシュする辞書
@@ -39,14 +39,13 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
 
     void Start()
     {
-        // ▼▼▼ 修正箇所 ▼▼▼
         // 必須コンポーネントが設定されているか確認
         if (timeOfDayRenderer == null)
         {
             Debug.LogError("[EnvironmentBGM] Inspectorで 'Time Of Day Renderer' がアサインされていません！処理を中断します。", this);
             return; // 処理を中断
         }
-        
+
         _playerLocation = PlayerLocation.instance;
         if (_playerLocation == null)
         {
@@ -58,7 +57,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
         // ゲーム開始時に現在の状態に合わせたBGMを再生（フェードなしで即時再生）
         PlayInitialBGM();
     }
-    
+
     /// <summary>
     /// Dictionaryに登録されている全てのAudioSourceの初期音量をキャッシュします。
     /// </summary>
@@ -120,7 +119,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
         }
 
         List<AudioSource> newSources = GetCurrentAudioSources();
-        
+
         // GetCurrentAudioSources内でnullチェックしているので、ここで newSources がnullになることは基本的にないが念のため
         if (newSources == null)
         {
@@ -136,7 +135,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
         {
             return;
         }
-        
+
         // 以前のフェード処理が実行中なら停止
         if (_fadeCoroutine != null)
         {
@@ -145,7 +144,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
         // 新しいフェード処理を開始
         _fadeCoroutine = StartCoroutine(FadeBGMCoroutine(newSources));
     }
-    
+
     /// <summary>
     /// BGMのクロスフェードを行うコルーチン。
     /// </summary>
@@ -214,22 +213,19 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
         }
     }
 
-
-    
     /// <summary>
     /// 現在の状況に応じたAudioSourceのリストを取得します。
     /// </summary>
     /// <returns>再生すべきAudioSourceのリスト。見つからなければnull。</returns>
     private List<AudioSource> GetCurrentAudioSources()
     {
-        // ▼▼▼ 修正箇所 ▼▼▼
         // Startでもチェックしているが、念のためここでもチェック
         if (timeOfDayRenderer == null || _playerLocation == null)
         {
              // Startでエラーが出ているはずなので、ここではエラーを重複させない
             return null;
         }
-        
+
         TimeOfDayRenderer.TimeOfDay currentTime = timeOfDayRenderer.Current;
         if (environmentBGMClips.TryGetValue(_playerLocation.currentLocation, out var timeClips))
         {
@@ -238,7 +234,7 @@ public class EnvironmentBGMController : Singleton<EnvironmentBGMController>
                 return sources;
             }
         }
-        
+
         // クリップが見つからなかったことを警告
         Debug.LogWarning($"[EnvironmentBGM] Location: {_playerLocation.currentLocation}, Time: {currentTime} に対応するBGMリストが見つかりません。");
         return null;

@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.UI; // ★ Selectable を使うために追加
+using UnityEngine.UI; // Selectable を使うために追加
 
 public class UISelectSoundManagerCaller : MonoBehaviour
 {
-    private Selectable targetSelectable; // ★ 追加
+    private Selectable targetSelectable;
 
     void Start() // AwakeかStartで取得
     {
@@ -12,7 +12,7 @@ public class UISelectSoundManagerCaller : MonoBehaviour
 
     public void UISelect()
     {
-        // ★ 追加：無効なら鳴らさない
+        // 無効なら鳴らさない
         if (targetSelectable != null && !targetSelectable.interactable) return;
 
         if (UISelectSoundManager.instance != null)
@@ -21,7 +21,7 @@ public class UISelectSoundManagerCaller : MonoBehaviour
 
     public void UISubmit()
     {
-        // ★ 追加：無効なら鳴らさない
+        // 無効なら鳴らさない
         if (targetSelectable != null && !targetSelectable.interactable) return;
 
         if (UISelectSoundManager.instance != null)

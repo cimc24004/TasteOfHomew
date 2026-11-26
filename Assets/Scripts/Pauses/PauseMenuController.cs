@@ -51,7 +51,6 @@ public class PauseMenuController : Singleton<PauseMenuController>
         {
             Debug.LogError("PauseMenuController: PlayerDataHub または PlayerInput が見つかりません。");
         }
-        
     }
 
     void OnDestroy()
@@ -134,7 +133,7 @@ public class PauseMenuController : Singleton<PauseMenuController>
     {
         Time.timeScale = 1f;
         IsPaused = false;
-        
+
         // シーン遷移を SceneManagerController に任せる
         if (SceneManagerController.Instance != null)
         {

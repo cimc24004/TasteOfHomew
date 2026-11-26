@@ -46,7 +46,7 @@ public class InputDeviceDetector : MonoBehaviour
     {
         // 起動時はとりあえずKBMに設定しておく
         CurrentDeviceType = DeviceType.KeyboardMouse;
-        
+
         // PlayerDataHub が Start() で初期化済みの場合に備えて、一度取得を試みる
         if (PlayerDataHub.instance != null && PlayerDataHub.instance.CurrentplayerInput != null)
         {
@@ -77,14 +77,13 @@ public class InputDeviceDetector : MonoBehaviour
         }
 
         // 3. 新しい PlayerInput のイベントを購読
-        // ★重要★: これが動作するには PlayerInput の Behavior が「Invoke C# Events」である必要があります
+        // 重要 : これが動作するには PlayerInput の Behavior が「Invoke C# Events」である必要があります
         this.playerInput.onControlsChanged += OnControlsChanged;
 
         // 4. 現在の Control Scheme に基づいて、デバイスタイプを即時更新
         Debug.Log("[InputDetector] PlayerInput が正常に登録されました。");
         UpdateDeviceType(this.playerInput.currentControlScheme);
     }
-
 
     /// <summary>
     /// PlayerInput の onControlsChanged イベント (C#) から呼び出される
@@ -114,7 +113,7 @@ public class InputDeviceDetector : MonoBehaviour
         {
             // 不明なSchemeの場合は現在の設定を維持
             // Debug.LogWarning($"[InputDetector] 不明なScheme名: {schemeName}");
-            return; 
+            return;
         }
 
         // 既に同じタイプなら何もしない
@@ -125,7 +124,7 @@ public class InputDeviceDetector : MonoBehaviour
 
         // タイプを更新
         CurrentDeviceType = newType;
-        
+
         Debug.Log("切り替わりました！！現在のCurrentDviceType: " + CurrentDeviceType);
 
         // イベント（OnDeviceChanged）を発行し、購読者（InputVisualSwitcher）に通知する

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization;
 
 /// <summary>
 /// ToDoリストのアイテム情報を保持するためのデータクラス

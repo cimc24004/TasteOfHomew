@@ -16,7 +16,7 @@ using UnityEngine.Localization.Tables; // GetTable, GetEntry のために必要
 /// エディタ非再生時と再生時の両方で、
 /// TMP_Dropdownのオプションをローカライズするスクリプト。
 /// </summary>
-[ExecuteAlways] // ★エディタ非再生時でも動作するように変更
+[ExecuteAlways] // エディタ非再生時でも動作するように変更
 [RequireComponent(typeof(TMP_Dropdown))]
 public class LocalizedDropdown : MonoBehaviour
 {
@@ -34,16 +34,16 @@ public class LocalizedDropdown : MonoBehaviour
 
     private void OnEnable()
     {
-        // ★[ExecuteAlways] により、エディタ非再生時でもイベントが購読される
+        // [ExecuteAlways] により、エディタ非再生時でもイベントが購読される
         LocalizationSettings.SelectedLocaleChanged += HandleLocaleChanged;
-        
+
         // 有効になった時点でも、リストを更新する
         PopulateOptions();
     }
 
     private void OnDisable()
     {
-        // ★[ExecuteAlways] により、エディタ非再生時でもイベントが解除される
+        // [ExecuteAlways] により、エディタ非再生時でもイベントが解除される
         LocalizationSettings.SelectedLocaleChanged -= HandleLocaleChanged;
     }
 
@@ -73,13 +73,13 @@ public class LocalizedDropdown : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            // 【再生時】
+            // 再生時
             // 従来通りの非同期メソッドを呼び出す
             _ = PopulateOptionsAsync_Runtime();
         }
         else
         {
-            // 【エディタ非再生時】
+            // エディタ非再生時
             // エディタ専用の同期メソッドを呼び出す
             #if UNITY_EDITOR
             PopulateOptionsSync_Editor();
@@ -94,35 +94,29 @@ public class LocalizedDropdown : MonoBehaviour
     private async Task PopulateOptionsAsync_Runtime()
     {
         // m_Dropdown が破棄されている可能性をチェック
-        if (m_Dropdown == null) return; 
+        if (m_Dropdown == null) return;
 
-        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
-        
         // 1. 現在の選択インデックスを記憶する
         int previousValue = m_Dropdown.value;
-
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         m_Dropdown.interactable = false;
         m_Dropdown.ClearOptions(); // (ここで value が 0 にリセットされる)
 
         var optionDataList = new List<TMP_Dropdown.OptionData>();
-        
+
         foreach (var localizedString in m_LocalizedOptions)
         {
             // 非同期で翻訳済みの文字列を取得する
             string translatedText = await localizedString.GetLocalizedStringAsync().Task;
-            
+
             // 翻訳済みの文字列で OptionData を作成
             optionDataList.Add(new TMP_Dropdown.OptionData(translatedText));
         }
-        
+
         // m_Dropdown が待機中に破棄されている可能性をチェック
         if (m_Dropdown == null) return;
 
         m_Dropdown.AddOptions(optionDataList);
-        
-        // ▼▼▼ ★★★ (ここから修正) ★★★ ▼▼▼
 
         // 2. 記憶しておいたインデックスを復元する
         //    (ただし、リストの範囲内に収まるように)
@@ -135,12 +129,9 @@ public class LocalizedDropdown : MonoBehaviour
             // 範囲外だった場合は 0 にしておく
             m_Dropdown.value = 0;
         }
-        
-        // ▲▲▲ ★★★ (ここまで修正) ★★★ ▲▲▲
 
         m_Dropdown.interactable = true;
     }
-
 
 #if UNITY_EDITOR
     /// <summary>
@@ -152,10 +143,8 @@ public class LocalizedDropdown : MonoBehaviour
     {
         if (m_Dropdown == null) return;
 
-        // ▼▼▼ ★★★ (エディタ側も同様に修正) ★★★ ▼▼▼
         // 1. 現在の選択インデックスを記憶する
         int previousValue = m_Dropdown.value;
-        // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
         m_Dropdown.interactable = false;
         m_Dropdown.ClearOptions();
@@ -170,7 +159,7 @@ public class LocalizedDropdown : MonoBehaviour
         {
             selectedLocale = LocalizationSettings.ProjectLocale;
         }
-        
+
         if (selectedLocale == null)
         {
             // これでもNullなら、もうどうしようもない
@@ -187,10 +176,10 @@ public class LocalizedDropdown : MonoBehaviour
             foreach (var localizedString in m_LocalizedOptions)
             {
                 string translatedText;
-                
+
                 // 特定のロケールを強制する
                 var handle = localizedString.GetLocalizedStringAsync(selectedLocale);
-                
+
                 // In the editor, this should be fast.
                 // WaitForCompletion() は同期的に完了を待つ
                 translatedText = handle.WaitForCompletion();
@@ -201,7 +190,6 @@ public class LocalizedDropdown : MonoBehaviour
 
         m_Dropdown.AddOptions(optionDataList);
 
-        // ▼▼▼ ★★★ (エディタ側も同様に修正) ★★★ ▼▼▼
         // 2. 記憶しておいたインデックスを復元する
         if (previousValue >= 0 && previousValue < m_Dropdown.options.Count)
         {
@@ -211,7 +199,6 @@ public class LocalizedDropdown : MonoBehaviour
         {
             m_Dropdown.value = 0;
         }
-        // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
 
         m_Dropdown.interactable = true;
 

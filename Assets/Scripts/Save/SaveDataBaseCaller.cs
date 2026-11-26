@@ -46,7 +46,7 @@ public class SaveDataBaseCaller : MonoBehaviour
     }
 
     // --- ロード（基本データ型） ---
-    
+
     public int LoadInt(string key, int defaultValue = 0)
     {
         return SaveDataBaseController.instance.LoadInt(key, defaultValue);
@@ -68,7 +68,7 @@ public class SaveDataBaseCaller : MonoBehaviour
     }
 
     // --- セーブ＆ロード（JSON / カスタムオブジェクト） ---
-    
+
     /// <summary>
     /// 任意の[Serializable]なクラス/構造体をJSON文字列として保存します
     /// </summary>
@@ -87,7 +87,7 @@ public class SaveDataBaseCaller : MonoBehaviour
     }
 
     // --- ユーティリティ ---
-    
+
     public void DeleteKey(string key)
     {
         SaveDataBaseController.instance.DeleteKey(key);

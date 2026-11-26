@@ -12,13 +12,11 @@ public class DistanceEventer : SerializedMonoBehaviour
     private float toPlayerDistance;
     private bool once_1;
     private bool once_2;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         playerStatus = PlayerStatus.instance;
     }
 
-    // Update is called once per frame
     void Update()
     {
         toPlayerDistance = Vector3.Distance(this.transform.position, playerStatus.transform.position);

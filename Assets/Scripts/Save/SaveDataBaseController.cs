@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 /// PlayerPrefs を使った汎用セーブ・ロードコントローラー
 /// 継承元（Singleton<T>）がシングルトンとDontDestroyOnLoadを管理することを前提としています。
 /// </summary>
-public class SaveDataBaseController : Singleton<SaveDataBaseController> 
+public class SaveDataBaseController : Singleton<SaveDataBaseController>
 {
     void Start()
     {
@@ -42,7 +42,7 @@ public class SaveDataBaseController : Singleton<SaveDataBaseController>
     {
         PlayerPrefs.SetString(key, value);
     }
-    
+
     /// <summary>
     /// bool値をint（1 or 0）として保存します
     /// </summary>
@@ -67,7 +67,7 @@ public class SaveDataBaseController : Singleton<SaveDataBaseController>
     {
         return PlayerPrefs.GetString(key, defaultValue);
     }
-    
+
     /// <summary>
     /// int（1 or 0）をbool値としてロードします
     /// </summary>
@@ -144,7 +144,7 @@ public class SaveDataBaseController : Singleton<SaveDataBaseController>
     {
         return PlayerPrefs.HasKey(key);
     }
-    
+
     /// <summary>
     /// すべての変更をディスクに書き込みます（通常はOnApplicationQuitで自動実行されます）
     /// </summary>

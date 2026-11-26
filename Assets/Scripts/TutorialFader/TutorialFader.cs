@@ -18,10 +18,10 @@ public class TutorialFader : MonoBehaviour
     [Header("アニメーション設定")]
     [Tooltip("フェードインにかかる時間（秒）")]
     [SerializeField] private float fadeInDuration = 0.5f;
-    
+
     [Tooltip("表示し続ける時間（秒）")]
     [SerializeField] private float displayDuration = 3.0f;
-    
+
     [Tooltip("フェードアウトにかかる時間（秒）")]
     [SerializeField] private float fadeOutDuration = 0.5f;
 
@@ -63,7 +63,7 @@ public class TutorialFader : MonoBehaviour
         cts?.Dispose();
         activeFadeInTween?.Kill();
         activeFadeOutTween?.Kill();
-        
+
         // 新しいCancellationTokenSourceを作成
         cts = new CancellationTokenSource();
 
@@ -93,7 +93,7 @@ public class TutorialFader : MonoBehaviour
             // 2. フェードイン
             // UniTaskCompletionSourceを使って、DOTweenのOnCompleteをawait可能にする
             var fadeInTcs = new UniTaskCompletionSource();
-            
+
             activeFadeInTween = tutorialCanvasGroup.DOFade(1f, fadeInDuration)
                 .SetEase(Ease.OutQuad)
                 .OnComplete(() => fadeInTcs.TrySetResult())  // 完了したらTCSに通知
@@ -106,12 +106,12 @@ public class TutorialFader : MonoBehaviour
 
             // 4. フェードアウト
             var fadeOutTcs = new UniTaskCompletionSource();
-            
+
             activeFadeOutTween = tutorialCanvasGroup.DOFade(0f, fadeOutDuration)
                 .SetEase(Ease.InQuad)
                 .OnComplete(() => fadeOutTcs.TrySetResult())
                 .OnKill(() => fadeOutTcs.TrySetCanceled());
-                
+
             await fadeOutTcs.Task; // TCSが完了（OnComplete）するのを待つ
 
             // 5. 非表示にして操作も受け付けないようにする

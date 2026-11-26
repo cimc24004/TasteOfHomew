@@ -1,6 +1,5 @@
-// TranslationProcessorWindow.cs
 // (Assets/Editor フォルダに配置してください)
-// ★ 翻訳済みJSONをインポートしてアセットに書き戻す機能を追加
+// 翻訳済みJSONをインポートしてアセットに書き戻す機能を追加
 
 using UnityEngine;
 using UnityEditor;
@@ -13,7 +12,7 @@ using System.Linq;
 using System.Diagnostics; // Process を使うため
 using System.Text; // Encoding を使うため
 using Debug = UnityEngine.Debug; // UnityのDebugクラスを明示
-using Newtonsoft.Json; // ★ Json.NET を
+using Newtonsoft.Json; // Json.NET を
 using System.Threading.Tasks; // Taskを使うため
 
 // --- JSON送受信用データ構造 ---
@@ -29,14 +28,14 @@ public class TranslationItem
 {
     [JsonProperty("collectionGUID")]
     public string collectionGUID;
-    
+
     [JsonProperty("key")]
     public string key;
-    
+
     [JsonProperty("japaneseText")]
     public string japaneseText;
 
-    // --- ▼▼▼ 修正箇所 (インポート時に読み取るキー) ▼▼▼ ---
+    // --- 修正箇所 (インポート時に読み取るキー) ---
     [JsonProperty("englishText")]
     public string englishText;
 
@@ -45,7 +44,6 @@ public class TranslationItem
 
     [JsonProperty("koreanText")]
     public string koreanText;
-    // --- ▲▲▲ 修正完了 ▲▲▲ ---
 }
 
 /// <summary>
@@ -55,15 +53,14 @@ public class TranslationProcessorWindow : EditorWindow
 {
     // --- UI用変数 ---
     private string searchPath = "Assets/Localization";
-    private string pythonExePath = "python"; 
+    private string pythonExePath = "python";
     private string pythonScriptPath = "Assets/Python/translate.py";
-    
+
     private string exportSavePath = "Assets/Translation_Export.json"; // エクスポートJSONの保存先
-    
-    // --- ▼▼▼ 修正箇所 (インポートUI用) ▼▼▼ ---
-    private string importJsonPath = "Assets/Translation_Export.json"; // ★ インポートするJSONパス
-    // --- ▲▲▲ 修正完了 ▲▲▲ ---
-    
+
+    // --- 修正箇所 (インポートUI用) ---
+    private string importJsonPath = "Assets/Translation_Export.json"; // インポートするJSONパス
+
     private LocaleIdentifier sourceLocale = new LocaleIdentifier("ja");
 
     private bool isProcessing = false;
@@ -79,7 +76,7 @@ public class TranslationProcessorWindow : EditorWindow
     {
         EditorGUILayout.LabelField("Python Translation Exporter / Importer", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("1. [Export] でJSONを生成し、Geminiに渡して翻訳してもらいます。\n2. [Import] で翻訳済みのJSONを読み込み、アセットに適用します。", MessageType.Info);
-        
+
         EditorGUILayout.Space(10);
 
         // --- 設定エリア ---
@@ -87,9 +84,9 @@ public class TranslationProcessorWindow : EditorWindow
         searchPath = EditorGUILayout.TextField("Collection Search Path", searchPath);
         pythonExePath = EditorGUILayout.TextField("Python Executable Path", pythonExePath);
         pythonScriptPath = EditorGUILayout.TextField("Python Script Path", pythonScriptPath);
-        
+
         EditorGUILayout.Space(10);
-        
+
         // --- 1. エクスポートエリア ---
         EditorGUILayout.LabelField("1. Export for Gemini", EditorStyles.miniBoldLabel);
         exportSavePath = EditorGUILayout.TextField("Export JSON Save Path", exportSavePath);
@@ -102,9 +99,8 @@ public class TranslationProcessorWindow : EditorWindow
         }
         EditorGUI.EndDisabledGroup();
         GUI.color = Color.white;
-        
-        
-        // --- ▼▼▼ 修正箇所 (2. インポートエリア) ▼▼▼ ---
+
+        // --- 修正箇所 (2. インポートエリア) ---
         EditorGUILayout.Space(20); // エクスポートとインポートを区切る
         EditorGUILayout.LabelField("2. Import from Gemini", EditorStyles.boldLabel);
         importJsonPath = EditorGUILayout.TextField("Import JSON File Path", importJsonPath);
@@ -113,18 +109,17 @@ public class TranslationProcessorWindow : EditorWindow
         EditorGUI.BeginDisabledGroup(isProcessing);
         if (GUILayout.Button(isProcessing ? "Processing..." : "Import Translations from .json File", GUILayout.Height(40)))
         {
-            if (EditorUtility.DisplayDialog("Confirm Import", 
+            if (EditorUtility.DisplayDialog("Confirm Import",
                 $"本当に {importJsonPath} の内容をインポートしますか？\n\n" +
                 "既存の翻訳（en, zh-Hans, ko）が上書きされます。\n" +
-                "（この操作は Ctrl+Z で元に戻せます）", 
+                "（この操作は Ctrl+Z で元に戻せます）",
                 "Import (実行)", "Cancel (中止)"))
             {
-                EditorApplication.delayCall += RunImportProcess; // ★ インポート用の関数を呼ぶ
+                EditorApplication.delayCall += RunImportProcess; // インポート用の関数を呼ぶ
             }
         }
         EditorGUI.EndDisabledGroup();
         GUI.color = Color.white;
-        // --- ▲▲▲ 修正完了 ▲▲▲ ---
     }
 
     /// <summary>
@@ -133,7 +128,7 @@ public class TranslationProcessorWindow : EditorWindow
     private async void RunExportProcess()
     {
         isProcessing = true;
-        Repaint(); 
+        Repaint();
 
         try
         {
@@ -144,12 +139,12 @@ public class TranslationProcessorWindow : EditorWindow
                 return;
             }
 
-            string jsonRequest = JsonConvert.SerializeObject(request); 
+            string jsonRequest = JsonConvert.SerializeObject(request);
             string scriptFullPath = Path.GetFullPath(pythonScriptPath);
             Debug.Log($"Sending {request.items.Count} items to Python for formatting...");
 
-            string jsonResponse = await Task.Run(() => 
-                RunPythonScript(jsonRequest, scriptFullPath) 
+            string jsonResponse = await Task.Run(() =>
+                RunPythonScript(jsonRequest, scriptFullPath)
             );
 
             if (string.IsNullOrEmpty(jsonResponse))
@@ -168,7 +163,7 @@ public class TranslationProcessorWindow : EditorWindow
                 Debug.LogError($"Export Save Path は 'Assets/' から始まるパスにしてください。");
                 return;
             }
-            
+
             try
             {
                 string directory = Path.GetDirectoryName(exportSavePath);
@@ -179,11 +174,11 @@ public class TranslationProcessorWindow : EditorWindow
 
                 File.WriteAllText(exportSavePath, jsonResponse, Encoding.UTF8);
                 AssetDatabase.Refresh();
-                
+
                 TextAsset jsonFile = AssetDatabase.LoadAssetAtPath<TextAsset>(exportSavePath);
                 if (jsonFile != null) EditorGUIUtility.PingObject(jsonFile);
 
-                EditorUtility.DisplayDialog("Success", 
+                EditorUtility.DisplayDialog("Success",
                     $"「日本語の表」(JSON) を保存しました:\n{exportSavePath}\n\n" +
                     "その .json ファイルを Gemini にアップロードしてください。", "OK");
             }
@@ -197,7 +192,7 @@ public class TranslationProcessorWindow : EditorWindow
         }
     }
 
-    // --- ▼▼▼ 修正箇所 (インポート用関数) ▼▼▼ ---
+    // --- 修正箇所 (インポート用関数) ---
     /// <summary>
     /// (インポート) プロセス全体を実行
     /// </summary>
@@ -230,7 +225,7 @@ public class TranslationProcessorWindow : EditorWindow
 
             // 3. 翻訳を適用
             Debug.Log($"Importing {importedData.items.Count} entries...");
-            ApplyTranslations(importedData.items); // ★ ApplyTranslations を呼ぶ
+            ApplyTranslations(importedData.items); // ApplyTranslations を呼ぶ
 
             EditorUtility.DisplayDialog("Success", $"インポートが完了しました。\n{importedData.items.Count} 件のエントリーが処理されました。", "OK");
         }
@@ -245,7 +240,6 @@ public class TranslationProcessorWindow : EditorWindow
             Repaint();
         }
     }
-    // --- ▲▲▲ 修正完了 ▲▲▲ ---
 
     /// <summary>
     /// (エクスポート用) 翻訳対象のデータを収集
@@ -262,11 +256,11 @@ public class TranslationProcessorWindow : EditorWindow
             if (collection == null || collection.SharedData == null) continue;
 
             StringTable sourceTable = collection.GetTable(sourceLocale) as StringTable;
-            if (sourceTable == null) continue; 
+            if (sourceTable == null) continue;
 
-            foreach (var kvp in sourceTable) 
+            foreach (var kvp in sourceTable)
             {
-                StringTableEntry entry = kvp.Value; 
+                StringTableEntry entry = kvp.Value;
                 string key = entry.Key;
                 string jaText = entry.Value;
 
@@ -291,7 +285,7 @@ public class TranslationProcessorWindow : EditorWindow
     {
         ProcessStartInfo startInfo = new ProcessStartInfo();
         startInfo.FileName = pythonExePath; // "python"
-        startInfo.Arguments = $"\"{scriptFullPath}\""; 
+        startInfo.Arguments = $"\"{scriptFullPath}\"";
         startInfo.UseShellExecute = false;
         startInfo.RedirectStandardInput = true;
         startInfo.RedirectStandardOutput = true;
@@ -315,7 +309,7 @@ public class TranslationProcessorWindow : EditorWindow
 
                 string output = process.StandardOutput.ReadToEnd();
                 string error = process.StandardError.ReadToEnd();
-                
+
                 process.WaitForExit();
 
                 if (process.ExitCode != 0 || !string.IsNullOrEmpty(error))
@@ -323,7 +317,7 @@ public class TranslationProcessorWindow : EditorWindow
                     Debug.LogError($"Python Error (ExitCode {process.ExitCode}): {error}");
                     return null;
                 }
-                
+
                 return output; // Pythonのprint()結果
             }
         }
@@ -333,16 +327,16 @@ public class TranslationProcessorWindow : EditorWindow
             return null;
         }
     }
-    
-    // --- ▼▼▼ 修正箇所 (インポート用関数) ▼▼▼ ---
+
+    // --- 修正箇所 (インポート用関数) ---
     /// <summary>
     /// (インポート用) 翻訳結果を StringTable アセットに書き込む
     /// </summary>
-    private void ApplyTranslations(List<TranslationItem> items) // ★ 引数を List<TranslationItem> に変更
+    private void ApplyTranslations(List<TranslationItem> items) // 引数を List<TranslationItem> に変更
     {
         HashSet<Object> modifiedAssets = new HashSet<Object>();
 
-        foreach (var result in items) // ★
+        foreach (var result in items)
         {
             string path = AssetDatabase.GUIDToAssetPath(result.collectionGUID);
             StringTableCollection collection = AssetDatabase.LoadAssetAtPath<StringTableCollection>(path);
@@ -351,8 +345,8 @@ public class TranslationProcessorWindow : EditorWindow
                 Debug.LogWarning($"Collection が見つかりません (GUID: {result.collectionGUID}, Key: {result.key})。スキップします。");
                 continue;
             }
-            
-            // ★ 英語 (en) の処理を復活
+
+            // 英語 (en) の処理を復活
             SetTableValue(collection, new LocaleIdentifier("en"), result.key, result.englishText, modifiedAssets);
             SetTableValue(collection, new LocaleIdentifier("zh-Hans"), result.key, result.chineseText, modifiedAssets);
             SetTableValue(collection, new LocaleIdentifier("ko"), result.key, result.koreanText, modifiedAssets);
@@ -363,19 +357,18 @@ public class TranslationProcessorWindow : EditorWindow
             Debug.Log($"ApplyTranslations: {modifiedAssets.Count} 個のアセットが更新されました。");
         }
     }
-    // --- ▲▲▲ 修正完了 ▲▲▲ ---
 
     /// <summary>
     /// (インポート用) 実際の書き込み処理 (Undo対応)
     /// </summary>
     private void SetTableValue(StringTableCollection collection, LocaleIdentifier localeId, string key, string value, HashSet<Object> modifiedAssets)
     {
-        // ★ 翻訳結果が null (JSONにキーが存在しない) または "" (空文字) の場合は、
+        // 翻訳結果が null (JSONにキーが存在しない) または "" (空文字) の場合は、
         // スキップせず、「空として上書き」するのが正しい
         if (value == null)
         {
             // (JSONに en: "" がなく、en: null だった場合の対策)
-            value = ""; 
+            value = "";
         }
 
         StringTable table = collection.GetTable(localeId) as StringTable;
@@ -390,7 +383,7 @@ public class TranslationProcessorWindow : EditorWindow
             string tablePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(collection));
             string tableName = $"{collection.TableCollectionName}_{localeId.Code}.asset";
             string fullAssetPath = Path.Combine(tablePath, tableName).Replace("\\", "/");
-                            
+
             AssetDatabase.CreateAsset(table, fullAssetPath);
             collection.AddTable(table);
             modifiedAssets.Add(table);
@@ -399,7 +392,7 @@ public class TranslationProcessorWindow : EditorWindow
         }
 
         var entry = table.GetEntry(key);
-        
+
         if (entry == null && string.IsNullOrEmpty(value))
         {
             // (例: 翻訳前も空、翻訳後も空 の場合)
@@ -413,7 +406,7 @@ public class TranslationProcessorWindow : EditorWindow
             // 変更がないのでスキップ
             return;
         }
-        
+
         Undo.RecordObject(table, "Apply Translation (Import)");
 
         if (entry != null)
@@ -424,9 +417,9 @@ public class TranslationProcessorWindow : EditorWindow
         {
             entry = table.AddEntry(key, value);
         }
-        
+
         if (entry.IsSmart) entry.IsSmart = true;
-        
+
         EditorUtility.SetDirty(table);
         modifiedAssets.Add(table);
     }

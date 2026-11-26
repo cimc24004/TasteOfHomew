@@ -38,8 +38,6 @@ public class GameFlowController : Singleton<GameFlowController>
     [Tooltip("Awake時に開始する（falseなら手動で呼んでね）")]
     public bool autoStartOnAwake = true;
 
-
-
     [Tooltip("ブロードキャストするフラグ名の接頭辞（phase.XXX）")]
     public string phaseFlagPrefix = "phase";
 
@@ -110,7 +108,6 @@ public class GameFlowController : Singleton<GameFlowController>
     /// <summary>特定フェーズへジャンプ（flowOrder に含まれていなくても遷移可）。</summary>
     [Button("Jump To")]
     public void JumpTo(Phase target) => SwitchTo(target);
-
 
     /// <summary>現在フェーズが flowOrder の最後か。</summary>
     public bool IsLastPhase => flowOrder.Count > 0 && IndexOf(CurrentPhase) == flowOrder.Count - 1;

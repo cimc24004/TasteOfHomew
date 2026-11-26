@@ -76,7 +76,7 @@ public class GameSettings
 ///   ・pendingSettings … 設定画面で変更中の、まだ適用していない設定
 /// 設定画面で値を変えると pendingSettings だけが変わり、「適用」で CurrentSettings に反映・保存される。
 ///
-/// ★注意: Edit > Project Settings > Script Execution Order で、
+/// 注意: Edit > Project Settings > Script Execution Order で、
 /// このスクリプトを「-100」など Default Time より前に設定してください。
 /// </summary>
 public class ConfigController : SerializedMonoBehaviour

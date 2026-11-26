@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement; // ← 追加
+using UnityEngine.SceneManagement;
 
 [AddComponentMenu("Game/Flags/Flag Event Runner (Rise Edge)")]
 public class FlagEventRunner : MonoBehaviour
@@ -39,11 +39,10 @@ public class FlagEventRunner : MonoBehaviour
     /// 直近の値（立ち上がり検出用）
     private readonly Dictionary<string, bool> _lastValues = new();
 
-
     void Awake()
     {
         BuildDictionary();
-        // SnapshotLastValues(); ← これ消す
+        // SnapshotLastValues(); これ消す
         // 初期prevは未登録（=false）として扱わせる
     }
 
@@ -131,7 +130,7 @@ public class FlagEventRunner : MonoBehaviour
         bool finalVal = flags[key].value;
         _lastValues[key] = finalVal;
     }
-    // ★ DataShare から FlagEventRunnerDictionary の実値を取り込む
+    // DataShare から FlagEventRunnerDictionary の実値を取り込む
     private void MergeFromDataShare()
     {
         var ds = DataShareController.instance;

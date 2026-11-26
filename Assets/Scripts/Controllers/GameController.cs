@@ -12,7 +12,6 @@ public class GameController : Singleton<GameController>
     //カーソルのロックはステージごとに違う可能性がある(GameOverやGameStart画面などではLockはしておかない)
     //なのでステージごとに配置するコントローラーを分けている。
 
-    // Start is called before the first frame update
     void Start()
     {
         game_state_controller = GameStateController.instance;
@@ -20,5 +19,4 @@ public class GameController : Singleton<GameController>
         game_state_controller.ActionByModeSelect(game_state, CursorVisible);
         NowSceneName = SceneManager.GetActiveScene().name;
     }
-
 }

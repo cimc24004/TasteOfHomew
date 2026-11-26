@@ -28,7 +28,7 @@ public class YAxisLoopMover : MonoBehaviour
     [Header("自動再生")]
     [SerializeField]
     [Tooltip("trueの場合、Start()時に自動でアニメーションを開始します")]
-    private bool playOnStart = true; // ← これを追加
+    private bool playOnStart = true;
 
     private Tween moveTween; // トゥイーンを管理する変数
     private float startY; // アニメーションの基準となるY座標

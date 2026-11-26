@@ -1,5 +1,3 @@
-// DoorController.cs
-
 using UnityEngine;
 using UnityEngine.Events;
 using DG.Tweening;
@@ -40,13 +38,13 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
 
     [ShowIf("open_type", OpenType.SideOpen)] public MoveXYZ move_x_y_z;
 
-    // ★ 鍵連携
+    // 鍵連携
     [Title("鍵")]
     public DoorKeyController keyController;
     public AudioClip LockedClip;
     public UnityEvent OnOpenBlockedByLock;
 
-    // ★ 音 (ステルス)
+    // 音 (ステルス)
     [Title("音 (ステルス)")]
     [Tooltip("ドアを開けた時にステルスAIに通知する音の半径。0以下なら通知しない。")]
     public float openSoundRadius = 10f;
@@ -54,7 +52,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
     [Tooltip("ドアを閉めた時にステルスAIに通知する音の半径。0以下なら通知しない。")]
     public float closeSoundRadius = 5f;
 
-    // ★ 鍵確認ダイアログ
+    // 鍵確認ダイアログ
     [Title("鍵確認ダイアログ")]
     [Tooltip("DialogueSequenceGroup の groupKey")]
     public string useKeyGroupKey = "Door";
@@ -85,21 +83,18 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         }
     }
 
-    // ▼▼▼ 修正 ▼▼▼
-    // ★ 1. IInteractable の実装 (引数なし・既存の定義)
+    // 1. IInteractable の実装 (引数なし・既存の定義)
     // (CrossHairController以外から呼ばれた場合)
     public void Interact()
     {
-
         OpenCloseAutoSelectAsync(PlayerStatus.instance.gameObject).Forget();
     }
 
-    // ★ 2. CrossHairController が呼ぶための、引数ありの Interact
+    // 2. CrossHairController が呼ぶための、引数ありの Interact
     public void Interact(GameObject interactor)
     {
         OpenCloseAutoSelectAsync(interactor).Forget();
     }
-    // ▲▲▲ 修正 ▲▲▲
 
     /// <summary>
     /// 施錠中 & 鍵所持なら「鍵を使う？」ダイアログを出して選ばせる。
@@ -189,7 +184,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
 
     public bool ShouldHighlight() => true;
 
-    // ▼▼▼ 修正 (interactor を受け取れるように) ▼▼▼
+    // interactor を受け取れるように
     [Button]
     public void Open() => Open(null); // ボタン用
     public void Open(GameObject interactor = null)
@@ -206,7 +201,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         if (OpenClip && audio_source) audio_source.PlayOneShot(OpenClip);
         OpenStartEvent?.Invoke();
 
-        // ★ 音イベントを「誰が」発生させたかを渡す
+        // 音イベントを「誰が」発生させたかを渡す
         if (openSoundRadius > 0f)
         {
             StealthGameController.MakeSoundAt(transform.position, openSoundRadius, interactor);
@@ -242,7 +237,7 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         nowDoorStatus = DoorStatus.Closed;
         if (CloseClip && audio_source) audio_source.PlayOneShot(CloseClip);
 
-        // ★ 音イベントを「誰が」発生させたかを渡す
+        // 音イベントを「誰が」発生させたかを渡す
         if (closeSoundRadius > 0f)
         {
             StealthGameController.MakeSoundAt(transform.position, closeSoundRadius, interactor);
@@ -273,13 +268,12 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
             });
         }
     }
-    // ▲▲▲ 修正ここまで ▲▲▲
 
     [Button("即座に開ける (音・アニメなし)")]
     public void ForceOpen()
     {
         nowDoorStatus = DoorStatus.Opened;
-        OpenedClosedCompletedAnimation = false; 
+        OpenedClosedCompletedAnimation = false;
 
         if (open_type == OpenType.SideOpen)
         {
@@ -288,18 +282,18 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         else if (open_type == OpenType.Rotate)
         {
             transform.localEulerAngles = TargetRotateVector;
-            if (TriggerChangeModeOpenClose && collider) collider.isTrigger = false; 
+            if (TriggerChangeModeOpenClose && collider) collider.isTrigger = false;
         }
 
-        OpenedClosedCompletedAnimation = true; 
-        OpenCompleted?.Invoke(); 
+        OpenedClosedCompletedAnimation = true;
+        OpenCompleted?.Invoke();
     }
 
     [Button("即座に閉める (音・アニメなし)")]
     public void ForceClose()
     {
         nowDoorStatus = DoorStatus.Closed;
-        OpenedClosedCompletedAnimation = false; 
+        OpenedClosedCompletedAnimation = false;
 
         if (open_type == OpenType.SideOpen)
         {
@@ -309,10 +303,10 @@ public class DoorController : SerializedMonoBehaviour, IInteractable
         {
             transform.localEulerAngles = DefaultRotateVector;
         }
- 
-        if (collider) collider.isTrigger = false; 
-        OpenedClosedCompletedAnimation = true; 
-        CloseCompleted?.Invoke(); 
+
+        if (collider) collider.isTrigger = false;
+        OpenedClosedCompletedAnimation = true;
+        CloseCompleted?.Invoke();
 
         if (keyController != null) keyController.NotifyDoorClosed(this);
     }

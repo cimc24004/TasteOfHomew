@@ -1,7 +1,6 @@
-// LocalizationTableProcessor.cs
 // (Assets/Editor フォルダに配置してください)
 // StringTableCollection単位で、全言語を1枚のCSV（ワイド形式）で入出力するバージョン
-// ★CS0029エラー (GetLocales()の型) を修正
+// CS0029エラー (GetLocales()の型) を修正
 
 using UnityEngine;
 using UnityEditor;
@@ -20,9 +19,9 @@ using System.Linq;
 public class CollectionCsvMapping
 {
     // StringTableCollection (例: UI_StringTableCollection.asset)
-    public StringTableCollection collection; 
+    public StringTableCollection collection;
     // CSVファイルのアセットパス (例: Assets/Localization_CSVs/UI_StringTableCollection.csv)
-    public string csvAssetPath; 
+    public string csvAssetPath;
 }
 
 /// <summary>
@@ -65,7 +64,7 @@ public class LocalizationTableProcessor : EditorWindow
         // --- 2. 実行エリア ---
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("2. Actions", EditorStyles.miniBoldLabel);
-        
+
         if (GUILayout.Button("Find Collections and Update List"))
         {
             FindCollections();
@@ -87,7 +86,7 @@ public class LocalizationTableProcessor : EditorWindow
         EditorGUI.BeginDisabledGroup(mappings.Count == 0);
         if (GUILayout.Button($"Import {mappings.Count} CSVs to Collections"))
         {
-            if (EditorUtility.DisplayDialog("Confirm Import", 
+            if (EditorUtility.DisplayDialog("Confirm Import",
                 $"本当に {mappings.Count} 件のCSVをインポートしますか？\n" +
                 "テーブルのデータが上書きされます。元に戻すことはできません。", "Import (実行)", "Cancel"))
             {
@@ -120,9 +119,9 @@ public class LocalizationTableProcessor : EditorWindow
                 SerializedProperty csvPathProp = mapping.FindPropertyRelative("csvAssetPath");
 
                 EditorGUILayout.BeginHorizontal(EditorStyles.textField);
-                
+
                 EditorGUILayout.PropertyField(collectionProp, GUIContent.none, GUILayout.MinWidth(150), GUILayout.MaxWidth(300));
-                
+
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.TextField(csvPathProp.stringValue);
                 EditorGUI.EndDisabledGroup();
@@ -156,7 +155,7 @@ public class LocalizationTableProcessor : EditorWindow
 
         // "t:StringTableCollection" で検索
         string[] guids = AssetDatabase.FindAssets("t:StringTableCollection", new[] { searchPath });
-        
+
         mappings.Clear();
 
         foreach (string guid in guids)
@@ -169,7 +168,7 @@ public class LocalizationTableProcessor : EditorWindow
                 // CSVの保存パスを決定 (例: UI_StringTableCollection.csv)
                 string csvName = $"{collection.name}.csv";
                 string csvAssetPath = Path.Combine(exportPath, csvName);
-                csvAssetPath = csvAssetPath.Replace("\\", "/"); 
+                csvAssetPath = csvAssetPath.Replace("\\", "/");
 
                 mappings.Add(new CollectionCsvMapping
                 {
@@ -202,13 +201,13 @@ public class LocalizationTableProcessor : EditorWindow
             StringTableCollection collection = mapping.collection;
             SharedTableData sharedData = collection.SharedData;
 
-            // --- ▼▼▼ 修正箇所 (CS0029 エラー対応) ▼▼▼ ---
+            // --- 修正箇所 (CS0029 エラー対応) ---
 
             // 1. このコレクションに含まれるロケールのIDをすべて取得 (HashSetによる高速検索用)
             var collectionLocaleIds = collection.Tables
-                .Select(lazyRef => lazyRef.asset as StringTable) 
-                .Where(table => table != null)                   
-                .Select(table => table.LocaleIdentifier)         
+                .Select(lazyRef => lazyRef.asset as StringTable)
+                .Where(table => table != null)
+                .Select(table => table.LocaleIdentifier)
                 .ToHashSet(); // HashSetに変換
 
             // 2. プロジェクト設定に定義されている全ロケールを「定義順」に取得
@@ -219,11 +218,9 @@ public class LocalizationTableProcessor : EditorWindow
             List<Locale> localesForExport = projectLocales
                 .Where(locale => collectionLocaleIds.Contains(locale.Identifier))
                 .ToList();
-            
-            // --- ▲▲▲ 修正完了 ▲▲▲ ---
 
             StringBuilder sb = new StringBuilder();
-            
+
             // --- ヘッダー行の作成 ---
             List<string> headers = new List<string> { "Key", "Id" };
             // 3. で抽出した「正しい順序」のロケールリストからヘッダーを作成
@@ -238,10 +235,10 @@ public class LocalizationTableProcessor : EditorWindow
             foreach (var sharedEntry in sharedData.Entries)
             {
                 string key = sharedEntry.Key;
-                
-                // ★Idを指数表記にしないための対策
-                string keyId = $"=\"{sharedEntry.Id}\""; 
-                
+
+                // Idを指数表記にしないための対策
+                string keyId = $"=\"{sharedEntry.Id}\"";
+
                 List<string> row = new List<string> { key, keyId };
 
                 // 各ロケールテーブルから「正しい順序」で値を取得
@@ -262,7 +259,7 @@ public class LocalizationTableProcessor : EditorWindow
                 sb.AppendLine(string.Join(",", row));
             }
 
-            // --- ★文字化け対策: UTF-8 with BOM で書き出す ---
+            // --- 文字化け対策: UTF-8 with BOM で書き出す ---
             string fullPath = Path.GetFullPath(mapping.csvAssetPath);
             try
             {
@@ -301,7 +298,7 @@ public class LocalizationTableProcessor : EditorWindow
             string[] lines;
             try
             {
-                // --- ★文字化け対策: UTF-8 with BOM で読み取る ---
+                // --- 文字化け対策: UTF-8 with BOM で読み取る ---
                 lines = File.ReadAllLines(fullPath, new UTF8Encoding(true));
             }
             catch (System.Exception e)
@@ -317,7 +314,7 @@ public class LocalizationTableProcessor : EditorWindow
 
             // --- ヘッダーの解析 ---
             string[] headerParts = lines[0].Split(',');
-            
+
             Dictionary<int, LocaleIdentifier> columnIndexToLocale = new Dictionary<int, LocaleIdentifier>();
             for (int i = 2; i < headerParts.Length; i++) // 0=Key, 1=Id
             {
@@ -330,7 +327,7 @@ public class LocalizationTableProcessor : EditorWindow
                     columnIndexToLocale[i] = new LocaleIdentifier(code);
                 }
             }
-            
+
             // --- データ行の解析 ---
             for (int i = 1; i < lines.Length; i++) // 1行目からデータ
             {
@@ -359,16 +356,16 @@ public class LocalizationTableProcessor : EditorWindow
                     if (colIndex < parts.Length) // CSVデータにその列が存在するか
                     {
                         string value = UnescapeCsvField(parts[colIndex]);
-                        
+
                         // 対応するStringTableを取得
                         StringTable table = collection.GetTable(localeId) as StringTable;
-                        
+
                         // テーブルがまだ存在しない場合 (例: jaはあるがenはCSVにしか存在しない)
                         if (table == null)
                         {
                             // 1. StringTableインスタンスを新規作成
                             table = ScriptableObject.CreateInstance<StringTable>();
-                            
+
                             // 2. ロケールIDとSharedDataを設定
                             table.LocaleIdentifier = localeId;
                             table.SharedData = sharedData;
@@ -377,9 +374,9 @@ public class LocalizationTableProcessor : EditorWindow
                             string tablePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(collection));
                             string tableName = $"{collection.TableCollectionName}_{localeId.Code}.asset";
                             string fullAssetPath = Path.Combine(tablePath, tableName).Replace("\\", "/");
-                            
+
                             AssetDatabase.CreateAsset(table, fullAssetPath);
-                            
+
                             // 4. 作成したアセット(table)をCollectionに追加
                             collection.AddTable(table);
 
@@ -398,7 +395,7 @@ public class LocalizationTableProcessor : EditorWindow
                         {
                             tableEntry = table.AddEntry(key, value);
                         }
-                        
+
                         if (tableEntry.IsSmart) tableEntry.IsSmart = true; // Smart Stringの再パース
 
                         modifiedAssets.Add(table);
@@ -414,7 +411,7 @@ public class LocalizationTableProcessor : EditorWindow
             {
                 EditorUtility.SetDirty(asset);
             }
-            
+
             AssetDatabase.SaveAssets(); // アセットの変更をディスクに保存
             Debug.Log($"[Table Processor] Import complete. Updated {importCount} collections. Assets saved.");
         }
@@ -423,7 +420,6 @@ public class LocalizationTableProcessor : EditorWindow
             Debug.Log("[Table Processor] Import finished, but no files were imported or no changes detected.");
         }
     }
-
 
     // --- CSVヘルパー関数 ---
 
@@ -446,14 +442,14 @@ public class LocalizationTableProcessor : EditorWindow
             string unescaped = field.Substring(1, field.Length - 2);
             return unescaped.Replace("\"\"", "\"");
         }
-        // ★指数表記対策で ="[ID]" としたものを元に戻す処理
+        // 指数表記対策で ="[ID]" としたものを元に戻す処理
         if (field.StartsWith("=\"") && field.EndsWith("\"") && field.Length >= 3)
         {
              return field.Substring(2, field.Length - 3);
         }
         return field;
     }
-    
+
     /// <summary>
     /// CSVの行を分割する簡易パーサー (ダブルクォート内のカンマを考慮)
     /// </summary>
@@ -492,7 +488,7 @@ public class LocalizationTableProcessor : EditorWindow
                 currentField.Append(c);
             }
         }
-        
+
         fields.Add(currentField.ToString()); // 最後のフィールド
         return fields.ToArray();
     }

@@ -69,10 +69,10 @@ public class EndController : MonoBehaviour
     }
     void OnDestroy()
     {
-        // 【エラー原因の修正】
+        // エラー原因の修正
         // シーン移動時は playerInput が先に死んでいることがあるため、nullチェック必須
         if (playerInput == null) return;
-        
+
         // アクション自体も念の為チェックして解除
         var clickAction = playerInput.actions?.FindAction("Click");
         var submitAction = playerInput.actions?.FindAction("Submit");
@@ -176,7 +176,7 @@ public class EndController : MonoBehaviour
 
             bool val = dataShareController.GetFlag(ke.key);
             if (!val) continue;
-            
+
             // 注意: 名前を表示するだけなので、CheckKeysと違って
             // 「invokeOnlyOnce」や「invoked」はチェックしない
             candidates.Add(ke);
@@ -219,9 +219,8 @@ public class EndController : MonoBehaviour
         }
         if (SteamManager.Initialized)
         {
-
             // API初期化成功後（必須）
-            string endingKey = winner.EndingName.Contains("3") ? "ENDING3" : 
+            string endingKey = winner.EndingName.Contains("3") ? "ENDING3" :
                                 winner.EndingName.Contains("2") ? "ENDING2" : "ENDING1";
             SteamUserStats.GetAchievement(endingKey, out bool isUnlocked);
             if (!isUnlocked)

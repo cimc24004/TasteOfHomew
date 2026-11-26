@@ -8,7 +8,7 @@ public class BoundaryWallCollision : MonoBehaviour
     public UnityEvent onBoundaryCollision;
 
     [Header("ギズモの色 (半透明の赤)")]
-    [SerializeField] 
+    [SerializeField]
     private Color gizmoColor = new Color(1f, 0f, 0f, 0.35f); // デフォルトを半透明の赤に設定
 
     private BoxCollider boxCollider;
@@ -27,7 +27,7 @@ public class BoundaryWallCollision : MonoBehaviour
         // Transformの情報をギズモに反映させる
         Gizmos.matrix = transform.localToWorldMatrix;
 
-        // ★変更点：ワイヤーフレームではなく、べた塗りの箱を描画
+        // ワイヤーフレームではなく、べた塗りの箱を描画
         Gizmos.DrawCube(boxCollider.center, boxCollider.size);
     }
 

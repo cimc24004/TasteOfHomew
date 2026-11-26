@@ -11,7 +11,6 @@ using UnityEngine.SceneManagement; // InputSystem のために追加
 [RequireComponent(typeof(AudioSource))]
 public class UISelectSoundManager : Singleton<UISelectSoundManager>
 {
-
     [Header("Audio Settings")]
     [Tooltip("UI要素を選択した時（ハイライト時）に鳴らすSE")]
     [SerializeField]
@@ -19,7 +18,7 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
 
     [Tooltip("UI要素を決定（クリック/Submit）した時に鳴らすSE")]
     [SerializeField]
-    private AudioClip submitSound; 
+    private AudioClip submitSound;
 
     private AudioSource audioSource;
 
@@ -33,22 +32,21 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
     private InputAction clickAction;
     void Start()
     {
-        // ★ 起動時は lastSelectedObject を必ず null にしておく
+        // 起動時は lastSelectedObject を必ず null にしておく
         lastSelectedObject = null;
         // DontDestroyOnLoad(gameObject);
         audioSource = GetComponent<AudioSource>();
 
         // PlayerInput から "Submit" アクションを取得
         playerInput = PlayerDataHub.instance.CurrentplayerInput;
-        
-        submitAction = playerInput.actions.FindAction("Submit"); 
-        clickAction = playerInput.actions.FindAction("Click");
 
+        submitAction = playerInput.actions.FindAction("Submit");
+        clickAction = playerInput.actions.FindAction("Click");
 
         submitAction.performed += OnSubmitPressed;
         clickAction.performed += OnSubmitPressed;
     }
-// ★ここが修正ポイント：オブジェクト破棄時にイベントを解除する
+// オブジェクト破棄時にイベントを解除する
     void OnDestroy()
     {
         // イベントの解除 ( -= ) を忘れると、死んだ後に呼ばれてエラーになる
@@ -74,7 +72,7 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
             // かつ、それが Selectable (Button, Toggle, Sliderなど) である場合
             if (currentSelected != null && lastSelectedObject != null && currentSelected.GetComponent<Selectable>() != null)
             {
-                // ★選択音を鳴らす
+                // 選択音を鳴らす
                 PlaySound(selectSound);
             }
 
@@ -91,7 +89,7 @@ public class UISelectSoundManager : Singleton<UISelectSoundManager>
         // 現在選択されているUIが「ある」場合のみ
         if (lastSelectedObject != null)
         {
-            // ★決定音を鳴らす
+            // 決定音を鳴らす
             PlaySound(submitSound);
         }
     }

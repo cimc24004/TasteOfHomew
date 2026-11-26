@@ -19,7 +19,7 @@ public class PauseMenuUIController : MonoBehaviour
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button backToTitleButton;
-    
+
     private ConfigController configController;
     private ConfigMenuUIController configMenuUIController;
     void Start()
@@ -29,9 +29,8 @@ public class PauseMenuUIController : MonoBehaviour
         settingsButton.onClick.AddListener(OnSettingsButtonClicked);
         backToTitleButton.onClick.AddListener(OnBackToTitleButtonClicked);
 
-        // ▼▼▼ ★★★ 修正箇所 (ラムダ式で引数 false を渡す) ★★★ ▼▼▼
+        // ラムダ式で引数 false を渡す
         // backToPauseButton.onClick.AddListener(HideConfigPanel);
-        // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 
         // 最初は非表示にしておく
         pauseMenuPanel.SetActive(false);
@@ -52,9 +51,7 @@ public class PauseMenuUIController : MonoBehaviour
         {
             configMenuUIController = configController.uiController;
             configPanel = configMenuUIController.SettingCanvas;
-
         }
-
     }
     // --- PauseMenuControllerから呼び出されるメソッド ---
 
@@ -76,11 +73,10 @@ public class PauseMenuUIController : MonoBehaviour
             {
                 configController.OnCloseConfig(null); // 引数はnullのまま
             }
-            // ▼▼▼ ★★★ 修正箇所 (false を渡す) ★★★ ▼▼▼
+            // false を渡す
             // 変更を破棄する
             // configController.RevertPendingSettings();
             HideConfigPanel(false); // false = 設定を適用しない
-            // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
         }
         EventSystem.current.SetSelectedGameObject(null);
         pauseMenuPanel.SetActive(false);
@@ -99,8 +95,7 @@ public class PauseMenuUIController : MonoBehaviour
         // ポーズメニューを非表示にし、設定パネルを表示する
         pauseMenuPanel.SetActive(false);
         configPanel.SetActive(true);
-        
-        // (変更なし)
+
         if (configController != null)
         {
             configController.OnOpenConfig();
@@ -112,7 +107,7 @@ public class PauseMenuUIController : MonoBehaviour
         pauseController.BackToTitle();
     }
 
-    // ▼▼▼ ★★★ 修正箇所 (引数を追加) ★★★ ▼▼▼
+    // 引数を追加
     /// <summary>
     /// 設定画面からポーズメニューに戻る
     /// </summary>
@@ -135,5 +130,4 @@ public class PauseMenuUIController : MonoBehaviour
 
         // 3. コントローラーフォーカスは ConfigController の OnCloseConfig で制御される
     }
-    // ▲▲▲ ★★★ 修正箇所 ★★★ ▲▲▲
 }

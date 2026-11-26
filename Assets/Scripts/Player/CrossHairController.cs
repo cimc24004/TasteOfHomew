@@ -19,11 +19,11 @@ public class CrossHairController : Singleton<CrossHairController>
     [SerializeField] public TextMeshProUGUI promptText;
     [SerializeField] public GameObject InteractBox;
     [SerializeField] public CanvasGroup InteractBoxCanvasGroup;
-    
+
     [Title("Localization (NEW)")]
     [Tooltip("「話す」「読む」など、翻訳が必要なキーが入ったテーブルの名前 (例: Interaction)")]
     [SerializeField] private string defaultInteractTableName;
-    
+
     [Tooltip("promptText にアタッチされている Localize String Event")]
     [SerializeField] private LocalizeStringEvent promptLocalizeEvent;
 
@@ -37,7 +37,7 @@ public class CrossHairController : Singleton<CrossHairController>
     private InputAction interactAction;
     private GameController gameController;
     private PlayerUIInfo playerUIInfo;
-    
+
     void Start()
     {
         if (!mainCamera) mainCamera = Camera.main;
@@ -49,17 +49,17 @@ public class CrossHairController : Singleton<CrossHairController>
             playerInput = PlayerDataHub.instance.CurrentplayerInput;
             if (playerInput != null) interactAction = playerInput.actions.FindAction("InteractAction");
         }
-        
+
         if (GameController.instance != null)
         {
             gameController = GameController.instance;
             playerUIInfo = gameController.playerUIInfo;
-            
+
             if (playerUIInfo != null)
             {
                 if (playerUIInfo.crosshair != null)
                     crosshairAnimator = playerUIInfo.crosshair.GetComponent<Animator>();
-                
+
                 promptText = playerUIInfo.promptText;
                 InteractBox = playerUIInfo.InteractBox;
                 InteractBoxCanvasGroup = playerUIInfo.InteractBoxCanvasGroup;
@@ -75,7 +75,7 @@ public class CrossHairController : Singleton<CrossHairController>
                 }
             }
         }
-        
+
         // (フォールバック) コンポーネント取得
         if (promptText != null && promptLocalizeEvent == null)
         {
@@ -111,8 +111,8 @@ public class CrossHairController : Singleton<CrossHairController>
                 SetHighlight(interactable.ShouldHighlight());
                 string displayString = interactable.GetDisplayText();
 
-                // ▼▼▼ ★★★ 修正箇所：型判定ロジック ★★★ ▼▼▼
-                
+                // 型判定ロジック
+
                 // (A) 基本は「翻訳が必要(true)」とする
                 bool needsLocalization = true;
 
@@ -122,7 +122,7 @@ public class CrossHairController : Singleton<CrossHairController>
                 // {
                 //     needsLocalization = false;
                 // }
-                
+
                 // ※もし逆のロジック（特定のクラスだけ翻訳する）が良い場合は以下のように書き換えてください
                 /*
                 bool needsLocalization = false;
@@ -135,7 +135,7 @@ public class CrossHairController : Singleton<CrossHairController>
                 {
                     // (1) 文字列が空なら、常に非表示
                     if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null;
-                    if (promptText) promptText.text = ""; 
+                    if (promptText) promptText.text = "";
                     if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 0.0f;
                 }
                 else if (needsLocalization)
@@ -145,27 +145,25 @@ public class CrossHairController : Singleton<CrossHairController>
                     {
                         // テーブル名とキーを設定して、翻訳システムに任せる
                         promptLocalizeEvent.StringReference.TableReference = defaultInteractTableName;
-                        promptLocalizeEvent.StringReference.TableEntryReference = displayString; 
-                        
+                        promptLocalizeEvent.StringReference.TableEntryReference = displayString;
+
                         if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 1f;
                     }
                 }
                 else
                 {
                     // (3) 翻訳が不要なクラスの場合 (生のテキストとして扱う)
-                    
+
                     // 重要: LocalizeEventが生きていると上書きされるため、参照を切る
-                    if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null; 
-                    
+                    if (promptLocalizeEvent) promptLocalizeEvent.StringReference.TableEntryReference = null;
+
                     if (promptText != null)
                     {
                         promptText.text = displayString; // displayString をそのまま表示
                     }
                     if (InteractBoxCanvasGroup) InteractBoxCanvasGroup.alpha = 1f;
                 }
-                
-                // ▲▲▲ ★★★ (ここまで) ★★★ ▲▲▲
-                
+
                 currentInteractable = interactable;
 
                 if (interactAction != null && interactAction.triggered)
@@ -186,14 +184,14 @@ public class CrossHairController : Singleton<CrossHairController>
 
         // 何もヒットしなかった場合
         SetHighlight(false);
-        
+
         // 表示を消す処理
         if (promptLocalizeEvent != null)
         {
              promptLocalizeEvent.StringReference.TableEntryReference = null; // キーをクリア
         }
         if (promptText) promptText.text = "";
-        
+
         // CanvasGroupで消す
         if (InteractBoxCanvasGroup != null && InteractBoxCanvasGroup.alpha > 0f)
         {
@@ -207,7 +205,7 @@ public class CrossHairController : Singleton<CrossHairController>
     {
         // ハイライト状態が変わった時だけ叩くガードを入れても良いが、Animatorの仕様による
         // if (isHighlight == on) return;
-        
+
         isHighlight = on;
         if (crosshairAnimator)
         {

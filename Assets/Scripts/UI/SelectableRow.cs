@@ -23,21 +23,20 @@ public class SelectableRow : MonoBehaviour
     [Tooltip("選択されている時のテキスト色")]
     [SerializeField]
     private Color selectedColor = Color.white; // 例: 白
-    
+
     [Tooltip("この行が管理するSlider, Dropdown, Button, Toggleなど")]
     [SerializeField]
     private Selectable uiSelectable; //Slider Dropdown Button Toggle
 
-    private TMP_Dropdown childDropdown; 
-    private Coroutine checkDeselectionCoroutine; 
+    private TMP_Dropdown childDropdown;
+    private Coroutine checkDeselectionCoroutine;
 
-    // ▼▼▼ ★★★ 追加: 有効化された瞬間に色をチェックする ★★★ ▼▼▼
+    // 有効化された瞬間に色をチェックする
     private void OnEnable()
     {
         // パネルが表示された瞬間、もし自分が選択済みなら色を白にする
         UpdateColorState();
     }
-    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
 
     private void OnDisable()
     {
@@ -77,7 +76,7 @@ public class SelectableRow : MonoBehaviour
         EventTrigger.Entry selectEntry = new EventTrigger.Entry();
         selectEntry.eventID = EventTriggerType.Select;
         selectEntry.callback.AddListener((eventData) => { HandleChildSelect(); });
-        
+
         // 「選択解除 (Deselect)」イベント
         EventTrigger.Entry deselectEntry = new EventTrigger.Entry();
         deselectEntry.eventID = EventTriggerType.Deselect;
@@ -93,13 +92,12 @@ public class SelectableRow : MonoBehaviour
         trigger.triggers.Add(deselectEntry);
         trigger.triggers.Add(pointerEnterEntry);
 
-        // ▼▼▼ ★★★ 変更: 初期色の設定を修正 ★★★ ▼▼▼
+        // 初期色の設定を修正
         // 単純に normalColor を入れるのではなく、今の状態を見て決める
         UpdateColorState();
-        // ▲▲▲ ★★★ 変更ここまで ★★★ ▲▲▲
     }
 
-    // ▼▼▼ ★★★ 追加: 現在の状態に合わせて色を適用するヘルパー関数 ★★★ ▼▼▼
+    // 現在の状態に合わせて色を適用するヘルパー関数
     /// <summary>
     /// 現在のEventSystemの選択状態を確認して、テキストの色を初期化する
     /// (StartやOnEnableのタイミングで、コントローラーによって既に選択されている可能性があるため)
@@ -122,16 +120,15 @@ public class SelectableRow : MonoBehaviour
         // 選択されていれば白、そうでなければグレー
         labelText.color = isSelected ? selectedColor : normalColor;
     }
-    // ▲▲▲ ★★★ 追加ここまで ★★★ ▲▲▲
 
     /// <summary>
     /// 子のUI (uiSelectable) がハイライトされた時 (マウスが乗った時) に呼ばれる
     /// </summary>
     public void HandleChildPointerEnter()
     {
-        // ★ここに「ハイライト時の音」を鳴らす処理を書く★
+        // ここに「ハイライト時の音」を鳴らす処理を書く
         // 例: SoundManager.Instance.PlayUISound(SoundType.UI_Highlight);
-        
+
         // Debug.Log(gameObject.name + " がハイライトされました。");
     }
 
@@ -150,8 +147,8 @@ public class SelectableRow : MonoBehaviour
         {
             labelText.color = selectedColor;
         }
-        
-        // ★ここに「選択時の音」を鳴らす処理を書く★
+
+        // ここに「選択時の音」を鳴らす処理を書く
         // 例: SoundManager.Instance.PlayUISound(SoundType.UI_Select);
     }
 
@@ -172,9 +169,9 @@ public class SelectableRow : MonoBehaviour
     /// </summary>
     private IEnumerator CheckDeselectionRoutine()
     {
-        yield return new WaitForEndOfFrame(); 
+        yield return new WaitForEndOfFrame();
 
-        if (EventSystem.current == null) 
+        if (EventSystem.current == null)
         {
              checkDeselectionCoroutine = null;
              yield break;
@@ -195,7 +192,7 @@ public class SelectableRow : MonoBehaviour
                 labelText.color = normalColor; // 色を通常色に戻す
             }
         }
-        
+
         checkDeselectionCoroutine = null;
     }
 

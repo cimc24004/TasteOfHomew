@@ -23,7 +23,7 @@ public class NPCActions : MonoBehaviour
     [Tooltip("参照するプレイヤーのTransform。Startで自動取得します。")]
     [ReadOnly]
     public Transform playerTransform;
-    
+
     [Title("Parameter Settings (Inspector Button用)")]
     [SerializeField]
     [Tooltip("RigのWeightが変化するのにかかる時間（秒）")]
@@ -118,7 +118,7 @@ public class NPCActions : MonoBehaviour
                 return;
             }
         }
-        
+
         // 既存のLookAt Tweenがあれば停止（上書き）
         lookAtTween?.Kill();
 
@@ -147,9 +147,8 @@ public class NPCActions : MonoBehaviour
                                .OnKill(() => lookAtTween = null);
     }
 
-    
     // --- Odin Buttonのテスト用（インスペクターで設定した時間を使う） ---
-    
+
     [Button("Fade Weight to 1.0 (Default Duration)")]
     [BoxGroup("Odin Test Buttons")]
     public void FadeWeightOne()
@@ -163,7 +162,7 @@ public class NPCActions : MonoBehaviour
     {
         FadeRigWeight(0.0f, weightFadeDuration);
     }
-    
+
     [Button("LookAt Player (Default Duration)")]
     [BoxGroup("Odin Test Buttons")]
     public void LookAtPlayerY()

@@ -46,7 +46,6 @@ public class RigWeightsFade : MonoBehaviour
     public Dictionary<string, Rig> rigDictionary = new Dictionary<string, Rig>();
     */
 
-
     // --------------------------------------------------------------------
     //  初期化
     // --------------------------------------------------------------------

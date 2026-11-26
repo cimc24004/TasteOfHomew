@@ -13,7 +13,7 @@ public class DoorKeyController : SerializedMonoBehaviour
 
     [LabelText("初期状態は施錠")] public bool initiallyLocked = true;
 
-    [LabelText("閉じたら自動で再ロック")] 
+    [LabelText("閉じたら自動で再ロック")]
     public bool relockOnClose = false;
 
     [ShowIf(nameof(relockOnClose))]
@@ -65,7 +65,7 @@ public class DoorKeyController : SerializedMonoBehaviour
 
         if (lockMode == LockMode.Manual)
         {
-            Play(lockedSfx); OnUnlockFailed?.Invoke(); 
+            Play(lockedSfx); OnUnlockFailed?.Invoke();
             return false;
         }
 
@@ -217,4 +217,3 @@ public static class KeyringService
 {
     public static IKeyring Current;
 }
-

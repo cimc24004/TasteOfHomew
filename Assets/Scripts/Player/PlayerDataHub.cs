@@ -29,7 +29,6 @@ public class PlayerDataHub : MonoBehaviour
     void Start()
     {
         // 必要に応じて初期化コードを追加
-        
     }
     // PlayerStatus側から呼び出してもらうための登録メソッド
     public void RegisterPlayer(PlayerStatus playerStatus, CMFPSController cMFPSController)

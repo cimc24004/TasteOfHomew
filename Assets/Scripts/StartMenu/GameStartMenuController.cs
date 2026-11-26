@@ -15,7 +15,6 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
     [SerializeField] private Button SettingButton;
     [SerializeField] private Button CreditButton;
 
-    
     [Header("Canvas Groups")]
     [SerializeField] private CanvasGroup StartNavMenuCanvasGroup;
     [SerializeField] private CanvasGroup ContinueMenuCanvasGroup;
@@ -65,7 +64,7 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
             sceneManagerController.LoadScene("LeaveSchool");
             GameStartFromBeginButton.enabled = false; // 二重クリック防止
         });
-        
+
         // 「つづける」ボタン（コンティニューメニューを表示）
         GameContinueButton.onClick.AddListener(() =>
         {
@@ -90,7 +89,6 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         // 「トップへ戻る」ボタン（スタートメニューを表示）
         ContinueToTopBackButton.onClick.AddListener(() =>
         {
-            
             // コンティニューメニューを操作不可に
             ContinueMenuCanvasGroup.interactable = false;
             ContinueMenuCanvasGroup.blocksRaycasts = false;
@@ -109,15 +107,14 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         // 最初のフォーカスを設定
         GameStartFromBeginButton.Select();
 
-
-        // ▼▼▼ ★★★ 設定画面との連携 (修正箇所) ★★★ ▼▼▼
+        // 設定画面との連携 (修正箇所)
 
         // --- 設定ボタンのリスナー ---
         SettingButton.onClick.AddListener(() =>
         {
             // 1. 設定画面を開く
             configMenuUIController.OpenSettingCanvas();
-            
+
             // 2. メインメニュー（両方）の操作を無効化する
             // これにより、設定画面が開いている間はボタンが選択できなくなる
             StartNavMenuCanvasGroup.interactable = false;
@@ -131,10 +128,10 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         {
             // 1. 設定画面を閉じる
             configMenuUIController.CloseSettingCanvas();
-            
+
             // 2. ConfigControllerに閉じたことを通知し、フォーカスを設定ボタンに戻す
             configController.OnCloseConfig(SettingButton.gameObject);
-            
+
             // 3. メインメニューの操作を有効化する
             // alpha値を見て、表示されている方だけを操作可能に戻す
             if (StartNavMenuCanvasGroup.alpha > 0.5f) // 0 or 1 の想定
@@ -142,7 +139,7 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
                 StartNavMenuCanvasGroup.interactable = true;
                 StartNavMenuCanvasGroup.blocksRaycasts = true;
             }
-            
+
             if (ContinueMenuCanvasGroup.alpha > 0.5f)
             {
                 ContinueMenuCanvasGroup.interactable = true;
@@ -151,11 +148,7 @@ public class GameStartMenuController : Singleton<GameStartMenuController>
         });
 
         gameStateController.ActionByModeSelect(GameStateController.GameState.MenuOnGamePlay, true);
-        // ▲▲▲ ★★★ 修正箇所 (ここまで) ★★★ ▲▲▲
     }
 
     // Updateは現在使用していない
-    // void Update()
-    // {
-    // }
 }

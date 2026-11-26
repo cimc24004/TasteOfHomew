@@ -45,7 +45,7 @@ public class UIFlowManager : Singleton<UIFlowManager>
     /// <summary>
     /// 【全画面切り替え】
     /// 現在のパネルをすべて閉じ、指定したIDのパネルを新しく開きます。
-    /// ★ 修正：FadeOutがすべて完了してからFadeInが開始されます。
+    /// FadeOutがすべて完了してからFadeInが開始されます。
     /// </summary>
     public void SwitchToPanel(string panelID)
     {
@@ -54,7 +54,7 @@ public class UIFlowManager : Singleton<UIFlowManager>
         CanvasGroup panelToShow = registeredPanels[panelID];
 
         int panelsToHideCount = activePanelStack.Count;
-        
+
         // (A) 隠すパネルがない場合（初回起動時など）
         if (panelsToHideCount == 0)
         {
@@ -70,15 +70,15 @@ public class UIFlowManager : Singleton<UIFlowManager>
         while (activePanelStack.Count > 0)
         {
             CanvasGroup panelToHide = activePanelStack.Pop();
-            
+
             panelToHide.interactable = false;
             panelToHide.blocksRaycasts = false;
-            
+
             // OnComplete でカウンターを増やす
             panelToHide.DOFade(0, defaultFadeDuration).OnComplete(() =>
             {
                 panelsFadedOut++;
-                // ★ すべてのFadeOutが完了したら（カウンターが一致したら）
+                // すべてのFadeOutが完了したら（カウンターが一致したら）
                 if (panelsFadedOut == panelsToHideCount)
                 {
                     // 2. 新しいパネルをフェードイン
@@ -97,7 +97,7 @@ public class UIFlowManager : Singleton<UIFlowManager>
     public void ShowPanel(string panelID)
     {
         if (!ValidatePanelID(panelID)) return;
-        
+
         // 1. 現在のトップパネルを操作不可にする（モーダルの後ろをクリックさせないため）
         if (activePanelStack.Count > 0)
         {
@@ -114,7 +114,7 @@ public class UIFlowManager : Singleton<UIFlowManager>
     /// <summary>
     /// 【モーダルを閉じる】
     /// 一番手前にあるパネルを閉じます。
-    /// ★ 修正：FadeOutが完了してから下のパネルが操作可能になります。
+    /// FadeOutが完了してから下のパネルが操作可能になります。
     /// </summary>
     public void HideCurrentPanel()
     {
@@ -122,14 +122,14 @@ public class UIFlowManager : Singleton<UIFlowManager>
 
         // 1. 一番上のパネルをフェードアウト
         CanvasGroup panelToHide = activePanelStack.Pop();
-        
+
         panelToHide.interactable = false;
         panelToHide.blocksRaycasts = false;
-        
+
         // OnComplete で下のパネルを操作可能にする
         panelToHide.DOFade(0, defaultFadeDuration).OnComplete(() =>
         {
-            // ★ FadeOut完了後
+            // FadeOut完了後
             // 2. 1つ下のパネル（新しいトップ）を操作可能に戻す
             if (activePanelStack.Count > 0)
             {
@@ -139,18 +139,17 @@ public class UIFlowManager : Singleton<UIFlowManager>
         });
     }
 
-
     // --- 内部ヘルパー ---
 
     private void FadeIn(CanvasGroup cg)
     {
         // 念のためアルファを0にリセットしてからフェード開始
-        cg.alpha = 0; 
+        cg.alpha = 0;
         cg.interactable = true;
         cg.blocksRaycasts = true;
         cg.DOFade(1, defaultFadeDuration);
     }
-    
+
     // FadeOutヘルパーはOnCompleteのロジックが複雑化したため削除し、
     // SwitchToPanel と HideCurrentPanel に直接（インラインで）記述しました。
 

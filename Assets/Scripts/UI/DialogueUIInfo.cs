@@ -1,4 +1,3 @@
-// DialogueUIRefs.cs
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +12,7 @@ public class DefaultDialogueUIInfo : Singleton<DefaultDialogueUIInfo>
     [Tooltip("本文を包むボックス")]
     public GameObject dialogueBox;
     public TextMeshProUGUI bodyText;
-    
+
     [Tooltip("選択肢の親Transform")]
     public Transform choicesRoot;
     [Tooltip("選択肢ボタンのPrefab")]

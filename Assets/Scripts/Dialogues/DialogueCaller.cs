@@ -1,4 +1,3 @@
-// DialogueCaller.cs
 using UnityEngine;
 using Sirenix.OdinInspector;
 using UnityEngine.Events;
@@ -28,8 +27,8 @@ public class DialogueCaller : SerializedMonoBehaviour
 
     [LabelText("Sequence ID")]
     public string sequenceId;
-    
-    // ▼▼▼【追加】インスペクターから設定できるフラグを追加 ▼▼▼
+
+    // インスペクターから設定できるフラグを追加
     [Title("Options")]
     [Tooltip("ダイアログ開始時にGameStateを変更するかどうか。")]
     public bool changeGameState = true;
@@ -84,7 +83,7 @@ public class DialogueCaller : SerializedMonoBehaviour
             StartUnityEvent?.Invoke();
 
             // 自分が投げた会話が「閉じるまで」待つ
-            // ▼▼▼【変更点】'changeGameState'の値を渡す ▼▼▼
+            // 'changeGameState'の値を渡す
             await ctrl.StartDialogueAsync(keyToUse, sequenceId, null, default, 1, changeGameState);
 
             // この Caller の終了イベント（自分だけ）
@@ -120,7 +119,7 @@ public class DialogueCaller : SerializedMonoBehaviour
         try
         {
             StartUnityEvent?.Invoke();
-            // ▼▼▼【変更点】'changeGameState'の値を渡す ▼▼▼
+            // 'changeGameState'の値を渡す
             await ctrl.StartDialogueAsync(explicitGroupKey, explicitSequenceId, null, default, 1, changeGameState);
             EndUnityEvent?.Invoke();
         }
@@ -154,7 +153,7 @@ public class DialogueCaller : SerializedMonoBehaviour
         try
         {
             StartUnityEvent?.Invoke();
-            // ▼▼▼【変更点】'changeGameState'の値を渡す ▼▼▼
+            // 'changeGameState'の値を渡す
             await ctrl.StartDialogueAsync(explicitGroupAsset.groupKey, explicitSequenceId, null, default, 1, changeGameState);
             EndUnityEvent?.Invoke();
         }

@@ -15,7 +15,7 @@ public class ItemEquipController : Singleton<ItemEquipController>
     public class ItemData
     {
         [HorizontalGroup("row", 70), LabelText("所持"), LabelWidth(36)]
-        [ToggleLeft] 
+        [ToggleLeft]
         public bool hasItem;
 
         public GameObject obj;

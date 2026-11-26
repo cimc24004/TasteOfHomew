@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization;
 
 [CreateAssetMenu(fileName = "Readable_", menuName = "Game/Readable Asset")]
 public class ReadableAsset : ScriptableObject
@@ -9,7 +9,7 @@ public class ReadableAsset : ScriptableObject
     [HorizontalGroup("h"), LabelText("ID"), Required]
     public string id;                  // セーブ/フラグ用の一意キー
 
-    // ▼▼▼ 【(1) 古いデータ（移行用）】 ▼▼▼
+    // 古いデータ（移行用）
     [Title("--- OLD DATA (for Migration) ---")]
     [HorizontalGroup("h_old"), LabelText("タイトル (Old)")]
     [TextArea(1, 2)]
@@ -18,18 +18,14 @@ public class ReadableAsset : ScriptableObject
     [LabelText("ページ本文(複数) (Old)")]
     [TextArea(3, 5)]
     public List<string> pages = new();
-    // ▲▲▲ 【(1) ここまで】 ▲▲▲
 
-
-    // ▼▼▼ 【(2) 新しいローカライズ用データ】 ▼▼▼
+    // 新しいローカライズ用データ
     [Title("--- LOCALIZATION (NEW) ---")]
     [HorizontalGroup("h_loc"), LabelText("タイトル (Localized)")]
     public LocalizedString localizedTitle;
 
     [LabelText("ページ本文(複数) (Localized)")]
     public List<LocalizedString> localizedPages = new();
-    // ▲▲▲ 【(2) ここまで】 ▲▲▲
-
 
     [Title("UI/挙動")]
     [LabelText("背景画像(任意)")]

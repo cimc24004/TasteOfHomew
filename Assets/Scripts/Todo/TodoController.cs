@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization;
 
 public class TodoController : SerializedMonoBehaviour
 {
@@ -42,7 +42,7 @@ public class TodoController : SerializedMonoBehaviour
         if (id != null) _keyToId[key] = id;
         return id;
     }
-    
+
     // ====== Runtime API (NEW) ======
 
     /// <summary>
@@ -64,19 +64,18 @@ public class TodoController : SerializedMonoBehaviour
     public string AddWithKeyLocalized(string key, LocalizedString locText)
     {
         if (string.IsNullOrWhiteSpace(key)) return AddLocalized(locText);
-        
+
         // ※キーが重複した場合、テキストを更新
         if (_keyToId.TryGetValue(key, out var existId) && _byId.TryGetValue(existId, out var exist))
         {
             exist.SetLocalizedText(locText); // 新しいSetLocalizedText
             return existId;
         }
-        
+
         var id = AddLocalized(locText); // 新しいAddLocalized
         if (id != null) _keyToId[key] = id;
         return id;
     }
-
 
     /// <summary>
     /// ToDoリストの状態を指定されたリストの内容で完全に上書きします。
@@ -95,7 +94,7 @@ public class TodoController : SerializedMonoBehaviour
         {
             if (item == null) continue;
 
-            // ▼▼▼ 【(5) 移行ロジック】 ▼▼▼
+            // 移行ロジック
             // (優先) 新しい localizedText があれば、それを使う
             if (item.localizedText != null && !item.localizedText.IsEmpty)
             {
@@ -106,7 +105,6 @@ public class TodoController : SerializedMonoBehaviour
             {
                 AddWithKey(item.key, item.text);
             }
-            // ▲▲▲ 【(5) ここまで】 ▲▲▲
         }
     }
 
@@ -179,7 +177,7 @@ public class TodoController : SerializedMonoBehaviour
     {
         AddWithKey(key, text);
     }
-    
+
     [GUIColor(1f, 0.9f, 0.6f)]
     [Button("Toggle Check By Key")]
     public void _ToggleByKey(string key = "task1")

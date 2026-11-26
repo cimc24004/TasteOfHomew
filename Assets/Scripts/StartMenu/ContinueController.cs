@@ -17,19 +17,19 @@ public class ContinueController : Singleton<ContinueController>
         public string SceneName;
         public string TeleportKey;
         public string EndingShareDictionaryKey;
-        public string CurrentPhaseStepKey; 
+        public string CurrentPhaseStepKey;
         public GameFlowController.Phase CurrentPhase;
     }
 
     [Title("UI設定")]
     [Tooltip("一番下にある「戻る」ボタン（ナビゲーション連結用）")]
-    private Button backButton; // ★ 追加：ここに「戻る」ボタンを入れてください
+    private Button backButton; // ここに「戻る」ボタンを入れてください
 
     [Title("コンティニューデータスロット")]
     [DictionaryDrawerSettings(KeyLabel = "Continue Button", ValueLabel = "Data")]
     [OnValueChanged("SetupContinueButtons")]
     public Dictionary<Button, ContinueData> continueSlots = new Dictionary<Button, ContinueData>();
-    
+
     void Start()
     {
         if (Application.isPlaying) InitializeAsync().Forget();
@@ -52,16 +52,16 @@ public class ContinueController : Singleton<ContinueController>
         if (Application.isPlaying)
         {
             // --- Playモード: 履歴チェックとナビゲーション再構築 ---
-            
+
             // 1. データロード
             var saveController = SaveDataBaseController.instance;
             var visitedHistoryData = new PhaseStepController.PhaseStepSaveData();
-            
+
             // セーブデータがあれば読み込む
             if (saveController != null && saveController.HasKey("PhaseStepController_VisitedHistory"))
             {
                 var loaded = saveController.LoadData<PhaseStepController.PhaseStepSaveData>("PhaseStepController_VisitedHistory");
-                if (loaded != null) 
+                if (loaded != null)
                 {
                     visitedHistoryData = loaded;
                 }
@@ -81,7 +81,7 @@ public class ContinueController : Singleton<ContinueController>
 
                 // 現在のフェーズデータを探す
                 var phaseEntry = visitedHistoryData.visitedHistory?.FirstOrDefault(e => e.phaseName == targetPhaseName);
-                
+
                 bool isVisited = false;
 
                 if (phaseEntry != null && phaseEntry.visitedStepKeys != null)
@@ -116,7 +116,7 @@ public class ContinueController : Singleton<ContinueController>
                 {
                     // === 有効 ===
                     if (buttonText) buttonText.text = data.chapterName.GetLocalizedString();
-                    
+
                     button.interactable = true;
                     button.enabled = true; // コンポーネント復活
                     if (button.image) button.image.raycastTarget = true;
@@ -128,18 +128,18 @@ public class ContinueController : Singleton<ContinueController>
                     button.onClick.RemoveAllListeners();
                     ContinueData dataToLoad = data; // ローカル変数にキャプチャ
                     button.onClick.AddListener(() => {
-                        LoadDataAndChangeScene(dataToLoad); button.enabled = false; 
+                        LoadDataAndChangeScene(dataToLoad); button.enabled = false;
                     });
                 }
                 else
                 {
                     // === 無効（???） ===
                     if (buttonText) buttonText.text = "???";
-                    
+
                     button.interactable = false;
                     button.enabled = false; // ボタンとして死んでもらう
                     if (button.image) button.image.raycastTarget = false; // マウス無効
-                    
+
                     button.onClick.RemoveAllListeners();
                 }
             }
@@ -182,7 +182,7 @@ public class ContinueController : Singleton<ContinueController>
             else
             {
                 // 一番上のボタンの場合の挙動（必要ならループさせるなど）
-                nav.selectOnUp = null; 
+                nav.selectOnUp = null;
             }
 
             // --- 下への移動 ---
@@ -224,11 +224,10 @@ public class ContinueController : Singleton<ContinueController>
 
             backButton.navigation = backNav;
         }
-        
+
         Debug.Log($"[ContinueController] ナビゲーション再構築完了: 有効チャプター {activeButtons.Count} 個");
     }
 
-    // ... LoadDataなどはそのまま ...
     public void LoadDataAndChangeScene(ContinueData data)
     {
         if (data == null) return;

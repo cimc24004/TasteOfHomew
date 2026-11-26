@@ -14,7 +14,7 @@ public class NPCLookAtTrigger : MonoBehaviour
     [Tooltip("このスクリプトが制御するNPCActions（自動取得されます）")]
     [ReadOnly]
     private NPCActions npcActions;
-    
+
     [Tooltip("追跡対象のプレイヤーTransform（自動取得されます）")]
     [ReadOnly]
     private Transform playerTransform;
@@ -26,13 +26,13 @@ public class NPCLookAtTrigger : MonoBehaviour
 
     [SerializeField]
     [Tooltip("RigのWeightが変化するのにかかる時間（NPCActionsの関数に渡されます）")]
-    private float rigFadeDuration = 0.3f; 
+    private float rigFadeDuration = 0.3f;
 
     // --- 内部状態 ---
     [Header("Debug State")]
     [Tooltip("現在、Rigがアクティブ（アクティブ状態と判断されて）いるか")]
     [ReadOnly]
-    private bool isRigActive = false; 
+    private bool isRigActive = false;
 
     void Awake()
     {
@@ -47,7 +47,7 @@ public class NPCLookAtTrigger : MonoBehaviour
         {
             playerTransform = npcActions.playerTransform;
         }
-        else if (PlayerStatus.instance != null) 
+        else if (PlayerStatus.instance != null)
         {
             playerTransform = PlayerStatus.instance.transform;
         }
@@ -60,7 +60,7 @@ public class NPCLookAtTrigger : MonoBehaviour
 
         // 起動時の初期状態を設定
         isRigActive = ShouldActivateRig();
-        
+
         // 初期状態をほぼ即時反映 (0.01秒でWeightを設定)
         npcActions.FadeRigWeight(isRigActive ? 1.0f : 0.0f, 0.01f);
     }
@@ -83,16 +83,16 @@ public class NPCLookAtTrigger : MonoBehaviour
         if (shouldActivate && !isRigActive)
         {
             isRigActive = true;
-            
-            // ★★★ご要望の通り、Rig Weightを1にする関数を呼びます★★★
+
+            // ご要望の通り、Rig Weightを1にする関数を呼びます
             npcActions.FadeRigWeight(1.0f, rigFadeDuration);
         }
         // 2. アクティブ状態 -> 非アクティブ状態 になった瞬間
         else if (!shouldActivate && isRigActive)
         {
             isRigActive = false;
-            
-            // ★★★ご要望の通り、Rig Weightを0にする関数を呼びます★★★
+
+            // ご要望の通り、Rig Weightを0にする関数を呼びます
             npcActions.FadeRigWeight(0.0f, rigFadeDuration);
         }
     }
@@ -132,7 +132,7 @@ public class NPCLookAtTrigger : MonoBehaviour
         // Dot(A, B) > 0 なら、2つのベクトルは同じ方向（前方180度）を向いている
         float dotProduct = Vector3.Dot(myForward.normalized, directionToPlayer.normalized);
 
-        // ★★★ご要望の通り、前方180度（内積 > 0）の場合のみ true を返します★★★
+        // ご要望の通り、前方180度（内積 > 0）の場合のみ true を返します
         return dotProduct > 0;
     }
 }

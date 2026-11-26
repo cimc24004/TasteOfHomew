@@ -26,7 +26,7 @@ public class TeleportGlobalController : Singleton<TeleportGlobalController>
 
         if (cc != null)
         {
-            // ★★★ CharacterController がある場合のテレポート方法 ★★★
+            // CharacterController がある場合のテレポート方法
             Debug.Log("CharacterControllerを無効化してテレポートします。");
             cc.enabled = false; // 一時的に無効化
             playerStatus.transform.position = _transform.position; // 位置を強制変更
@@ -47,7 +47,6 @@ public class TeleportGlobalController : Singleton<TeleportGlobalController>
             teleportTransformData.Add(keyName, targetTransform);
         }else
         {
-            // ★★★ 修正点 ★★★
             // キーが既に存在する場合 (古いシーンのTransformが入っている) は、
             // 新しいシーンのTransformで上書きする
             Debug.Log($"キー '{keyName}' を新しいTransformで上書き更新します。");
@@ -62,7 +61,6 @@ public class TeleportGlobalController : Singleton<TeleportGlobalController>
         // nullチェックを追加して安全性を高める
         if (playerStatus == null || teleportDataController == null) return;
 
-        // ★★★ 修正点 ★★★
         // Dictionaryのキーを先に別のリストにコピーする
         var teleportKeys = new List<string>(teleportDataController.teleportData.Keys);
 

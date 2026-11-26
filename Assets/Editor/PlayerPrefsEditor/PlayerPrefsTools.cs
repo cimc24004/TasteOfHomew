@@ -2,7 +2,6 @@ using System.Collections.Generic;
 
 namespace PlayerPrefsEditor
 {
-
     /// <summary>
     /// Windowのみ対応
     /// </summary>

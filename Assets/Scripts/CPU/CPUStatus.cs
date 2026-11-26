@@ -39,7 +39,7 @@ public class CPUStatus : MonoBehaviour
         }
 
         // 起動時の状態を反映
-        UpdateMovementState(true); 
+        UpdateMovementState(true);
     }
 
     void Update()
@@ -83,7 +83,7 @@ public class CPUStatus : MonoBehaviour
                 footStepController.CurrentState = newState;
             }
 
-            // B. Animatorに通知 (★要求されたロジック)
+            // B. Animatorに通知 (要求されたロジック)
             if (CPUAnimator != null)
             {
                 switch (newState)
@@ -94,10 +94,10 @@ public class CPUStatus : MonoBehaviour
                     case MovementState.Walking:
                         CPUAnimator.SetBool("Walk", true);
                         break;
-                    
+
                     // ※もし MovementState に Running がある場合の分岐例
                     // case MovementState.Running:
-                    //     CPUAnimator.SetBool("Walk", true); 
+                    //     CPUAnimator.SetBool("Walk", true);
                     //     break;
                 }
             }

@@ -3,7 +3,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Events;
-using UnityEngine.Localization; // ← 【追加】
+using UnityEngine.Localization;
 
 public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
 {
@@ -26,25 +26,24 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
     [Tooltip("このNPCで会話進行中は新たなTalkを無視（推奨）")] public bool blockWhileTalking = true;
     [Tooltip("話しかけたときにプレイヤーの方向を向くか。")] public bool LookAtPlayerY;
 
-    // ▼▼▼ 【(1) 修正】 デフォルトキーのフィールドを追加 ▼▼▼
+    // デフォルトキーのフィールドを追加
     [Title("Localization")]
     [Tooltip("（オプション）「調べる」など、デフォルト以外のキーを個別に指定する場合")]
     [SerializeField] private LocalizedString interactText;
 
     [Tooltip("↑の interactText が空の場合に使われる、デフォルトの翻訳キー（String Table内）")]
-    [SerializeField] private string defaultInteractKey = "ui_interact_talk"; // ← ★★★ これを追加 ★★★
-    // ▲▲▲ 【(1) 修正ここまで】 ▲▲▲
+    [SerializeField] private string defaultInteractKey = "ui_interact_talk";
 
     [Title("Local Events (このCaller専用)")]
     public UnityEvent onDialogueStarted;
-    public UnityEvent onDialogueClosed;   // ← 会話が閉じた直後にこのCallerだけで発火
+    public UnityEvent onDialogueClosed;   // 会話が閉じた直後にこのCallerだけで発火
     private bool consumed = false;
     private bool localBusy = false;
 
     // IInteractable
     public void Interact() => Talk().Forget();
-    
-    // ▼▼▼ 【(2) 修正】 GetDisplayText がフォールバックするように変更 ▼▼▼
+
+    // GetDisplayText がフォールバックするように変更
     public string GetDisplayText()
     {
         // (優先) "interactText" が設定されていれば、そのキーを返す
@@ -52,12 +51,11 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         {
             return interactText.TableEntryReference.Key;
         }
-        
+
         // (フォールバック) "interactText" が空なら、デフォルトのキーを返す
-        return defaultInteractKey; 
+        return defaultInteractKey;
     }
-    // ▲▲▲ 【(2) 修正ここまで】 ▲▲▲
-    
+
     public bool ShouldHighlight() => (!blockWhileTalking || !localBusy) && (!once || !consumed);
 
     [Button("Talk()")]
@@ -87,13 +85,13 @@ public class NpcDialogueCaller : SerializedMonoBehaviour, IInteractable
         localBusy = true;
         try
         {
-            onDialogueStarted?.Invoke();              // ← このCallerの開始イベント
+            onDialogueStarted?.Invoke();              // このCallerの開始イベント
             if(LookAtPlayerY)npcActions.LookAtPlayerY();
             await ctrl.StartDialogueAsync(gKey, seqId);  // （ここが戻ってきたら閉じた合図）
         }
         finally
         {
-            onDialogueClosed?.Invoke();               // ← このCallerの終了イベント（常に自分だけ）
+            onDialogueClosed?.Invoke();               // このCallerの終了イベント（常に自分だけ）
             if(LookAtPlayerY)npcActions.LookAtDefaultY();
             if (once) consumed = true;
             localBusy = false;

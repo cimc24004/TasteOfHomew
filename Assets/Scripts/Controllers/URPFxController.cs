@@ -18,7 +18,7 @@
 // ---------------------------------------------------------------------
 
 using UnityEngine;
-using System.Collections; 
+using System.Collections;
 
 #if GLITCH_COLORBLINDNESS
 using FronkonGames.Glitches.ColorBlindness;

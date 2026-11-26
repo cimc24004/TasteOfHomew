@@ -1,25 +1,25 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI; // ★ Selectable を使うために追加
+using UnityEngine.UI; // Selectable を使うために追加
 using Cysharp.Threading.Tasks;
 
 public class HoverToSelect : MonoBehaviour, IPointerEnterHandler
 {
     private InputDeviceDetector inputDeviceDetector;
-    private Selectable targetSelectable; // ★ 追加：自身のSelectable(Button)を取得用
+    private Selectable targetSelectable; // 自身のSelectable(Button)を取得用
 
     void Start()
     {
         inputDeviceDetector = InputDeviceDetector.Instance;
-        targetSelectable = GetComponent<Selectable>(); // ★ ButtonもSelectableの一種なのでこれで取れる
+        targetSelectable = GetComponent<Selectable>(); // ButtonもSelectableの一種なのでこれで取れる
     }
 
     public async void OnPointerEnter(PointerEventData eventData)
     {
-        // ★ 追加：ボタンが無効(interactable = false)なら何もしない
+        // ボタンが無効(interactable = false)なら何もしない
         if (targetSelectable != null && !targetSelectable.interactable)
         {
-            return; 
+            return;
         }
 
         if (inputDeviceDetector.CurrentDeviceType != InputDeviceDetector.DeviceType.KeyboardMouse)

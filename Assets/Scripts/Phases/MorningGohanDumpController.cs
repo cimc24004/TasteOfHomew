@@ -10,7 +10,6 @@ public class MorningGohanDumpController : MonoBehaviour
     [SerializeField]
     private GameObject Meat;
     private AudioSource MeatGetAudioSource;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         phaseStepController = PhaseStepController.instance;
@@ -18,7 +17,6 @@ public class MorningGohanDumpController : MonoBehaviour
         MeatGetAudioSource = this.gameObject.GetComponent<AudioSource>();
         meatforHaveInteractEventRelay.onInteract.AddListener(MeatGohanGet);
     }
-
 
     public void MeatDumpEventStart()
     {
@@ -35,9 +33,7 @@ public class MorningGohanDumpController : MonoBehaviour
     }
     public void MeatGohanDump()
     {
-        //ご飯をゴミ箱に捨てる。 PlayableCallから呼ばれます。 
+        //ご飯をゴミ箱に捨てる。 PlayableCallから呼ばれます。
         itemEquipController.ClearAll();
     }
-
-
 }

@@ -1,4 +1,3 @@
-// GameOverController.cs
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;

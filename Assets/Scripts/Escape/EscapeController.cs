@@ -1,4 +1,3 @@
-// EscapeController_Refactored_Full.cs
 using System;
 // using System.Reflection; // リフレクションは不要になりました
 using UnityEngine;
@@ -10,13 +9,13 @@ using UnityEngine.Events;
 public class EscapeController : MonoBehaviour
 {
     [Header("DialogueController（任意：空でもOK）")]
-    // ★ 型を MonoBehaviour から DialogueController に変更
-    [SerializeField] private DialogueController dialogueController; 
+    // 型を MonoBehaviour から DialogueController に変更
+    [SerializeField] private DialogueController dialogueController;
 
     [Header("フラグキー")]
     [SerializeField] private string friendHouseKey = "EscapeFriendHouse";
     [SerializeField] private string myHouseKey = "EscapeMyHouse";
-    [SerializeField] private string myMotherKilledKey = "EscapeMyHouseMotherKilled"; 
+    [SerializeField] private string myMotherKilledKey = "EscapeMyHouseMotherKilled";
 
     [Header("イベント（Start / End を外部からアサイン）")]
     public UnityEvent onFriendStart;
@@ -29,12 +28,12 @@ public class EscapeController : MonoBehaviour
 
     private void Awake()
     {
-        // ★ 取得ロジックをシンプル化
+        // 取得ロジックをシンプル化
         // Inspectorでセットされていなければ、SingletonのInstanceから取得する
         if (dialogueController == null)
         {
             dialogueController = DialogueController.instance;
-            
+
             // もしAwake時点でInstanceがなければ警告を出す (Startや実行時にも再試行するためエラーにはしない)
             if (dialogueController == null)
             {
@@ -56,7 +55,7 @@ public class EscapeController : MonoBehaviour
     }
 
     // --- Start 系（既存） ---
-    
+
     // (元のコードから変更なし)
     public void OnFriendSelected()
     {
@@ -95,7 +94,7 @@ public class EscapeController : MonoBehaviour
         onMyEnd?.Invoke(); // 別イベントが欲しければ onMyMotherKilledEnd を新設して差し替え可
     }
 
-    // ---------- ここからフラグ駆動（★★★ 大幅に修正 ★★★） ----------
+    // ---------- ここからフラグ駆動（大幅に修正） ----------
 
     /// <summary>
     /// DialogueController の flags から判断して End を実行。
@@ -115,7 +114,7 @@ public class EscapeController : MonoBehaviour
             }
         }
 
-        // ★ リフレクションを廃止し、公開メソッド GetFlag を直接呼び出す
+        // リフレクションを廃止し、公開メソッド GetFlag を直接呼び出す
         bool friendVal = dialogueController.GetFlag(friendHouseKey);
         bool myVal = dialogueController.GetFlag(myHouseKey);
         bool mkVal = dialogueController.GetFlag(myMotherKilledKey);
@@ -149,7 +148,7 @@ public class EscapeController : MonoBehaviour
             }
         }
 
-        // ★ リフレクションを廃止し、公開メソッド GetFlag を直接呼び出す
+        // リフレクションを廃止し、公開メソッド GetFlag を直接呼び出す
         bool friendVal = dialogueController.GetFlag(friendHouseKey);
         bool myVal = dialogueController.GetFlag(myHouseKey);
         bool mkVal = dialogueController.GetFlag(myMotherKilledKey);
@@ -168,8 +167,8 @@ public class EscapeController : MonoBehaviour
     }
 
     // ---------- フラグ取得（既存の柔軟ロジック） ----------
-    
-    // ★★★ 以下のメソッドはすべて不要になったため削除しました ★★★
+
+    // 以下のメソッドはすべて不要になったため削除しました
     // private bool TryGetFlagValue(string key, out bool value) { ... }
     // private bool TryExtractFromFlagsContainer(object container, string key, out bool value) { ... }
     // private void TryFindDialogueControllerSingleton() { ... }

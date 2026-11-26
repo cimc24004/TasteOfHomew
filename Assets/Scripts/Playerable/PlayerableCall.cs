@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
 using UnityEngine.Playables;
-using UnityEngine.Localization; // ← 【(1) 追加】
+using UnityEngine.Localization;
 
 [DisallowMultipleComponent]
 public class PlayerableCall : MonoBehaviour, IInteractable
@@ -33,12 +33,10 @@ public class PlayerableCall : MonoBehaviour, IInteractable
     [LabelText("不一致のときに出す文言 (Old)")]
     [Tooltip("移行用：新しい Localized Locked Text が空の場合、これが「翻訳キー」として使われます")]
     public string lockedText = "今は使えない";
-    
-    // ▼▼▼ 【(2) 追加】 新しい LocalizedString フィールド ▼▼▼
-    [Tooltip("↑の interactText が空の場合に使われる、デフォルトの翻訳キー（String Table内）")]
-    [SerializeField] private string defaultInteractKey = ""; // ← ★★★ これを追加 ★★★
 
-    // ▲▲▲ 【(2) 追加ここまで】 ▲▲▲
+    // 新しい LocalizedString フィールド
+    [Tooltip("↑の interactText が空の場合に使われる、デフォルトの翻訳キー（String Table内）")]
+    [SerializeField] private string defaultInteractKey = "";
 
     [Title("Rules")]
     [LabelText("一度だけ実行")]
@@ -68,7 +66,7 @@ public class PlayerableCall : MonoBehaviour, IInteractable
         Debug.Log("flow: " + flow);
         if (!playback) playback = GameObject.FindWithTag("MainPlayableDirector").GetComponent<TimelinePlayback>();
     }
-    
+
     public void Interact()
     {
         if (!flow) flow = GameFlowController.instance;
@@ -100,7 +98,7 @@ public class PlayerableCall : MonoBehaviour, IInteractable
         if (disableOnPlayed) gameObject.SetActive(false);
     }
 
-    // ▼▼▼ 【(3) 修正】 移行ロジックを GetDisplayText に実装 ▼▼▼
+    // 移行ロジックを GetDisplayText に実装
     public string GetDisplayText()
     {
         if (!ValidateBasics(silent:true)) return "";
@@ -112,11 +110,11 @@ public class PlayerableCall : MonoBehaviour, IInteractable
             {
                 return ""; // 非表示
             }
-            
+
             // (優先) 新しい localizedLockedText が設定されていれば、そのキーを返す
 
             // (フォールバック) 古い lockedText の文字列を「キー」として返す
-            return lockedText; 
+            return lockedText;
         }
 
         if (string.IsNullOrEmpty(timelineId)) return "";
@@ -131,7 +129,6 @@ public class PlayerableCall : MonoBehaviour, IInteractable
         // (フォールBACK) 古い promptText の文字列を「キー」として返す
         return promptText;
     }
-    // ▲▲▲ 【(3) 修正ここまで】 ▲▲▲
 
     public bool ShouldHighlight()
     {

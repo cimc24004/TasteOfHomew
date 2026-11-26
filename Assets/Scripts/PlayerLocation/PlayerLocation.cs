@@ -21,7 +21,6 @@ public class PlayerLocation : Singleton<PlayerLocation>
     /// <param name="newLocation">新しい場所</param>
     public void SetLocation(PlayerLocation.Location newLocation)
     {
-
         if (currentLocation != newLocation)
         {
             Debug.Log($"[EnvironmentBGM] 場所が変更されました: {currentLocation} -> {newLocation}");

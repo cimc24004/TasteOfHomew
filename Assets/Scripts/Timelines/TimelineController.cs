@@ -22,7 +22,7 @@ public class TimelineController : Singleton<TimelineController>
     }
 
     [Title("Phases（各PhaseにSOを割り当て）")]
-    [ListDrawerSettings(Expanded = true, DraggableItems = true)] // ← 並べ替え可能！
+    [ListDrawerSettings(Expanded = true, DraggableItems = true)] // 並べ替え可能！
     public List<Binding> phases = new();
 
     [Title("（任意）再生ヘルパ")]

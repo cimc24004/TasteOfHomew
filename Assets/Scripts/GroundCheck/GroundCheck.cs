@@ -16,7 +16,7 @@ public class GroundCheck : SerializedMonoBehaviour
     [SerializeField] private LayerMask groundLayer;
 
     // --- 他のスクリプトから参照するプロパティ ---
-    
+
     [Tooltip("現在、地面に接地しているか")]
     [ShowInInspector, ReadOnly]
     public bool IsGrounded { get; private set; }
@@ -24,7 +24,7 @@ public class GroundCheck : SerializedMonoBehaviour
     [Tooltip("接地している地面のコライダー")]
     [ShowInInspector, ReadOnly]
     public Collider GroundCollider { get; private set; }
-    
+
     // 物理演算に関連するためFixedUpdateで処理
     private void FixedUpdate()
     {
@@ -47,7 +47,7 @@ public class GroundCheck : SerializedMonoBehaviour
             GroundCollider = null;
         }
     }
-    
+
     private void OnDrawGizmosSelected()
     {
         if (raycastOrigin != null)

@@ -69,7 +69,7 @@ public class FriendGameCoin : MonoBehaviour
             seq.Append(transform.DOMove(startPos + Vector3.up * riseDistance, tweenDuration).SetEase(Ease.OutQuad));
             if (spriteRenderer)
                 seq.Join(spriteRenderer.DOFade(0f, tweenDuration));
-            // ★ Destroyではなく SetActive(false)
+            // Destroyではなく SetActive(false)
             seq.OnComplete(() => gameObject.SetActive(false));
         }
     }

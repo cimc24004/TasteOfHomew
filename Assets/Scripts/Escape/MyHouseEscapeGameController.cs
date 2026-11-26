@@ -1,6 +1,5 @@
-// MyHouseEscapeGameController.cs
 using System.Collections;
-using Cysharp.Threading.Tasks;          // ← UniTask だけ使う
+using Cysharp.Threading.Tasks;          // UniTask だけ使う
 using UnityEngine;
 using UnityEngine.Events;
 

@@ -6,31 +6,29 @@ using UnityEngine.SceneManagement; // シーン操作に必要
 using UnityEditor.SceneManagement; // シーンの変更をマークするために必要
 using System.Linq; // フォルダ検索で使用
 
-// ▼▼▼ ★★★ Odin Inspector を使うための using ★★★ ▼▼▼
+// Odin Inspector を使うための using
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
-// ▲▲▲ ★★★ Odin Inspector を使うための using ★★★ ▲▲▲
 
 /// <summary>
 /// シーン上またはPrefab内のすべての AudioSource に、
 /// 指定した AudioMixerGroup を一括で割り当てるエディタ拡張ウィンドウ。
 /// (Odin Inspector 版)
 /// </summary>
-// ▼▼▼ ★★★ EditorWindow から OdinEditorWindow に変更 ★★★ ▼▼▼
+// EditorWindow から OdinEditorWindow に変更
 public class AudioMixerAssignerWindow : OdinEditorWindow
 {
     // --- フィールド ---
-    
+
     [Title("1. 割り当てる Group", "この Group がすべての AudioSource に割り当てられます。")]
     [Required(ErrorMessage = "割り当てる Audio Mixer Group を指定してください。")] // 必須項目
     [AssetsOnly] // プロジェクトのアセットのみ許可
     [SerializeField]
     private AudioMixerGroup targetGroup; // 割り当てたいMixer Group
 
-    
     // --- シーン上の処理 ---
-    
+
     [Title("2. シーン上の AudioSource")]
     [InfoBox("現在のシーンの全ての AudioSource に Group を割り当てます。\n(非アクティブなオブジェクトも含む)")]
     // [Button] 属性で、このメソッドをボタンとしてUIに描画する
@@ -47,12 +45,11 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
             ProcessSceneAudioSources();
         }
     }
-    
+
     [Title("", "--- または ---", horizontalLine: true)]
     [PropertyOrder(2)]
     private readonly int separator = 0; // タイトル表示用のダミー
 
-    
     // --- Prefabリストの処理 ---
 
     [Title("3. Prefabリスト上の AudioSource")]
@@ -76,9 +73,9 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
             ProcessPrefabAudioSources();
         }
     }
-    
-    // --- ★★★ (新機能) フォルダから一括追加 ★★★ ---
-    
+
+    // --- (新機能) フォルダから一括追加 ---
+
     [Title("4. フォルダからPrefabを一括追加 (オプション)")]
     [InfoBox("指定したフォルダ(とサブフォルダ)内の全Prefabを検索し、上のリストに追加します。")]
     [FolderPath] // フォルダパス専用の入力フィールド
@@ -112,14 +109,13 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
                 addedCount++;
             }
         }
-        
+
         Debug.Log($"'{targetFolder}' から {addedCount} 個のPrefabをリストに追加しました。");
     }
-    
+
     // --- EnableIf (ボタンの有効化) 用のヘルパー ---
     private bool FolderIsSelected() => !string.IsNullOrEmpty(targetFolder) && AssetDatabase.IsValidFolder(targetFolder);
     private bool CanProcessPrefabs() => targetGroup != null && targetPrefabs != null && targetPrefabs.Count > 0;
-
 
     // --- ウィンドウの初期化 ---
 
@@ -129,13 +125,12 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
         // ウィンドウを表示
         GetWindow<AudioMixerAssignerWindow>("Audio Mixer Assigner");
     }
-    
-    // ★★★ OnGUI() や OnEnable() は OdinEditorWindow が自動で処理するため不要 ★★★
+
+    // OnGUI() や OnEnable() は OdinEditorWindow が自動で処理するため不要
     // protected override void OnGUI()
     // {
     //     base.OnGUI(); // これだけでOdinが↑の属性を解釈して描画してくれる
     // }
-
 
     // --- 処理ロジック (ここの中身は前回のスクリプトと同一です) ---
 
@@ -152,7 +147,7 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
 
         int count = 0;
         List<AudioSource> allSourcesInScene = new List<AudioSource>();
-        
+
         // 現在のシーンの全ルートオブジェクトを取得
         GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
 
@@ -161,7 +156,7 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
             // true を指定して、非アクティブなものも含め、すべての子孫からAudioSourceを取得
             allSourcesInScene.AddRange(root.GetComponentsInChildren<AudioSource>(true));
         }
-        
+
         if (allSourcesInScene.Count == 0)
         {
              Debug.Log("シーン上で AudioSource は見つかりませんでした。");
@@ -227,7 +222,7 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
 
         // Undoのために変更する全オブジェクトを記録
         Undo.RecordObjects(objectsToRecord.ToArray(), "Assign Mixer Group to Prefabs");
-        
+
         // --- 実際の処理 ---
         foreach (GameObject prefab in targetPrefabs)
         {
@@ -251,7 +246,7 @@ public class AudioMixerAssignerWindow : OdinEditorWindow
                     {
                         source.outputAudioMixerGroup = targetGroup;
                         // アセット内のコンポーネントが変更されたことを通知
-                        EditorUtility.SetDirty(source); 
+                        EditorUtility.SetDirty(source);
                         modified = true;
                         sourceCount++;
                     }

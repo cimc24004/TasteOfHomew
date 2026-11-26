@@ -17,13 +17,12 @@ public class GameStateController : Singleton<GameStateController>
     private PlayerDataHub playerDataHub;
     private InputDeviceDetector inputDeviceDetector;
 
-    // ★ KBM時にカーソルを表示すべきかどうかの内部状態
+    // KBM時にカーソルを表示すべきかどうかの内部状態
     // (MenuOnGamePlayMode(true) で true, GameplayMode() で false になる)
-    private bool shouldShowCursorForKBM = false; 
+    private bool shouldShowCursorForKBM = false;
 
-    // ★ 最後にチェックしたデバイスタイプ
+    // 最後にチェックしたデバイスタイプ
     private InputDeviceDetector.DeviceType? lastCheckedDeviceType = null;
-
 
     void Start()
     {
@@ -31,7 +30,7 @@ public class GameStateController : Singleton<GameStateController>
         inputDeviceDetector = InputDeviceDetector.Instance;
     }
 
-    // ▼▼▼ Update関数でデバイスを常時監視 ▼▼▼
+    // Update関数でデバイスを常時監視
     void Update()
     {
         // 1. InputDeviceDetector のインスタンスを（まだなら）取得
@@ -52,18 +51,18 @@ public class GameStateController : Singleton<GameStateController>
         {
             // 4. 変更があった場合、現在のゲームステートに基づいてカーソルを更新
             ApplyCursorState(currentDeviceType);
-            
+
             // 5. 最後のデバイスタイプを更新
             lastCheckedDeviceType = currentDeviceType;
         }
     }
-    
-    // ★ OnDestroy はイベント購読をしないので不要
+
+    // OnDestroy はイベント購読をしないので不要
 
     public void ActionByModeSelect(GameState game_state, bool cursor_display)
     {
-        this.gameState = game_state; 
-        
+        this.gameState = game_state;
+
         if (game_state == GameState.Gameplay)
         {
             GameplayMode();
@@ -78,10 +77,10 @@ public class GameStateController : Singleton<GameStateController>
     {
         if (playerDataHub == null)
             playerDataHub = PlayerDataHub.instance;
-        
+
         this.gameState = GameState.Gameplay;
-        this.shouldShowCursorForKBM = false; // ★リセット
-        this.lastCheckedDeviceType = null; // ★リセット
+        this.shouldShowCursorForKBM = false; // リセット
+        this.lastCheckedDeviceType = null; // リセット
 
         playerDataHub.CurrentCMFPSController.UnlockView();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
@@ -89,7 +88,7 @@ public class GameStateController : Singleton<GameStateController>
         playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Enable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
 
-        // ★ GameplayMode はデバイス問わず常にロック＆非表示
+        // GameplayMode はデバイス問わず常にロック＆非表示
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -103,8 +102,8 @@ public class GameStateController : Singleton<GameStateController>
             playerDataHub = PlayerDataHub.instance;
 
         this.gameState = GameState.MenuOnGamePlay;
-        this.shouldShowCursorForKBM = visibleCursor; // ★ KBM時の表示フラグを記憶
-        this.lastCheckedDeviceType = null; // ★リセット
+        this.shouldShowCursorForKBM = visibleCursor; // KBM時の表示フラグを記憶
+        this.lastCheckedDeviceType = null; // リセット
 
         playerDataHub.CurrentCMFPSController?.LockView();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Enable();
@@ -112,9 +111,9 @@ public class GameStateController : Singleton<GameStateController>
         playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Disable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Enable();
 
-        // ★ メニューを開いた瞬間のデバイスタイプで、即時カーソルを更新
+        // メニューを開いた瞬間のデバイスタイプで、即時カーソルを更新
         ApplyCursorState(inputDeviceDetector.CurrentDeviceType);
-        
+
         EventSystem.current.sendNavigationEvents = true;
     }
 
@@ -122,25 +121,24 @@ public class GameStateController : Singleton<GameStateController>
     {
         if (playerDataHub == null)
             playerDataHub = PlayerDataHub.instance;
-            
+
         this.gameState = GameState.MenuOnGamePlay; // ReadEventもメニュー系として扱う
-        this.shouldShowCursorForKBM = visibleCursor; // ★ KBM時の表示フラグを記憶
-        this.lastCheckedDeviceType = null; // ★リセット
+        this.shouldShowCursorForKBM = visibleCursor; // KBM時の表示フラグを記憶
+        this.lastCheckedDeviceType = null; // リセット
 
         playerDataHub.CurrentplayerInput.actions.FindActionMap("Player").Disable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("MenuOnGamePlay").Disable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("ReadEvent").Enable();
         playerDataHub.CurrentplayerInput.actions.FindActionMap("GamePlayAndMenuCommon").Disable();
 
-        // ★ メニューを開いた瞬間のデバイスタイプで、即時カーソルを更新
+        // メニューを開いた瞬間のデバイスタイプで、即時カーソルを更新
         ApplyCursorState(inputDeviceDetector.CurrentDeviceType);
 
         EventSystem.current.sendNavigationEvents = false;
     }
 
-
     /// <summary>
-    /// ★ カーソル状態を適用する唯一の関数 ★
+    /// カーソル状態を適用する唯一の関数
     /// </summary>
     private void ApplyCursorState(InputDeviceDetector.DeviceType deviceType)
     {

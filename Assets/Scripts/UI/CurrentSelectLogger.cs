@@ -18,7 +18,7 @@ public class CurrentSelectedLogger : MonoBehaviour
         if (currentEventSystem == null)
         {
             // EventSystemがシーンにない場合は何もしない
-            return; 
+            return;
         }
 
         // 2. 現在選択されているオブジェクトを取得
@@ -35,7 +35,6 @@ public class CurrentSelectedLogger : MonoBehaviour
             // 5. 新しいオブジェクトが選択された場合
             else
             {
-                // ★最重要★
                 // Debug.Log() の第2引数に context (GameObject) を渡すことで、
                 // コンソールログがクリック可能になり、HierarchyでPingが飛ぶようになります。
                 Debug.Log($"[UI Selection] -> {currentSelected.name}", currentSelected);

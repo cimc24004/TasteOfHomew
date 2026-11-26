@@ -120,22 +120,22 @@ public class TimelinePlayback : MonoBehaviour
         ApplyAndPlay(phase, timelineId, asset);
         return true;
     }
-    
+
     /// <summary> TimelineAssetを直接指定して再生 </summary>
     public bool Play(TimelineAsset timelineAsset)
     {
         if (!ValidateBasics(requireFlow: false)) return false;
-        
+
         if (timelineAsset == null)
         {
             Debug.LogWarning("[TimelinePlayback] 引数で渡されたTimelineAssetがnullです。");
             return false;
         }
-        
+
         LastPhase = (flow != null) ? flow.CurrentPhase : default(GameFlowController.Phase);
         LastTimelineId = timelineAsset.name;
         ExecutePlayback(timelineAsset);
-        
+
         return true;
     }
 

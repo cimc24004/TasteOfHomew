@@ -37,11 +37,9 @@ public class SceneManagerController : MonoBehaviour
     public bool unloadPreviousImmediately = true;
     public bool dontDestroyOnLoad = true;
 
-    // ▼▼▼ ここから追加 ▼▼▼
     [Header("自己破棄設定")]
     [Tooltip("このリストに含まれるシーンに移動した際、このオブジェクト自体を破棄します")]
     public List<string> destroyOnLoadScenes = new List<string>();
-    // ▲▲▲ ここまで追加 ▲▲▲
 
     private void Awake()
     {
@@ -61,13 +59,13 @@ public class SceneManagerController : MonoBehaviour
             fadeCanvasGroup.alpha = 1f;
             fadeCanvasGroup.blocksRaycasts = true; // 最初のフレームでの誤操作を防ぐ
         }
-        
+
         // 起動直後はすぐにポーズできるよう、十分に過去の時刻で初期化
         LastFadeOutCompletedTime = Time.realtimeSinceStartup - 1.0f;
-        
+
         // <<< ここが修正点 >>>
         // 起動時、最初の明転処理が完了するまではロード中とする
-        IsLoading = true; 
+        IsLoading = true;
     }
 
     private void OnEnable()
@@ -78,7 +76,7 @@ public class SceneManagerController : MonoBehaviour
     private void OnDisable()
     {
         // OnDestroyなどで呼ばれる可能性があるので、nullチェックを追加
-        if (Instance == this) 
+        if (Instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
@@ -86,15 +84,15 @@ public class SceneManagerController : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // ▼▼▼ ここから修正・追加 ▼▼▼
+        // ここから修正・追加
         // 破棄リストに現在のシーン名が含まれているかチェック
         if (destroyOnLoadScenes.Contains(scene.name))
         {
             Debug.Log($"[SceneManagerController] 破棄対象シーン '{scene.name}' に移動したため、自身を破棄します。");
-            
+
             // イベント購読を解除 (Destroy前に必ず行う)
-            SceneManager.sceneLoaded -= OnSceneLoaded; 
-            
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+
             // シングルトン参照をクリア
             if (Instance == this)
             {
@@ -103,12 +101,10 @@ public class SceneManagerController : MonoBehaviour
 
             // このゲームオブジェクトを破棄
             Destroy(gameObject);
-            
-            // このオブジェクトは破棄されるため、以降の処理（フェードアウトなど）は行わない
-            return; 
-        }
-        // ▲▲▲ ここまで修正・追加 ▲▲▲
 
+            // このオブジェクトは破棄されるため、以降の処理（フェードアウトなど）は行わない
+            return;
+        }
 
         Debug.Log($"[SceneManagerController] OnSceneLoaded: '{scene.name}' がロードされました。");
         if (fadeCanvasGroup.alpha >= 1.0f)
@@ -222,14 +218,14 @@ public class SceneManagerController : MonoBehaviour
             yield return fadeCanvasGroup.DOFade(0f, fadeDuration).WaitForCompletion();
             fadeCanvasGroup.blocksRaycasts = false;
         }
-        
+
         // 明転が完了した時刻を記録
         LastFadeOutCompletedTime = Time.realtimeSinceStartup;
         IsLoading = false; // すべてのロード処理が完了
 
         Debug.Log("[SceneManagerController] CheckForTimelineFade: 明転が完了しました。シーン遷移完了。");
     }
-    
+
     public void LoadSceneImmediate(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
     {
         IsLoading = true; // ロード開始

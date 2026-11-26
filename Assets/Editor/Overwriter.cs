@@ -227,7 +227,7 @@ public class Overwriter : AssetPostprocessor
 		var isFirst = true;
 		var isSameAction = false;
 		var result = 0;
-		
+
 		foreach (var exist in existAssets)
 		{
 			string importedPath = exist.Imported.Path;

@@ -11,33 +11,30 @@ using UnityEngine.SceneManagement; // SceneManager.sceneLoaded を使うため�
 public class DataShareController : Singleton<DataShareController>
 {
     [Header("共有フラグ辞書")]
-    // ★ リネーム: shareDictionary → EndingShareDictionary
+    // リネーム: shareDictionary → EndingShareDictionary
     public Dictionary<string, bool> EndingShareDictionary = new Dictionary<string, bool>();
 
-    // ★ 追加: FlagEventRunnerDictionary
+    // FlagEventRunnerDictionary
     public Dictionary<string, bool> FlagEventRunnerDictionary = new Dictionary<string, bool>();
 
     [Header("共有ゲーム進行データ")]
     public string CurrentPhaseStep = "1";
-    
-    // ▼▼▼ GameFlowControllerが見つからない場合、コメントアウトを解除して下の行を使用してください ▼▼▼
-    public GameFlowController.Phase CurrentPhase = GameFlowController.Phase.Morning; 
-    // public int CurrentPhase = 0; // GameFlowController.Phase.Morning; 
-    // ▲▲▲▲▲▲
+
+    // GameFlowControllerが見つからない場合、コメントアウトを解除して下の行を使用してください
+    public GameFlowController.Phase CurrentPhase = GameFlowController.Phase.Morning;
+    // public int CurrentPhase = 0; // GameFlowController.Phase.Morning;
 
     [Header("シーン連動設定")]
     [Tooltip("（値リセット）このリストのシーンに移動した際、全フラグの値を false にリセットします（キーは残ります）")]
     public List<string> resetValuesOnLoadScenes = new List<string>();
 
-    // ▼▼▼ テレポート連携 追加 (1/3) ▼▼▼
+    // テレポート連携 追加 (1/3)
     [Header("テレポート連携")]
     [Tooltip("（実行予約）次にシーンをロードした際、このキー名でテレポートを実行します。実行後、この値はクリアされます。")]
     [ReadOnly] // インスペクターからは変更させず、メソッド経由でのみ設定
     public string NextTeleportKey = "";
-    // ▲▲▲ テレポート連携 追加 ▲▲▲
-    
-    
-    // ▼▼▼ OnEnable / OnDisable 修正 (2/3) ▼▼▼
+
+    // OnEnable / OnDisable 修正 (2/3)
     // AwakeではなくOnEnableで登録することが推奨されます
     private void OnEnable()
     {
@@ -50,8 +47,6 @@ public class DataShareController : Singleton<DataShareController>
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
-    // ▲▲▲▲▲▲
-
 
     /// <summary>
     /// シーンがロードされたときに呼び出されるメソッド
@@ -65,7 +60,7 @@ public class DataShareController : Singleton<DataShareController>
             ResetAllValuesToFalse();
         }
 
-        // ▼▼▼ テレポート連携 修正 (3/3) ▼▼▼
+        // テレポート連携 修正 (3/3)
         // --- 2. テレポート実行予約チェック ---
         // NextTeleportKeyにキー名がセットされていたら
         if (!string.IsNullOrEmpty(NextTeleportKey))
@@ -74,25 +69,24 @@ public class DataShareController : Singleton<DataShareController>
             if (TeleportDataController.instance != null)
             {
                 Debug.Log($"[{gameObject.name}] シーンロードにより、テレポート '{NextTeleportKey}' を予約実行します。");
-                
+
                 // TeleportDataControllerに「キー名」と「true (使用する)」を渡す
                 TeleportDataController.instance.TeleportDataUse(NextTeleportKey, true);
-                
+
                 // 予約を実行したので、キーをクリアする
-                NextTeleportKey = ""; 
+                NextTeleportKey = "";
             }
             else
             {
                 // テレポートキーは予約されていたが、移動先のシーンにTeleportDataControllerがなかった場合
                 Debug.LogWarning($"[{gameObject.name}] テレポートキー '{NextTeleportKey}' が予約されていましたが、" +
                                  $"シーン '{scene.name}' に TeleportDataController.instance が見つかりません。");
-                
+
                 // ※キーはクリアせず、次のシーンロードまで持ち越すことも可能ですが、
                 // 意図しないテレポートを防ぐため、ここではクリアします。
                 NextTeleportKey = "";
             }
         }
-        // ▲▲▲▲▲▲
     }
 
     /// <summary>
@@ -119,13 +113,12 @@ public class DataShareController : Singleton<DataShareController>
                 FlagEventRunnerDictionary[key] = false;
             }
         }
-        
+
         Debug.Log($"[{gameObject.name}] 全てのフラグの値が false にリセットされました。");
     }
 
-    
     // ===== テレポート連携API =====
-    
+
     /// <summary>
     /// 次回シーンロード時に使用するテレポートキーを予約（セット）します。
     /// （例：スタート画面のContinueControllerから呼び出す）
@@ -136,7 +129,6 @@ public class DataShareController : Singleton<DataShareController>
         Debug.Log($"[{gameObject.name}] 次回テレポートキーを予約: {keyName}");
         NextTeleportKey = keyName;
     }
-
 
     // ===== EndingShareDictionary 用API =====
     public void SetFlagToTrue(string key)

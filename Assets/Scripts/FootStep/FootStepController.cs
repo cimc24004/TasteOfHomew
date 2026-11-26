@@ -64,7 +64,7 @@ public class FootStepController : SerializedMonoBehaviour
     private void HandleFootstep()
     {
         PlaySoundBasedOnGround();
-        
+
         switch (CurrentState)
         {
             case MovementState.Walking:
@@ -87,7 +87,7 @@ public class FootStepController : SerializedMonoBehaviour
         {
             return;
         }
-        
+
         // 接地している地面のタグを取得
         string groundTag = groundCheck.GroundCollider.tag;
         Debug.Log($"[Footstep] Ground detected. Tag: '{groundTag}'");
@@ -127,7 +127,7 @@ public class FootStepController : SerializedMonoBehaviour
             Debug.LogWarning("[Footstep] Could not determine TerrainLayer name at the current position.");
             return;
         }
-        
+
         Debug.Log($"[Footstep] On Terrain. Detected TerrainLayer: '{layerName}'");
 
         // footstepSoundsのキーを走査し、レイヤー名にキーが含まれているかチェック

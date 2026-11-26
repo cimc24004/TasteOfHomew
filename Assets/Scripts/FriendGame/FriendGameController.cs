@@ -11,7 +11,7 @@ public class FriendGameController : Singleton<FriendGameController>
 {
     [Title("Refs")]
     [SerializeField] private FriendGameAdvert friendGameAdvert;
-    [Required, SerializeField] private List<TextMeshProUGUI> HaveCoinsTextUIs; // ★複数表示に対応
+    [Required, SerializeField] private List<TextMeshProUGUI> HaveCoinsTextUIs; // 複数表示に対応
     [Required, SerializeField] private Button RetryButton;
     [Required, SerializeField] private GameObject GameOverUI;
     [Required, SerializeField] private FriendGamePlayerController friendGamePlayerController;
@@ -29,14 +29,13 @@ public class FriendGameController : Singleton<FriendGameController>
     [Title("State")]
     [ReadOnly, SerializeField] private int HaveCoins;
     [ShowInInspector, ReadOnly] private bool isGameOver = false;
-    [ShowInInspector, ReadOnly, LabelText("Retry Count")] private int retryCount = 0; // ★追加
+    [ShowInInspector, ReadOnly, LabelText("Retry Count")] private int retryCount = 0;
 
     [Title("Events")]
     public UnityEvent OnGameStart;
     public UnityEvent OnGameReset;
     public UnityEvent OnGameOver;
     public UnityEvent OnFriendGameEnd;
-
 
     [Title("Fail 判定")]
     [LabelText("落下しきい値 (Y)")] public float fallKillY = -10f;
@@ -47,10 +46,10 @@ public class FriendGameController : Singleton<FriendGameController>
     [LabelText("落下時に鳴らすSE")] public AudioClip fallGameOverClip;
     [MinValue(0f), LabelText("GameOverUIを出すまでの待機秒数")] public float gameOverDelay = 1.0f;
     [Title("GameClear 演出")]
-    [Required, LabelText("GameClear用SE出力先")] 
-    public AudioSource gameClearAudioSource;  // ★追加
-    [LabelText("GameClear時に鳴らすSE")] 
-    public AudioClip gameClearClip; // ★追加
+    [Required, LabelText("GameClear用SE出力先")]
+    public AudioSource gameClearAudioSource;
+    [LabelText("GameClear時に鳴らすSE")]
+    public AudioClip gameClearClip;
 
     [Title("CountDown SFX")]
     [Required, LabelText("カウントダウンSE出力先")] public AudioSource countdownAudioSource;
@@ -58,8 +57,8 @@ public class FriendGameController : Singleton<FriendGameController>
     [Required, LabelText("GO! で鳴らすSE")] public AudioClip countdownGoClip;
 
     [Title("GameClear UI / Next")]
-    [Required, LabelText("GameClear UI")] public GameObject gameClearUI; // ★追加
-    [Required, LabelText("Next Stage Button")] public Button NextStageButton; // ★追加
+    [Required, LabelText("GameClear UI")] public GameObject gameClearUI;
+    [Required, LabelText("Next Stage Button")] public Button NextStageButton;
 
     [ShowInInspector, ReadOnly, LabelText("初期プレイヤー位置")]
     private Vector3 initialPlayerPos;
@@ -72,10 +71,10 @@ public class FriendGameController : Singleton<FriendGameController>
         AdvertCanvasGroup = friendGameAdvert.FriendGameAdvertCanvasGroup;
         RetryButton.onClick.AddListener(() =>
         {
-            // ★RetryCountを増やす（押した時点でインクリメント）
+            // RetryCountを増やす（押した時点でインクリメント）
             retryCount++;
 
-            // ★現時点のretryCountが2なら FriendGameEnd() を実行
+            // 現時点のretryCountが2なら FriendGameEnd() を実行
             if (retryCount >= 2)
             {
                 FriendGameEnd();
@@ -85,7 +84,7 @@ public class FriendGameController : Singleton<FriendGameController>
             GameReset();
         });
 
-        NextStageButton.onClick.AddListener(FriendGameEnd); // ★NextStageButtonでFriendGameEnd()
+        NextStageButton.onClick.AddListener(FriendGameEnd); // NextStageButtonでFriendGameEnd()
 
         GameOverUI.SetActive(false);
         gameClearUI.SetActive(false);
@@ -205,7 +204,7 @@ public class FriendGameController : Singleton<FriendGameController>
         });
     }
 
-    // ★追加：ゲームクリア
+    // ゲームクリア
     [Button("GameClear")]
     public void GameClear()
     {
@@ -241,7 +240,7 @@ public class FriendGameController : Singleton<FriendGameController>
 
     private void UpdateCoinUI()
     {
-        // ★複数の所持コイン表示を一括更新
+        // 複数の所持コイン表示を一括更新
         for (int i = 0; i < HaveCoinsTextUIs.Count; i++)
         {
             var t = HaveCoinsTextUIs[i];

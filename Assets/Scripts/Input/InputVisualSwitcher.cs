@@ -16,7 +16,6 @@ public class InputVisualSwitcher : MonoBehaviour
     [SerializeField]
     private GameObject keyIcon;
 
-    
     private void Start()
     {
         if (InputDeviceDetector.Instance == null)

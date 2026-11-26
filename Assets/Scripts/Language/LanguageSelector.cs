@@ -21,7 +21,7 @@ async UniTaskVoid Start()
             string steamLang = SteamApps.GetCurrentGameLanguage();
             Locale targetLocale = null;
 
-            // ▼▼▼ 言語判定ロジック ▼▼▼
+            // 言語判定ロジック
             if (steamLang == "japanese")
             {
                 targetLocale = LocalizationSettings.AvailableLocales.GetLocale("ja");
@@ -39,14 +39,12 @@ async UniTaskVoid Start()
                 targetLocale = LocalizationSettings.AvailableLocales.GetLocale("zh-Hant");
             }
 
-            // ★変更点★
             // 上記の条件に当てはまらなかった場合（英語、ドイツ語、スペイン語など全て）、
             // または取得に失敗した場合は、デフォルトとして「英語 (en)」を設定する
             if (targetLocale == null)
             {
                 targetLocale = LocalizationSettings.AvailableLocales.GetLocale("en");
             }
-            // ▲▲▲ ここまで ▲▲▲
 
             // 適用（英語Localeの取得に成功していれば適用される）
             if (targetLocale != null)
@@ -68,17 +66,16 @@ async UniTaskVoid Start()
 
         var locales = LocalizationSettings.AvailableLocales.Locales;
         var options = new List<string>();
-        
+
         int currentIndex = 0;
 
         for (int i = 0; i < locales.Count; i++)
         {
             var locale = locales[i];
-            
+
             // UI表示用の名前を追加
             options.Add(locale.Identifier.CultureInfo.NativeName);
 
-            // ★重要★
             // 現在設定されているLocaleと、リスト内のLocaleが一致するかチェック
             // 確実に一致させるため、Identifier（言語コード）同士で比較しても良いですが、
             // 上記でGetLocaleを使っていればオブジェクト比較でも概ね動作します
@@ -92,7 +89,7 @@ async UniTaskVoid Start()
 
         // イベントを発火させずに、現在の言語の位置を選択状態にする
         dropdown.SetValueWithoutNotify(currentIndex);
-        
+
         // 見た目も即座に更新する
         dropdown.RefreshShownValue();
     }

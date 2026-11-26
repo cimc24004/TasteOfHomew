@@ -10,13 +10,13 @@ public class FlashLightController : SerializedMonoBehaviour
     [Required] public AudioClip toggleClip;
     [InfoBox("AudioSourceが未設定なら自動追加されます")]
     public AudioSource audioSource;
-    
+
     [Title("Settings")]
     [Tooltip("外部要因（イベント等）でライトの切り替えを許可するかどうか")]
     public bool permitSwitchLight = true;
 
     [Tooltip("家の中にいるときライトを強制的に消すかどうか")]
-    public bool autoTurnOffInHouse = true;  // ←★追加
+    public bool autoTurnOffInHouse = true;
 
     [Title("Follow (Camera.main を基準に追従)")]
     public Vector3 positionOffset = new Vector3(0f, -0.12f, 0.5f);
@@ -40,7 +40,6 @@ public class FlashLightController : SerializedMonoBehaviour
         if (flashlightLight == null) flashlightLight = GetComponentInChildren<Light>();
 
         isOn = flashlightLight.enabled;
-        
     }
     void Start()
     {
@@ -52,7 +51,6 @@ public class FlashLightController : SerializedMonoBehaviour
     }
     void OnEnable()
     {
-
     }
 
     void OnDisable()
@@ -62,7 +60,6 @@ public class FlashLightController : SerializedMonoBehaviour
             flashAction.performed -= OnFlashPerformed;
         }
     }
-
 
     void OnFlashPerformed(InputAction.CallbackContext ctx)
     {
@@ -95,11 +92,11 @@ public class FlashLightController : SerializedMonoBehaviour
             Quaternion targetRot = cam.rotation * Quaternion.Euler(rotationOffset);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Mathf.Clamp01(Time.deltaTime * rotationLerpSpeed));
         }
-        
-        // ▼▼▼ 家の中での自動消灯 ▼▼▼
-        if (autoTurnOffInHouse &&                 // ←★ここを追加
-            PlayerLocation.instance != null && 
-            PlayerLocation.instance.currentLocation == PlayerLocation.Location.InHouse && 
+
+        // 家の中での自動消灯
+        if (autoTurnOffInHouse &&
+            PlayerLocation.instance != null &&
+            PlayerLocation.instance.currentLocation == PlayerLocation.Location.InHouse &&
             flashlightLight.enabled)
         {
             audioSource.PlayOneShot(toggleClip);
@@ -107,7 +104,7 @@ public class FlashLightController : SerializedMonoBehaviour
             isOn = false;
         }
     }
-    
+
     /// <summary>
     /// 外部からライトの切り替え許可を操作します。
     /// </summary>

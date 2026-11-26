@@ -17,7 +17,7 @@ public class TimelineFadeRegistrar : MonoBehaviour
             return _cg;
         }
     }
-    
+
     // このスクリプトは、Awake() や Start() での登録処理は不要です。
     // アタッチされているだけで、SMCが FindObjectOfType で見つけ出します。
 }

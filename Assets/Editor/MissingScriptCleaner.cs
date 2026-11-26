@@ -67,7 +67,6 @@ public static class MissingScriptCleaner
         // Prefab を保存（対応バージョンのみ）
         try
         {
-
         }
         catch { /* 失敗しても致命ではないので握りつぶし */ }
 

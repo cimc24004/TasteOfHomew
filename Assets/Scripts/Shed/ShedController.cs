@@ -26,7 +26,7 @@ public class ShedController : Singleton<ShedController>
         Assert.IsNotNull(horrorBGM, "horrorBGM is not assigned on ShedController");
         Assert.IsNotNull(FootStepGhostWhenDiary, "FootStepGhostWhenDiary is not assigned on ShedController");
         Assert.IsNotNull(Diary, "Diary is not assigned on ShedController");
-        
+
         footstepAudioSource = FootStepGhostWhenDiary.GetComponent<AudioSource>();
         diaryReadablePickup.onOpenedEveryTime.AddListener(OnDiaryOpened);
         diaryReadablePickup.onPageChanged.AddListener(OnPageChanged);
@@ -49,7 +49,7 @@ public class ShedController : Singleton<ShedController>
     {
         diaryReadingNow = true;
         // 変更点②: 日記を開くたびにフラグをリセットする処理を削除
-        // horrorStarted = false; // ← この行を削除
+        // horrorStarted = false; // この行を削除
     }
 
     private void OnDiaryClosed()
@@ -75,7 +75,7 @@ public class ShedController : Singleton<ShedController>
         if (!hasHorrorSequencePlayedOnce && _pageNow >= mid)
         {
             // フラグをtrueにして、このブロックが二度と実行されないようにする
-            hasHorrorSequencePlayedOnce = true; 
+            hasHorrorSequencePlayedOnce = true;
 
             // BGM再生開始
             if (!horrorBGM.isPlaying)

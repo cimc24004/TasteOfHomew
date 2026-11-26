@@ -29,7 +29,7 @@ public class LocalizeTMPFontMenu
 
         // 3. SerializedObject 経由で m_UpdateAsset にアクセス
         SerializedObject so = new SerializedObject(locEvent);
-        
+
         // LocalizedAssetEvent の正しいフィールド名は "m_UpdateAsset"
         SerializedProperty updateEventProperty = so.FindProperty("m_UpdateAsset");
 
@@ -41,7 +41,7 @@ public class LocalizeTMPFontMenu
 
         // リスナーのリスト (m_PersistentCalls.m_Calls) を取得
         SerializedProperty persistentCalls = updateEventProperty.FindPropertyRelative("m_PersistentCalls.m_Calls");
-        
+
         // 4. 既に紐付けられていないかチェック
         bool alreadyExists = false;
         for (int i = 0; i < persistentCalls.arraySize; i++)
@@ -50,7 +50,7 @@ public class LocalizeTMPFontMenu
             Object target = call.FindPropertyRelative("m_Target").objectReferenceValue;
             string methodName = call.FindPropertyRelative("m_MethodName").stringValue;
 
-            // ▼▼▼ "set_font" が正しい（スクリーンショットの 'font' プロパティ） ▼▼▼
+            // "set_font" が正しい（スクリーンショットの 'font' プロパティ）
             if (target == tmp && methodName == "set_font")
             {
                 alreadyExists = true;
@@ -61,21 +61,21 @@ public class LocalizeTMPFontMenu
         if (alreadyExists)
         {
             Debug.Log($"Localize event is already wired to {go.name}.", go);
-            return; 
+            return;
         }
 
         // 5. 新しいリスナーを手動で作成・設定
-        
+
         int newListenerIndex = persistentCalls.arraySize;
-        persistentCalls.arraySize++; 
+        persistentCalls.arraySize++;
         SerializedProperty newCall = persistentCalls.GetArrayElementAtIndex(newListenerIndex);
 
         newCall.FindPropertyRelative("m_Target").objectReferenceValue = tmp;
-        
-        // ▼▼▼ "set_font" が正しい（スクリーンショットの 'font' プロパティ） ▼▼▼
+
+        // "set_font" が正しい（スクリーンショットの 'font' プロパティ）
         newCall.FindPropertyRelative("m_MethodName").stringValue = "set_font";
-        
-        // ★★★ モードを「動的 (EventDefined)」に設定 ★★★
+
+        // モードを「動的 (EventDefined)」に設定
         newCall.FindPropertyRelative("m_Mode").enumValueIndex = (int)PersistentListenerMode.EventDefined;
 
         // 6. 変更を適用

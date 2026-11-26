@@ -8,13 +8,13 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables; // こっちの 
 
 // [Serializable]
 // [DisplayName("Input Action Name Source")]
-// public class InputActionNameSource : ISource 
+// public class InputActionNameSource : ISource
 // {
 //     [SerializeField]
 //     private InputActionAsset m_ActionAsset;
 
 //     // このメソッドが "InputActionName" や "list" など、全てのセレクターで呼び出される
-//     public bool TryEvaluateSelector(ISelectorInfo selector) 
+//     public bool TryEvaluateSelector(ISelectorInfo selector)
 //     {
 //         // === ステップ1: "InputActionName" というセレクター以外は無視する ===
 //         // お前の #{InputActionName:FriendGameJump} の「InputActionName」の部分
@@ -46,14 +46,14 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables; // こっちの 
 //         // === ステップ3: いつもの処理（ただし、必ず true を返す） ===
 //         if (m_ActionAsset == null)
 //         {
-//             selector.Result = "NO_ASSET_ASSIGNED"; 
+//             selector.Result = "NO_ASSET_ASSIGNED";
 //             return true; // "処理した"
 //         }
 
 //         var action = m_ActionAsset.FindAction(actionName);
 //         if (action == null)
 //         {
-//             selector.Result = $"NOT_FOUND:{actionName}"; 
+//             selector.Result = $"NOT_FOUND:{actionName}";
 //             return true; // "処理した"
 //         }
 
@@ -72,6 +72,6 @@ using UnityEngine.Localization.SmartFormat.PersistentVariables; // こっちの 
 
 //         // 正常にキー名を返す
 //         selector.Result = action.GetBindingDisplayString(bindingIndex);
-//         return true; // ★★★ "俺が正常に処理した" と true を返す ★★★
+// return true; // "俺が正常に処理した" と true を返す
 //     }
 // }

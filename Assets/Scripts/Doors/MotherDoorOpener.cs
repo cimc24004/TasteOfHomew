@@ -1,4 +1,3 @@
-// MotherDoorOpener.cs
 // 「正面にドアが見えたら開ける」母用コンポーネント（Doorタグ前提）
 // - Rotate: 閉まってたら一度だけOpen()
 // - Slide : OpenCloseAutoSelect() を短間隔で連打（アニメを継続させるイメージ）
@@ -64,14 +63,12 @@ public class MotherDoorOpener : SerializedMonoBehaviour
 
             if (door == null) return;
 
-            // ▼▼▼ ここから修正 ▼▼▼
-
             // Rotate: 閉まってたら一回だけ Open()
             if (door.open_type == DoorController.OpenType.Rotate)
             {
                 if (door.nowDoorStatus == DoorController.DoorStatus.Closed)
                 {
-                    // ★修正★ interactor として this.gameObject を渡す
+                    // interactor として this.gameObject を渡す
                     door.Open(this.gameObject);
                 }
             }
@@ -81,14 +78,12 @@ public class MotherDoorOpener : SerializedMonoBehaviour
                 float now = Time.time;
                 if (!_nextAllowedSlideCall.TryGetValue(door, out float next) || now >= next)
                 {
-                    // ★修正★ OpenCloseAutoSelect ではなく、
+                    // OpenCloseAutoSelect ではなく、
                     // interactor を渡せる Interact() を呼ぶ
-                    door.Interact(this.gameObject); 
+                    door.Interact(this.gameObject);
                     _nextAllowedSlideCall[door] = now + slideCallInterval;
                 }
             }
-            
-            // ▲▲▲ 修正ここまで ▲▲▲
         }
     }
 

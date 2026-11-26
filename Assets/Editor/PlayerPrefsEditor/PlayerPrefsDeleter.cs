@@ -1,4 +1,3 @@
-// PlayerPrefsDeleter.cs
 // https://www.hanachiru-blog.com/entry/2019/05/25/170042
 //
 // Created by hanachiru on 2019.05.26
@@ -11,14 +10,12 @@ using System.Linq;
 
 namespace PlayerPrefsEditor
 {
-
     public class PlayerPrefsDeleter : EditorWindow
     {
         private List<PlayerPrefsData> _playerPrefData = null;
-        
-        // ★ スクロール位置を保持する変数
-        private Vector2 _scrollPosition; 
 
+        // スクロール位置を保持する変数
+        private Vector2 _scrollPosition;
 
         [MenuItem("Tools/PlayerPrefsDeleter")]
         private static void Open()
@@ -40,7 +37,7 @@ namespace PlayerPrefsEditor
                 return;
             }
 
-            // ▼▼▼ リスト全体をスクロールビューで囲む ▼▼▼
+            // リスト全体をスクロールビューで囲む
             // _scrollPosition 変数を使って現在のスクロール位置を渡し、
             // 更新されたスクロール位置を受け取る
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
@@ -49,7 +46,6 @@ namespace PlayerPrefsEditor
                 DrawPlayerPrefsList();
             }
             EditorGUILayout.EndScrollView();
-            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
         }
 
         /// <summary>
@@ -57,7 +53,6 @@ namespace PlayerPrefsEditor
         /// </summary>
         private void LoadPlayerPrefs()
         {
-
 #if UNITY_EDITOR
             //リストの初期化
             if (_playerPrefData != null)
@@ -81,7 +76,6 @@ namespace PlayerPrefsEditor
 #else
             _playerPrefData = null;
 #endif
-
         }
 
         /// <summary>
@@ -94,7 +88,7 @@ namespace PlayerPrefsEditor
             _playerPrefData = null;
         }
 
-        private void DrawToolbar() // (変更なし)
+        private void DrawToolbar()
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar, GUILayout.ExpandWidth(true)))
             {
@@ -117,12 +111,11 @@ namespace PlayerPrefsEditor
         private void DrawPlayerPrefsList()
         {
             bool isDeleted = false;
-            
+
             // 値表示用のスタイルを定義（折り返しを有効にする）
             GUIStyle wrappedSelectableField = new GUIStyle(EditorStyles.textField);
-            wrappedSelectableField.wordWrap = true; 
+            wrappedSelectableField.wordWrap = true;
 
-            // ★★★ 修正点 ★★★
             // BeginScrollView の直下には、要素全体の高さを計算させるため
             // 一つの Vertical グループが必要です。
             EditorGUILayout.BeginVertical();
@@ -153,7 +146,7 @@ namespace PlayerPrefsEditor
 
                 // SelectableLabel を使い、TextField風のスタイル（背景あり・折り返しあり）で表示
                 EditorGUILayout.SelectableLabel(
-                    item.Value, 
+                    item.Value,
                     wrappedSelectableField, // 上で定義した折り返しスタイル
                     GUILayout.ExpandWidth(true), // 幅はウィンドウに合わせる
                     GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2) // 最低でも2行分の高さを確保
@@ -162,8 +155,8 @@ namespace PlayerPrefsEditor
                 EditorGUILayout.EndVertical();
                 GUILayout.Space(4); // 各項目の間に少しスペースを入れる
             }
-            
-            // ★ スクロールビュー内の Vertical を終了
+
+            // スクロールビュー内の Vertical を終了
             EditorGUILayout.EndVertical();
 
             if (isDeleted) LoadPlayerPrefs();

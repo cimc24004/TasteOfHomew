@@ -118,11 +118,11 @@ public class PlayerMovement : SerializedMonoBehaviour
 
     void Update()
     {
-        // ▼▼▼ 修正点1: 走行条件の変更 ▼▼▼
+        // 修正点1: 走行条件の変更
         // 「外にいる」かつ「しゃがんでいない」場合のみ走れるようにする
         bool canRun = PlayerLocation.instance != null && PlayerLocation.instance.currentLocation == PlayerLocation.Location.Outside;
         isRunning = canRun && !isCrouching && (sprintAction != null && sprintAction.IsPressed());
-        
+
         // ===== 移動 =====
         Vector2 input = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
 
@@ -173,18 +173,18 @@ public class PlayerMovement : SerializedMonoBehaviour
             float newY = Mathf.Lerp(lp.y, targetHeadLocalY, Time.deltaTime * cameraLerpSpeed);
             head.localPosition = new Vector3(lp.x, newY, lp.z);
         }
-        
+
         // ===== 足音コントローラーの状態を更新 =====
         UpdateFootstepState();
     }
-    
+
     void UpdateFootstepState()
     {
         if (playerFootStepController == null || groundCheck == null) return;
 
         bool isGrounded = groundCheck.IsGrounded;
         bool isMoving = moveAction.ReadValue<Vector2>().magnitude > 0;
-        
+
         if (isGrounded)
         {
             if (isCrouching && isMoving)
@@ -214,7 +214,7 @@ public class PlayerMovement : SerializedMonoBehaviour
     {
         if (crouchAction == null) return;
 
-        // ▼▼▼ 修正点2: 走行中のしゃがみ禁止 ▼▼▼
+        // 修正点2: 走行中のしゃがみ禁止
         // 走行中は、しゃがみ入力（トグルON/ホールド）を無視する
         if (isRunning)
         {
