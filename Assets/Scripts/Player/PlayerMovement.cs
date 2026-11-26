@@ -1,10 +1,23 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Sirenix.OdinInspector;
 
+/// <summary>
+/// プレイヤーの移動（歩き / 走り / しゃがみ）と重力を処理する。
+///
+/// ・カメラの向きを基準に移動する
+/// ・走れるのは屋外にいて、しゃがんでいないときだけ
+/// ・しゃがむとカメラと頭の位置が下がる（オプションで当たり判定も低くする）
+/// ・移動状態を FootStepController に伝える（足音と、ステルス中の見張りの聴覚に使われる）
+/// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : SerializedMonoBehaviour
 {
+    /// <summary>接地中に下向きへかけ続ける速度。地面から浮かないよう、少しだけ押し付ける。</summary>
+    private const float GroundedStickVelocity = -2f;
+
+    // ===== Inspector =====
+
     [Header("移動")]
     public float speed = 5f;
     public float runSpeed = 8f;
@@ -40,220 +53,222 @@ public class PlayerMovement : SerializedMonoBehaviour
     [Header("参照コンポーネント")]
     [SerializeField] private FootStepController playerFootStepController;
     [SerializeField] public GroundCheck groundCheck;
+
+    // ===== 実行時の状態 =====
+
     private CharacterController controller;
-    private Vector3 velocity;
     private Camera mainCamera;
+    private PlayerStatus playerStatus;
 
     private PlayerInput playerInput;
     private InputAction moveAction;
     private InputAction sprintAction;
     private InputAction crouchAction;
 
-    // 状態
+    private Vector3 velocity; // 重力による落下速度（y だけ使う）
     private bool isCrouching = false;
     private bool isRunning = false;
+
+    // しゃがみ/立ちで切り替わる、カメラと頭の高さ（ローカル Y）
     private float targetCameraLocalY;
     private float targetHeadLocalY;
-
-    private float defaultHeight;
-    private Vector3 defaultCenter;
     private float headStandLocalY;
     private float headCrouchLocalY;
-    private PlayerStatus playerStatus;
 
-    void OnDisable()
+    private Vector3 defaultCenter;
+
+    // ===== Unity ライフサイクル =====
+
+    private void OnEnable()
     {
         if (playerStatus == null) playerStatus = PlayerStatus.instance;
         if (playerStatus == null) return;
-        playerFootStepController.CurrentState = MovementState.Idle;
-        playerStatus.crossHairController.enabled = false;
-        if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
-            playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 0;
-    }
-    void OnEnable()
-    {
-        if(playerStatus == null)  playerStatus = PlayerStatus.instance;
-        if (playerStatus == null) return;
-        // if(playerStatus.crossHairController.InteractBoxCanvasGroup != null)
-        //     playerStatus.crossHairController.InteractBoxCanvasGroup.alpha = 1;
+
         playerStatus.crossHairController.enabled = true;
     }
-    void Start()
+
+    /// <summary>移動を止めている間（会話中など）は、足音とクロスヘアも止める。</summary>
+    private void OnDisable()
+    {
+        if (playerStatus == null) playerStatus = PlayerStatus.instance;
+        if (playerStatus == null) return;
+
+        playerFootStepController.CurrentState = MovementState.Idle;
+
+        var crossHair = playerStatus.crossHairController;
+        crossHair.enabled = false;
+        if (crossHair.InteractBoxCanvasGroup != null)
+        {
+            crossHair.InteractBoxCanvasGroup.alpha = 0;
+        }
+    }
+
+    private void Start()
     {
         playerStatus = PlayerStatus.instance;
         controller = GetComponent<CharacterController>();
         mainCamera = Camera.main;
 
         playerInput = PlayerDataHub.instance.CurrentplayerInput;
-
-        moveAction   = playerInput.actions.FindAction(string.IsNullOrEmpty(moveActionName) ? "Move" : moveActionName);
-        sprintAction = playerInput.actions.FindAction(string.IsNullOrEmpty(sprintActionName) ? "Sprint" : sprintActionName);
-        crouchAction = playerInput.actions.FindAction(string.IsNullOrEmpty(crouchActionName) ? "Crouch" : crouchActionName);
+        moveAction = FindAction(moveActionName, "Move");
+        sprintAction = FindAction(sprintActionName, "Sprint");
+        crouchAction = FindAction(crouchActionName, "Crouch");
         if (moveAction == null) Debug.LogError("moveActionがありません");
-        if (cameraRoot)
-        {
-            var lp = cameraRoot.localPosition;
-            if (Mathf.Approximately(cameraStandLocalY, 0f)) cameraStandLocalY = lp.y;
-            if (Mathf.Approximately(cameraCrouchLocalY, 0f)) cameraCrouchLocalY = cameraStandLocalY - Mathf.Abs(crouchDrop);
-            targetCameraLocalY = cameraStandLocalY;
-            cameraRoot.localPosition = new Vector3(lp.x, targetCameraLocalY, lp.z);
-        }
 
-        if (head)
-        {
-            var lp = head.localPosition;
-            headStandLocalY = lp.y;
-            headCrouchLocalY = headStandLocalY - Mathf.Abs(crouchDrop);
-            targetHeadLocalY = headStandLocalY;
-            head.localPosition = new Vector3(lp.x, targetHeadLocalY, lp.z);
-        }
+        InitializeCameraHeights();
+        InitializeHeadHeights();
 
-        defaultHeight = controller.height;
         defaultCenter = controller.center;
-        if (standHeight <= 0f) standHeight = defaultHeight;
+        if (standHeight <= 0f) standHeight = controller.height;
         if (crouchHeight <= 0f) crouchHeight = Mathf.Max(0.8f, standHeight * 0.65f);
 
         if (applyControllerCrouch) ApplyControllerStand();
     }
 
-    void Update()
+    private void Update()
     {
-        // 修正点1: 走行条件の変更
-        // 「外にいる」かつ「しゃがんでいない」場合のみ走れるようにする
-        bool canRun = PlayerLocation.instance != null && PlayerLocation.instance.currentLocation == PlayerLocation.Location.Outside;
-        isRunning = canRun && !isCrouching && (sprintAction != null && sprintAction.IsPressed());
-
-        // ===== 移動 =====
-        Vector2 input = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
-
-        Vector3 basisRight = mainCamera ? mainCamera.transform.right : transform.right;
-        Vector3 basisFwd   = mainCamera ? mainCamera.transform.forward : transform.forward;
-        basisRight.y = 0f; basisFwd.y = 0f;
-        basisRight.Normalize(); basisFwd.Normalize();
-
-        float moveSpd;
-        if (isCrouching)
-        {
-            moveSpd = crouchSpeed;
-        }
-        else if (isRunning)
-        {
-            moveSpd = runSpeed;
-        }
-        else
-        {
-            moveSpd = speed;
-        }
-        Debug.Log($"[PlayerMovement] Input Vector: {input}");
-        Vector3 moveDir = (basisRight * input.x + basisFwd * input.y);
-        Vector3 move = Vector3.ClampMagnitude(moveDir, 1.0f); // 最大値を1に制限
-        controller.Move(move * moveSpd * Time.deltaTime);
-
-        // ===== 重力 =====
-        if (groundCheck.IsGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
-
-        // ===== しゃがみ入力 =====
+        UpdateRunState();
+        Move();
+        ApplyGravity();
         HandleCrouchInput();
-
-        // ===== カメラ & Head Lerp =====
-        if (cameraRoot)
-        {
-            var lp = cameraRoot.localPosition;
-            float newY = Mathf.Lerp(lp.y, targetCameraLocalY, Time.deltaTime * cameraLerpSpeed);
-            cameraRoot.localPosition = new Vector3(lp.x, newY, lp.z);
-        }
-        if (head)
-        {
-            var lp = head.localPosition;
-            float newY = Mathf.Lerp(lp.y, targetHeadLocalY, Time.deltaTime * cameraLerpSpeed);
-            head.localPosition = new Vector3(lp.x, newY, lp.z);
-        }
-
-        // ===== 足音コントローラーの状態を更新 =====
+        UpdateCameraAndHeadHeight();
         UpdateFootstepState();
     }
 
-    void UpdateFootstepState()
+    // ===== 初期化 =====
+
+    private InputAction FindAction(string actionName, string defaultName)
+    {
+        return playerInput.actions.FindAction(string.IsNullOrEmpty(actionName) ? defaultName : actionName);
+    }
+
+    /// <summary>カメラの立ち/しゃがみの高さを決める。Inspector で 0 のままの値は、現在の位置から自動で決める。</summary>
+    private void InitializeCameraHeights()
+    {
+        if (!cameraRoot) return;
+
+        if (Mathf.Approximately(cameraStandLocalY, 0f)) cameraStandLocalY = cameraRoot.localPosition.y;
+        if (Mathf.Approximately(cameraCrouchLocalY, 0f)) cameraCrouchLocalY = cameraStandLocalY - Mathf.Abs(crouchDrop);
+
+        targetCameraLocalY = cameraStandLocalY;
+        SetLocalY(cameraRoot, targetCameraLocalY);
+    }
+
+    private void InitializeHeadHeights()
+    {
+        if (!head) return;
+
+        headStandLocalY = head.localPosition.y;
+        headCrouchLocalY = headStandLocalY - Mathf.Abs(crouchDrop);
+
+        targetHeadLocalY = headStandLocalY;
+        SetLocalY(head, targetHeadLocalY);
+    }
+
+    // ===== 毎フレームの処理 =====
+
+    /// <summary>走れるのは「屋外にいる」かつ「しゃがんでいない」ときだけ。</summary>
+    private void UpdateRunState()
+    {
+        bool canRun = PlayerLocation.instance != null && PlayerLocation.instance.currentLocation == PlayerLocation.Location.Outside;
+        isRunning = canRun && !isCrouching && (sprintAction != null && sprintAction.IsPressed());
+    }
+
+    /// <summary>入力方向へ移動する。前後左右はカメラの向き（水平成分のみ）を基準にする。</summary>
+    private void Move()
+    {
+        Vector2 input = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
+
+        Vector3 right = mainCamera ? mainCamera.transform.right : transform.right;
+        Vector3 forward = mainCamera ? mainCamera.transform.forward : transform.forward;
+        right.y = 0f;
+        forward.y = 0f;
+        right.Normalize();
+        forward.Normalize();
+
+        // 斜め入力で速くならないよう、長さを 1 までに制限する
+        Vector3 direction = Vector3.ClampMagnitude(right * input.x + forward * input.y, 1.0f);
+        controller.Move(direction * GetMoveSpeed() * Time.deltaTime);
+    }
+
+    private float GetMoveSpeed()
+    {
+        if (isCrouching) return crouchSpeed;
+        if (isRunning) return runSpeed;
+        return speed;
+    }
+
+    private void ApplyGravity()
+    {
+        if (groundCheck.IsGrounded && velocity.y < 0)
+        {
+            velocity.y = GroundedStickVelocity;
+        }
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void UpdateCameraAndHeadHeight()
+    {
+        if (cameraRoot) LerpLocalY(cameraRoot, targetCameraLocalY);
+        if (head) LerpLocalY(head, targetHeadLocalY);
+    }
+
+    private void UpdateFootstepState()
     {
         if (playerFootStepController == null || groundCheck == null) return;
 
         bool isGrounded = groundCheck.IsGrounded;
         bool isMoving = moveAction.ReadValue<Vector2>().magnitude > 0;
-
-        if (isGrounded)
-        {
-            if (isCrouching && isMoving)
-            {
-                playerFootStepController.CurrentState = MovementState.Crouching;
-            }
-            else if (isMoving && isRunning)
-            {
-                playerFootStepController.CurrentState = MovementState.Running;
-            }
-            else if (isMoving)
-            {
-                playerFootStepController.CurrentState = MovementState.Walking;
-            }
-            else
-            {
-                playerFootStepController.CurrentState = MovementState.Idle;
-            }
-        }
-        else
-        {
-            playerFootStepController.CurrentState = MovementState.Idle;
-        }
+        playerFootStepController.CurrentState = GetMovementState(isGrounded, isMoving);
     }
 
-    void HandleCrouchInput()
+    private MovementState GetMovementState(bool isGrounded, bool isMoving)
+    {
+        if (!isGrounded || !isMoving) return MovementState.Idle;
+        if (isCrouching) return MovementState.Crouching;
+        if (isRunning) return MovementState.Running;
+        return MovementState.Walking;
+    }
+
+    // ===== しゃがみ =====
+
+    private void HandleCrouchInput()
     {
         if (crouchAction == null) return;
+        if (isRunning) return; // 走っている間はしゃがめない
 
-        // 修正点2: 走行中のしゃがみ禁止
-        // 走行中は、しゃがみ入力（トグルON/ホールド）を無視する
-        if (isRunning)
-        {
-            return;
-        }
-
+        bool wantsCrouch;
         if (crouchToggle)
         {
-            if (crouchAction.triggered)
-            {
-                if (isCrouching)
-                {
-                    if (!applyControllerCrouch || CanStandUp())
-                        SetCrouch(false);
-                }
-                else
-                {
-                    SetCrouch(true);
-                }
-            }
+            // トグル式: 押すたびに切り替え
+            if (!crouchAction.triggered) return;
+            wantsCrouch = !isCrouching;
         }
         else
         {
-            bool pressed = crouchAction.IsPressed();
-            if (pressed)
-            {
-                if (!isCrouching) SetCrouch(true);
-            }
-            else
-            {
-                if (isCrouching && (!applyControllerCrouch || CanStandUp()))
-                    SetCrouch(false);
-            }
+            // ホールド式: 押している間だけしゃがむ
+            wantsCrouch = crouchAction.IsPressed();
+        }
+
+        if (wantsCrouch == isCrouching) return;
+
+        if (wantsCrouch)
+        {
+            SetCrouch(true);
+        }
+        else if (!applyControllerCrouch || CanStandUp())
+        {
+            // 当たり判定も低くしている場合は、頭上に空間があるときだけ立てる
+            SetCrouch(false);
         }
     }
 
-    void SetCrouch(bool crouch)
+    private void SetCrouch(bool crouch)
     {
         if (isCrouching == crouch) return;
+
         isCrouching = crouch;
 
         targetCameraLocalY = isCrouching ? cameraCrouchLocalY : cameraStandLocalY;
@@ -266,24 +281,44 @@ public class PlayerMovement : SerializedMonoBehaviour
         }
     }
 
-    void ApplyControllerStand()
+    private void ApplyControllerStand()
     {
-        controller.height = standHeight;
-        controller.center = new Vector3(defaultCenter.x, standHeight * 0.5f, defaultCenter.z);
+        SetControllerHeight(standHeight);
     }
 
-    void ApplyControllerCrouch()
+    private void ApplyControllerCrouch()
     {
-        controller.height = crouchHeight;
-        controller.center = new Vector3(defaultCenter.x, crouchHeight * 0.5f, defaultCenter.z);
+        SetControllerHeight(crouchHeight);
     }
 
-    bool CanStandUp()
+    /// <summary>当たり判定の高さを変える。足元の位置が変わらないよう、中心も合わせて動かす。</summary>
+    private void SetControllerHeight(float height)
+    {
+        controller.height = height;
+        controller.center = new Vector3(defaultCenter.x, height * 0.5f, defaultCenter.z);
+    }
+
+    /// <summary>立ち上がったときの当たり判定が、天井などにぶつからないか。</summary>
+    private bool CanStandUp()
     {
         float radius = controller.radius * 0.98f;
-        Vector3 p1 = transform.position + Vector3.up * radius;
-        Vector3 p2 = transform.position + Vector3.up * (standHeight - radius);
-        bool blocked = Physics.CheckCapsule(p1, p2, radius, ceilingMask, QueryTriggerInteraction.Ignore);
+        Vector3 bottom = transform.position + Vector3.up * radius;
+        Vector3 top = transform.position + Vector3.up * (standHeight - radius);
+        bool blocked = Physics.CheckCapsule(bottom, top, radius, ceilingMask, QueryTriggerInteraction.Ignore);
         return !blocked;
+    }
+
+    // ===== 小さなヘルパー =====
+
+    private static void SetLocalY(Transform target, float y)
+    {
+        Vector3 localPosition = target.localPosition;
+        target.localPosition = new Vector3(localPosition.x, y, localPosition.z);
+    }
+
+    private void LerpLocalY(Transform target, float targetY)
+    {
+        float newY = Mathf.Lerp(target.localPosition.y, targetY, Time.deltaTime * cameraLerpSpeed);
+        SetLocalY(target, newY);
     }
 }
